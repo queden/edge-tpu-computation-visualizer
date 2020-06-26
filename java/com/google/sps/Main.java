@@ -10,18 +10,18 @@ public class Main {
     public static void main(String[] args) {
       System.out.println("Hello world!");
 
-      ValidationProto.Allocation.Builder alloBuilder = new ValidationProto.Allocation.Builder;
-      ValidationProto.InstructionTag.Builder instructBuilder = new ValidationProto.InstructionTag.Builder;
+      ValidationProto.TensorAllocation.Builder alloBuilder = new ValidationProto.TensorAllocation.Builder;
+      ValidationProto.Instruction.Builder instructBuilder = new ValidationProto.Instruction.Builder;
 
-      tensorToInstructions = relateTensorsToInstructions(alloBuilder.getTensorAllocationList(), instructBuilder.getInstructionTagList());
+      tensorToInstructions = relateTensorsToInstructions(alloBuilder.getTensorAllocationList(), instructBuilder.getInstructionList());
     }
 
-    private static HashTable relateTensorsToInstructions(List<Allocation> allocations, List<InstructionTag> instructionTags) {
-        for (Allocation allocation : allocations) {
+    private static HashTable relateTensorsToInstructions(List<TensorAllocation> allocations, List<Instruction> instructions) {
+        for (TensorAllocation allocation : allocations) {
             tensorToInstructions
         }
 
-        for (InstructionTag instruction : instructionTags) {
+        for (Instruction instruction : instructionTags) {
 
         }
     }
