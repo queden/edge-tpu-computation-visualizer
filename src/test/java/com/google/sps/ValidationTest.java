@@ -24,12 +24,28 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
+import com.google.sps.Proto;
 /** */
 @RunWith(JUnit4.class)
-public final class ValidationTest {
-  @Test
-  public void CantAddOptionalAttendeeWhoIsAlsoMandatory() {
+public final class ValidationTest { 
+    private static int[] testMemory = new int[128 * 1024];
+    private static SimulationTraceProto.TensorAllocation.Builder allocationBuilder = SimulationTraceProto.TensorAllocation.newBuilder();
 
-  }
+
+    private static ArrayList<TensorAllocation> testAllocation = Arrays.asList(new TensorAllocation[]{
+        allocationBuilder.setLabel(1).setStartAddress(8).setSize(1000).build(), 
+        allocationBuilder.setLabel(2).setStartAddress(95678).setSize(216).build()});
+
+    for (int i = 8; i < 1009; i++) {
+        testMemory[i] = 1;
+    }
+
+    for (int i = 95678; i < 95895; i++) {
+        testMemory[i] = 2;
+    }
+
+    @Test
+    public void testBuildAllocationMemory() {
+        assertArrayEquals(testMemory, Validation.getAllocationArray(testAllocation));
+    }
 }
