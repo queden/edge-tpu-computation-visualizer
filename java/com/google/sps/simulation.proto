@@ -1,0 +1,65 @@
+syntax = "proto2";
+
+package sps;
+
+option java_package = "com.google.sps";
+option java_outer_classname = "SimulationTraceProto";
+
+message SimulationTrace {
+  optional string debug_label = 1;
+  repeated DependenceNode dependence_node = 2;
+  repeated TensorAllocation tensor_allocation = 3;
+  repeated Instruction instruction = 4;
+  repeated TraceEntry trace_entry = 5;
+}
+
+message DependenceNode {
+  optional string debug_label = 1;
+  optional int32 label = 2;
+  repeated int32 operands = 3;
+}
+
+message TensorAllocation {
+  optional string name = 1;
+  optional int32 label = 2;
+  optional int32 start_address = 3;
+  optional int32 size = 4;  // in allocation units
+}
+
+message Counter {
+   optional string name = 1;
+   // Counter end value (inclusive)
+   optional int32 end = 2;
+   optional int32 step = 3;
+   // Mask indicating if counter is used to compute address. When false, step
+   // is expected to be 1 unless a TTU is disabled.
+   optional bool mask = 5;
+}
+
+message MemoryAccess {
+  optional int32 tensor = 1;
+  optional int32 base_address = 2;
+  repeated Counter counter = 3;
+}
+
+message Instruction {
+  optional string debug_label = 1;
+  optional int32 tag = 2;
+  optional MemoryAccess narrow_read = 3;
+  optional MemoryAccess narrow_write = 4;
+  optional MemoryAccess wide_read = 5;
+  optional MemoryAccess wide_write = 6;
+}
+
+message TraceEntry {
+  enum AccessType {
+    READ_NARROW = 0;
+    WRITE_NARROW = 1;
+    READ_WIDE = 2;
+    WRITE_WIDE = 3;
+  }
+  optional AccessType access_type = 1;
+  optional int32 instruction_tag = 2;
+  optional int32 address = 4;
+  optional int64 start_time = 5;
+}
