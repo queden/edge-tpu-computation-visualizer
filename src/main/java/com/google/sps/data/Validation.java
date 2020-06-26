@@ -1,17 +1,19 @@
 package com.google.sps.data;
 
 import java.util.Hashtable;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 import com.google.sps.proto.SimulationTraceProto;
+import com.google.sps.proto.SimulationTraceProto.TensorAllocation;
 
 public class Validation {
     ArrayList<SimulationTraceProto.TensorAllocation> tensorAddress = new ArrayList();
    // HashTable<Allocation, new ArrayList<InstructionTag>()> tensorToAddress;
     public static void main(String[] args) {
 
-      SimulationTraceProto.TensorAllocation.Builder alloBuilder = new SimulationTraceProto.TensorAllocation.newBuilder();
-      SimulationTraceProto.Instruction.Builder instructBuilder = new SimulationTraceProto.Instruction.newBuilder();
+      SimulationTraceProto.TensorAllocation.Builder alloBuilder = SimulationTraceProto.TensorAllocation.newBuilder();
+      SimulationTraceProto.Instruction.Builder instructBuilder = SimulationTraceProto.Instruction.newBuilder();
 
     //   tensorToInstructions = relateTensorsToInstructions(alloBuilder.getTensorAllocationList(), instructBuilder.getInstructionList());
     }
@@ -27,37 +29,14 @@ public class Validation {
 
     //     }
     // }
-
-    private static int[] getAllocationArray(List<TensorAllocation> allocations) {
-        Hashtable<Integer, TensorAllocation> labelToAllocation = new Hashtable<Integer, TensorAllocation>();
+    
+    public static int[] getAllocationArray(List<TensorAllocation> allocations) {
         int[] memory = new int[128 * 1024];
         
         for (TensorAllocation allocation : allocations) {
-            memory[allocation.getStartAddress()] = allocation.getLabel();
-            labelToAllocation.put(allocation.getLabel(), allocation);
+            Arrays.fill(memory, allocation.getStartAddress(), allocation.getStartAddress() + allocation.getSize(), allocation.getLabel());
         }
 
-        int i = 0;
-        int curLabel = -1;
-        int curSize = 0;
-        int curTensorSize = 0;
-
-        while (i < memory.length) {
-            if (memory[i] == 0 && curLabel != -1 && curSize < curTensorSize) {
-                memory[i] = curLabel;
-                i++;
-                curSize++;
-            }
-            else if (memory[i] == 0) {
-                i++;
-            }
-            else {
-                curSize = 0;
-                curTensorSize = labelToAllocation.get(memory[i]);
-                curLabel = memory[i];
-                i++;
-            }
-        }
 
         return memory;
     }
