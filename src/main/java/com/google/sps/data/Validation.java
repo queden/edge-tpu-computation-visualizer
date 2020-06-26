@@ -12,39 +12,13 @@ public class Validation {
     public static final int NARROW_SIZE = 128;
     public static final int WIDE_SIZE = 256;
 
-
-    public static void main(String[] args) {
-        // TensorAllocation.Builder allocationBuilderNarrow = SimulationTraceProto.TensorAllocation.newBuilder();
-        // TensorAllocation.Builder allocationBuilderWide = SimulationTraceProto.TensorAllocation.newBuilder();
-
-        // TensorAllocation allocation1 = allocationBuilderNarrow.setLabel(1).setStartAddress(8).setSize(1000).build(); 
-        // TensorAllocation allocation2 = allocationBuilderNarrow.setLabel(2).setStartAddress(95678).setSize(216).build();
-
-
-        // Instruction.Builder instructionBuilder = SimulationTraceProto.Instruction.newBuilder();
-        // MemoryAccess memAcc1 = MemoryAccess.newBuilder().setBaseAddress 
-
-        // SimulationTrace.Builder simulationTraceBuilder = SimulationTrace.newBuilder();
-        // simulationTraceBuilder.addTensorAllocationNarrow(allocation1);
-        // simulationTraceBuilder.addTensorAllocationNarrow(allocation2);
-        // simulationTraceBuilder.addTensorAllocationNarrow(allocation1);
-        // simulationTraceBuilder.addTensorAllocationNarrow(allocation2);
-
-        // validate(simulationTraceBuilder.build());
-
-    //   tensorToInstructions = relateTensorsToInstructions(alloBuilder.getTensorAllocationList(), instructBuilder.getInstructionList());
-    }
-
     public static void validate(SimulationTrace simulationTrace) {
-        // SimulationTraceProto.TensorAllocation.Builder alloBuilder = SimulationTraceProto.TensorAllocation.newBuilder();
-        // SimulationTraceProto.Instruction.Builder instructBuilder = SimulationTraceProto.Instruction.newBuilder();
-
-        List<Instruction> instructions = simulationTrace.getInstructions();
+        List<Instruction> instructions = simulationTrace.getInstructionList();
 
         int[] narrowAllocation = getAllocationArray(simulationTrace.getTensorAllocationNarrowList(), NARROW_SIZE);
         int[] wideAllocation = getAllocationArray(simulationTrace.getTensorAllocationWideList(), WIDE_SIZE);
 
-        relateTensorsToInstructions(narrowAllocation, wideAllocaiton, instructions);
+        relateTensorsToInstructions(narrowAllocation, wideAllocation, instructions);
     }
 
     public static void relateTensorsToInstructions(int[] narrowAllocation, int[] wideAllocation, List<Instruction> instructions) {
