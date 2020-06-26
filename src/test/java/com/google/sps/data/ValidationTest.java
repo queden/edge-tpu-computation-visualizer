@@ -64,14 +64,14 @@ public final class ValidationTest extends Suite {
                 testMemory[i] = 2;
             }
 
-            assertArrayEquals(testMemory, Validation.getAllocationArray(testAllocation));
+            assertArrayEquals(testMemory, Validation.getAllocationArray(testAllocation, 128));
         }
         
         @Test
         public void testAllocationMemoryEmpty() {
             testAllocation = new ArrayList<>();
 
-            assertArrayEquals(testMemory, Validation.getAllocationArray(testAllocation));
+            assertArrayEquals(testMemory, Validation.getAllocationArray(testAllocation, 128));
         }
 
         @Test
@@ -88,7 +88,7 @@ public final class ValidationTest extends Suite {
                 testMemory[i] = 2;
             }
     
-            assertArrayEquals(testMemory, Validation.getAllocationArray(testAllocation));
+            assertArrayEquals(testMemory, Validation.getAllocationArray(testAllocation, 128));
         }
 
         @Test
@@ -105,7 +105,7 @@ public final class ValidationTest extends Suite {
                 testMemory[i] = 2;
             }
     
-            assertArrayEquals(testMemory, Validation.getAllocationArray(testAllocation));
+            assertArrayEquals(testMemory, Validation.getAllocationArray(testAllocation, 128));
         }
 
         @Test
@@ -122,7 +122,7 @@ public final class ValidationTest extends Suite {
                 testMemory[i] = 2;
             }
     
-            assertArrayEquals(testMemory, Validation.getAllocationArray(testAllocation));
+            assertArrayEquals(testMemory, Validation.getAllocationArray(testAllocation, 128));
         }
 
         @Test (expected = IndexOutOfBoundsException.class)
@@ -130,7 +130,7 @@ public final class ValidationTest extends Suite {
             testAllocation = new ArrayList(Arrays.asList(new TensorAllocation[]{
                 allocationBuilder.setLabel(1).setStartAddress(0).setSize(200000).build()}));
             
-            assertArrayEquals(testMemory, Validation.getAllocationArray(testAllocation));
+            assertArrayEquals(testMemory, Validation.getAllocationArray(testAllocation, 128));
         }
     }
 }
