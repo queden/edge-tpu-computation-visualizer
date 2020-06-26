@@ -4,15 +4,19 @@ option java_package = "com.google.sps.proto";
 option java_outer_classname = "SimulationTraceProto";
 
 message SimulationTrace {
-  optional string debug_label = 1;
-  repeated DependenceNode dependence_node = 2;
-  repeated TensorAllocation tensor_allocation = 3;
-  repeated Instruction instruction = 4;
-  repeated TraceEntry trace_entry = 5;
+  optional string name = 1;
+  optional int32 num_tiles = 2;
+  optional int32 narrow_memory_size_bytes = 3;
+  optional int32 wide_memory_size_bytes = 4;
+  repeated DependenceNode dependence_node = 5;
+  repeated TensorAllocation tensor_allocation_narrow = 6;
+  repeated TensorAllocation tensor_allocation_wide = 7;
+  repeated Instruction instruction = 8;
+  repeated TraceEntry trace_entry = 9;
 }
 
 message DependenceNode {
-  optional string debug_label = 1;
+  optional string name = 1;
   optional int32 label = 2;
   repeated int32 operands = 3;
 }
@@ -41,12 +45,13 @@ message MemoryAccess {
 }
 
 message Instruction {
-  optional string debug_label = 1;
+  optional string name = 1;
   optional int32 tag = 2;
-  optional MemoryAccess narrow_read = 3;
-  optional MemoryAccess narrow_write = 4;
-  optional MemoryAccess wide_read = 5;
-  optional MemoryAccess wide_write = 6;
+  repeated bool mask = 3;  // One entry for each tile.
+  optional MemoryAccess narrow_read = 4;
+  optional MemoryAccess narrow_write = 5;
+  optional MemoryAccess wide_read = 6;
+  optional MemoryAccess wide_write = 7;
 }
 
 message TraceEntry {
@@ -59,5 +64,5 @@ message TraceEntry {
   optional AccessType access_type = 1;
   optional int32 instruction_tag = 2;
   optional int32 address = 4;
-  optional int64 start_time = 5;
+  optional int64 cycle = 5;
 }
