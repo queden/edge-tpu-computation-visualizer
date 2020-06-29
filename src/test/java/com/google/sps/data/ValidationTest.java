@@ -331,10 +331,15 @@ public final class ValidationTest extends Suite {
                 .setWideRead(memAccessBuilder.setBaseAddress(0))
                 .setWideWrite(memAccessBuilder.setBaseAddress(3170))
                 .build()}));
+            expected = new ArrayList(Arrays.asList(new Instruction[]{
+                instructionBuilder.setName("mixed").setTag(7)
+                .setNarrowWrite(memAccessBuilder.setTensor(1).setBaseAddress(250000))
+                .setWideRead(memAccessBuilder.setTensor(2).setBaseAddress(0))
+                .setWideWrite(memAccessBuilder.setTensor(3).setBaseAddress(3170))
+                .clearNarrowRead()
+                .build()}));
             Validation.relateTensorsToInstructions(testNarrow, testWide, testInstruction);
-            assertEquals(Arrays.asList(), testInstruction);
+            assertEquals(expected, testInstruction);
         }
- 
- 
     }    
 }
