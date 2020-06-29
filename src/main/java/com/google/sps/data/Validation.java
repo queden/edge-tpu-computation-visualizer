@@ -4,6 +4,7 @@ import java.util.Hashtable;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
+import com.google.sps.exceptions.*;
 import com.google.sps.proto.SimulationTraceProto;
 import com.google.sps.proto.SimulationTraceProto.*;
 
@@ -15,13 +16,20 @@ public class Validation {
     public static void validate(SimulationTrace simulationTrace) {
         List<Instruction> instructions = simulationTrace.getInstructionList();
 
+        // may need to catch ArrayIndexOutOfBoundsException
         int[] narrowAllocation = getAllocationArray(simulationTrace.getTensorAllocationNarrowList(), NARROW_SIZE);
         int[] wideAllocation = getAllocationArray(simulationTrace.getTensorAllocationWideList(), WIDE_SIZE);
 
-        relateTensorsToInstructions(narrowAllocation, wideAllocation, instructions);
+        try {
+            relateTensorsToInstructions(narrowAllocation, wideAllocation, instructions);
+        }
+        catch (InvalidTensorAddressException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
-    public static void relateTensorsToInstructions(int[] narrowAllocation, int[] wideAllocation, List<Instruction> instructions) {
+    public static void relateTensorsToInstructions(int[] narrowAllocation, int[] wideAllocation, List<Instruction> instructions) 
+        throws InvalidTensorAddressException {
         for (int i = 0; i < instructions.size(); i++) {
             Instruction instruction = instructions.get(i);
             Instruction.Builder instructionBuilder = Instruction.newBuilder();
@@ -31,46 +39,58 @@ public class Validation {
 
             if (instruction.hasNarrowRead()) {
                 memoryAccessBuilder.mergeFrom(instruction.getNarrowRead());
-                int tensor = narrowAllocation[memoryAccessBuilder.getBaseAddress()];
+                
+                int baseAddress = memoryAccessBuilder.getBaseAddress();
+                int tensor = narrowAllocation[baseAddress];
+
                 if (tensor >= 0) {
                     memoryAccessBuilder.setTensor(tensor);
                     instructionBuilder.setNarrowRead(memoryAccessBuilder.build());
                 }
                 else {
-                    memoryAccessBuilder.clear();
+                    throw new InvalidTensorAddressException(baseAddress, instructionBuilder.getTag(), AccessTypesEnum.NARROW_READ);
                 }
             }
             if (instruction.hasNarrowWrite()) {
                 memoryAccessBuilder.mergeFrom(instruction.getNarrowWrite());
+                
+                int baseAddress = memoryAccessBuilder.getBaseAddress();
                 int tensor = narrowAllocation[memoryAccessBuilder.getBaseAddress()];
+
                 if (tensor >= 0) {
                     memoryAccessBuilder.setTensor(tensor);
                     instructionBuilder.setNarrowWrite(memoryAccessBuilder.build());
                 }
                 else {
-                    memoryAccessBuilder.clear();
+                    throw new InvalidTensorAddressException(baseAddress, instructionBuilder.getTag(), AccessTypesEnum.NARROW_WRITE);
                 }
             }
             if (instruction.hasWideRead()) {
                 memoryAccessBuilder.mergeFrom(instruction.getWideRead());
+
+                int baseAddress = memoryAccessBuilder.getBaseAddress();
                 int tensor = wideAllocation[memoryAccessBuilder.getBaseAddress()];
+
                 if (tensor >= 0) {
                     memoryAccessBuilder.setTensor(tensor);
                     instructionBuilder.setWideRead(memoryAccessBuilder.build());
                 }
                 else {
-                    memoryAccessBuilder.clear();
-                }   
+                    throw new InvalidTensorAddressException(baseAddress, instructionBuilder.getTag(), AccessTypesEnum.WIDE_READ);
+                }
             }
             if (instruction.hasWideWrite()) {
                 memoryAccessBuilder.mergeFrom(instruction.getWideWrite());
+                
+                int baseAddress = memoryAccessBuilder.getBaseAddress();
                 int tensor = wideAllocation[memoryAccessBuilder.getBaseAddress()];
+
                 if (tensor >= 0) {
                     memoryAccessBuilder.setTensor(tensor);
                     instructionBuilder.setWideWrite(memoryAccessBuilder.build());
                 }
                 else {
-                    memoryAccessBuilder.clear();
+                    throw new InvalidTensorAddressException(baseAddress, instructionBuilder.getTag(), AccessTypesEnum.WIDE_WRITE);
                 }
             }
             instructions.set(i, instructionBuilder.build());
