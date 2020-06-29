@@ -32,34 +32,55 @@ public class Validation {
             if (instruction.hasNarrowRead()) {
                 memoryAccessBuilder.mergeFrom(instruction.getNarrowRead());
                 int tensor = narrowAllocation[memoryAccessBuilder.getBaseAddress()];
-                memoryAccessBuilder.setTensor(tensor);
-                instructionBuilder.setNarrowRead(memoryAccessBuilder.build());
+                if (tensor >= 0) {
+                    memoryAccessBuilder.setTensor(tensor);
+                    instructionBuilder.setNarrowRead(memoryAccessBuilder.build());
+                }
+                else {
+                    memoryAccessBuilder.clear();
+                }
             }
             if (instruction.hasNarrowWrite()) {
                 memoryAccessBuilder.mergeFrom(instruction.getNarrowWrite());
                 int tensor = narrowAllocation[memoryAccessBuilder.getBaseAddress()];
-                memoryAccessBuilder.setTensor(tensor);
-                instructionBuilder.setNarrowWrite(memoryAccessBuilder.build());
+                if (tensor >= 0) {
+                    memoryAccessBuilder.setTensor(tensor);
+                    instructionBuilder.setNarrowWrite(memoryAccessBuilder.build());
+                }
+                else {
+                    memoryAccessBuilder.clear();
+                }
             }
             if (instruction.hasWideRead()) {
                 memoryAccessBuilder.mergeFrom(instruction.getWideRead());
                 int tensor = wideAllocation[memoryAccessBuilder.getBaseAddress()];
-                memoryAccessBuilder.setTensor(tensor);
-                instructionBuilder.setWideRead(memoryAccessBuilder.build());
+                if (tensor >= 0) {
+                    memoryAccessBuilder.setTensor(tensor);
+                    instructionBuilder.setWideRead(memoryAccessBuilder.build());
+                }
+                else {
+                    memoryAccessBuilder.clear();
+                }   
             }
             if (instruction.hasWideWrite()) {
                 memoryAccessBuilder.mergeFrom(instruction.getWideWrite());
                 int tensor = wideAllocation[memoryAccessBuilder.getBaseAddress()];
-                memoryAccessBuilder.setTensor(tensor);
-                instructionBuilder.setWideWrite(memoryAccessBuilder.build());
+                if (tensor >= 0) {
+                    memoryAccessBuilder.setTensor(tensor);
+                    instructionBuilder.setWideWrite(memoryAccessBuilder.build());
+                }
+                else {
+                    memoryAccessBuilder.clear();
+                }
             }
-
             instructions.set(i, instructionBuilder.build());
         }
     }
 
     public static int[] getAllocationArray(List<TensorAllocation> allocations, int memorySize) {
         int[] memory = new int[memorySize * 1024];
+
+        Arrays.fill(memory, -1);
         
         for (TensorAllocation allocation : allocations) {
             Arrays.fill(memory, allocation.getStartAddress(), allocation.getStartAddress() + allocation.getSize(), allocation.getLabel());
