@@ -327,7 +327,7 @@ public final class ValidationTest extends Suite {
         public void testOutOfBoundTensor() {
             testInstruction = new ArrayList(Arrays.asList(new Instruction[]{
                 instructionBuilder.setName("mixed").setTag(7)
-                .setNarrowWrite(memAccessBuilder.setBaseAddress(200000))
+                .setNarrowWrite(memAccessBuilder.setBaseAddress(250000))
                 .setWideRead(memAccessBuilder.setBaseAddress(0))
                 .setWideWrite(memAccessBuilder.setBaseAddress(3170))
                 .build()}));
