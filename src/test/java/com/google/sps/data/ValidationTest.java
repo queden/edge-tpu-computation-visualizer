@@ -179,23 +179,32 @@ public final class ValidationTest extends Suite {
         public void setUp() {
             testNarrow = new int[128 * 1024];
             testWide = new int[256 * 1024];
+            testInstruction = new ArrayList<>();
         }
     //empty instructions
         @Test
         public void testEmptyInstruction() {
             
             testInstruction = new ArrayList<>();
+            
             Validation.relateTensorsToInstructions(testNarrow, testWide, testInstruction);
             assertEquals(Arrays.asList(), testInstruction);
         }
     //empty memory access
         @Test
         public void testEmptyMemoryAccess() {
+            System.out.println(testInstruction);
             testInstruction = new ArrayList(Arrays.asList(new Instruction[]{
-                instructionBuilder.setName("fence").setTag(7).build()}));
-            
+                instructionBuilder.setName("fence").setTag(7)
+                .clearWideRead()
+                .clearWideWrite()
+                .clearNarrowRead()
+                .clearNarrowWrite().build()}));
+          //  testInstruction.clear();
             expected = new ArrayList(Arrays.asList(new Instruction[]{
-                expectedInstructionBuilder.setName("fence").setTag(7).build()}));
+                expectedInstructionBuilder.setName("fence").setTag(7)
+                .clearNarrowRead()
+                .clearNarrowWrite().build()}));
             
             
             Validation.relateTensorsToInstructions(testNarrow, testWide, testInstruction);
@@ -238,12 +247,16 @@ public final class ValidationTest extends Suite {
                 instructionBuilder.setName("mixed").setTag(7)
                 .setWideRead(memAccessBuilder.setBaseAddress(0))
                 .setWideWrite(memAccessBuilder.setBaseAddress(8))
+                .clearNarrowRead()
+                .clearNarrowWrite()
                 .build()}));
           
             expected = new ArrayList(Arrays.asList(new Instruction[]{
                 instructionBuilder.setName("mixed").setTag(7)
                 .setWideRead(memAccessBuilder.setTensor(1).setBaseAddress(0))
                 .setWideWrite(memAccessBuilder.setTensor(2).setBaseAddress(8))
+                .clearNarrowRead()
+                .clearNarrowWrite()
                 .build()}));
            
             Validation.relateTensorsToInstructions(testNarrow, testWide, testInstruction);
@@ -308,6 +321,20 @@ public final class ValidationTest extends Suite {
             
            assertEquals(expected, testInstruction);
         } 
+
+        //outbound
+        @Test (expected = IndexOutOfBoundsException.class)
+        public void testOutOfBoundTensor() {
+            testInstruction = new ArrayList(Arrays.asList(new Instruction[]{
+                instructionBuilder.setName("mixed").setTag(7)
+                .setNarrowWrite(memAccessBuilder.setBaseAddress(200000))
+                .setWideRead(memAccessBuilder.setBaseAddress(0))
+                .setWideWrite(memAccessBuilder.setBaseAddress(3170))
+                .build()}));
+            Validation.relateTensorsToInstructions(testNarrow, testWide, testInstruction);
+            assertEquals(Arrays.asList(), testInstruction);
+        }
+ 
  
     }    
 }
