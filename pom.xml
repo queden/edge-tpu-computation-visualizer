@@ -43,7 +43,14 @@
         <artifactId>protobuf-java</artifactId>
         <version>3.11.0</version>
     </dependency>
-    
+
+    <!-- <dependency>
+        <groupId>com.oracle</groupId>
+        <artifactId>javaFX</artifactId>
+        <version>11.0.2</version>
+        <scope>system</scope>
+        <systemPath>PATH_TO_FX/lib</systemPath>
+    </dependency> -->
 
   </dependencies>
 
@@ -58,6 +65,16 @@
           <deploy.version>1</deploy.version>
         </configuration>
       </plugin>
+
+      <!-- <plugin>
+        <groupId>org.openjfx</groupId>
+        <artifactId>javafx-maven-plugin</artifactId>
+        <version>0.0.4</version>
+        <configuration>
+            <mainClass>HelloFX</mainClass>
+        </configuration>
+      </plugin> -->
+
     </plugins>
   </build>
 </project>
