@@ -3,7 +3,9 @@ package com.google.sps.data;
 import com.google.sps.exceptions.*;
 import com.google.sps.proto.SimulationTraceProto.*;
 import java.util.Arrays;
+import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 
 public class Validation {
 
@@ -31,7 +33,12 @@ public class Validation {
       relateTensorsToInstructions(narrowAllocation, wideAllocation, instructions);
     } catch (InvalidTensorAddressException e) {
       System.out.println(e.getMessage());
+    } catch (ArrayIndexOutOfBoundsException e) {
+      System.out.println(e.getMessage());
     }
+
+    Map<Integer, Instruction> instructionTagtoInstruction =
+        relateIntructionTagtoInstructionTable(instructions);
   }
 
   /**
@@ -84,6 +91,7 @@ public class Validation {
         }
       }
 
+
       if (instruction.hasWideRead()) {
         memoryAccessBuilder.mergeFrom(instruction.getWideRead());
 
@@ -98,7 +106,7 @@ public class Validation {
               baseAddress, instructionBuilder.getTag(), WIDE_READ);
         }
       }
-      
+
       if (instruction.hasWideWrite()) {
         memoryAccessBuilder.mergeFrom(instruction.getWideWrite());
 
@@ -137,5 +145,17 @@ public class Validation {
     }
 
     return memory;
+  }
+
+  /** Given a list of instructions, maps each instruction tag to its corresponding instruction. */
+  public static Map<Integer, Instruction> relateIntructionTagtoInstructionTable(
+      List<Instruction> instructions) {
+    Map<Integer, Instruction> instructionTagtoInstruction = new Hashtable<>();
+
+    for (Instruction instruction : instructions) {
+      instructionTagtoInstruction.put(instruction.getTag(), instruction);
+    }
+
+    return instructionTagtoInstruction;
   }
 }

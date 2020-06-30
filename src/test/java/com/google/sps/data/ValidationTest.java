@@ -17,6 +17,7 @@ package com.google.sps.data;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import com.google.sps.exceptions.*;
 import com.google.sps.proto.SimulationTraceProto;
 import com.google.sps.proto.SimulationTraceProto.TensorAllocation;
 import com.google.sps.proto.SimulationTraceProto.Instruction;
@@ -161,10 +162,6 @@ public final class ValidationTest extends Suite {
             
             assertArrayEquals(testMemory, Validation.getAllocationArray(testAllocation, 128));
         }
- 
-        
- 
-        
     }
  
     public static class TestTensorToInstruction {
@@ -179,11 +176,15 @@ public final class ValidationTest extends Suite {
         public void setUp() {
             testNarrow = new int[128 * 1024];
             testWide = new int[256 * 1024];
+
+            Arrays.fill(testNarrow, -1);    
+            Arrays.fill(testWide, -1);
+
             testInstruction = new ArrayList<>();
         }
     //empty instructions
         @Test
-        public void testEmptyInstruction() {
+        public void testEmptyInstruction() throws InvalidTensorAddressException {
             
             testInstruction = new ArrayList<>();
             
@@ -192,7 +193,7 @@ public final class ValidationTest extends Suite {
         }
     //empty memory access
         @Test
-        public void testEmptyMemoryAccess() {
+        public void testEmptyMemoryAccess() throws InvalidTensorAddressException {
             System.out.println(testInstruction);
             testInstruction = new ArrayList(Arrays.asList(new Instruction[]{
                 instructionBuilder.setName("fence").setTag(7)
@@ -214,7 +215,7 @@ public final class ValidationTest extends Suite {
  
         //1 reads and 1 write -- Narrow
         @Test
-        public void testReadAndWriteNarrow() {
+        public void testReadAndWriteNarrow() throws InvalidTensorAddressException {
            
             testNarrow[0] = 1;
             testNarrow[8] = 2;
@@ -238,7 +239,7 @@ public final class ValidationTest extends Suite {
  
         //1 reads and 1 write -- Wide
         @Test
-        public void testReadAndWriteWide() {
+        public void testReadAndWriteWide() throws InvalidTensorAddressException {
            
             testWide[0] = 1;
             testWide[8] = 2;
@@ -266,7 +267,7 @@ public final class ValidationTest extends Suite {
  
         //2 reads and 1 write -- Wide
         @Test
-        public void testTwoReadsAndOneWrite() {
+        public void testTwoReadsAndOneWrite() throws InvalidTensorAddressException {
            
             testNarrow[0] = 1;
             testWide[0] = 2;
@@ -295,7 +296,7 @@ public final class ValidationTest extends Suite {
  
         //2 reads and 1 write -- Wide
         @Test
-        public void testOneReadsAndTwoWrite() {
+        public void testOneReadsAndTwoWrite() throws InvalidTensorAddressException {
            
             testNarrow[0] = 1;
             testWide[0] = 2;
@@ -323,8 +324,8 @@ public final class ValidationTest extends Suite {
         } 
 
         //outbound
-        @Test (expected = IndexOutOfBoundsException.class)
-        public void testOutOfBoundTensor() {
+        @Test (expected = ArrayIndexOutOfBoundsException.class)
+        public void testOutOfBoundTensor() throws InvalidTensorAddressException {
             testInstruction = new ArrayList(Arrays.asList(new Instruction[]{
                 instructionBuilder.setName("mixed").setTag(7)
                 .setNarrowWrite(memAccessBuilder.setBaseAddress(250000))
@@ -341,5 +342,33 @@ public final class ValidationTest extends Suite {
             Validation.relateTensorsToInstructions(testNarrow, testWide, testInstruction);
             assertEquals(expected, testInstruction);
         }
+
+        @Test (expected = InvalidTensorAddressException.class)
+        public void testInvalidTensorAddress() throws InvalidTensorAddressException {
+           
+            testNarrow[0] = 1;
+            testWide[0] = 2;
+            testWide[3170] = 3;
+            
+            testInstruction = new ArrayList(Arrays.asList(new Instruction[]{
+                instructionBuilder.setName("mixed").setTag(7)
+                .setNarrowWrite(memAccessBuilder.setBaseAddress(0))
+                .setWideRead(memAccessBuilder.setBaseAddress(1))
+                .setWideWrite(memAccessBuilder.setBaseAddress(3170))
+                .clearNarrowRead()
+                .build()}));
+          
+            expected = new ArrayList(Arrays.asList(new Instruction[]{
+                instructionBuilder.setName("mixed").setTag(7)
+                .setNarrowWrite(memAccessBuilder.setTensor(1).setBaseAddress(0))
+                .setWideRead(memAccessBuilder.setTensor(2).setBaseAddress(1))
+                .setWideWrite(memAccessBuilder.setTensor(3).setBaseAddress(3170))
+                .clearNarrowRead()
+                .build()}));
+           
+            Validation.relateTensorsToInstructions(testNarrow, testWide, testInstruction);
+            
+           assertEquals(expected, testInstruction);
+        } 
     }    
 }
