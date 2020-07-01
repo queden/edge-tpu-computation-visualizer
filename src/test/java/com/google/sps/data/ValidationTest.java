@@ -25,13 +25,14 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
+
 /** */
 @RunWith(ValidationTest.class)
 @Suite.SuiteClasses({
   ValidationTest.TestAllocationMemory.class,
   ValidationTest.TestTensorToInstruction.class
 })
-// @Suite.SuiteClasses({ValidationTest.TestTensorToInstruction.class})
+  
 public final class ValidationTest extends Suite {
   private static SimulationTraceProto.TensorAllocation.Builder allocationBuilder =
       SimulationTraceProto.TensorAllocation.newBuilder();
@@ -211,7 +212,7 @@ public final class ValidationTest extends Suite {
                   }));
 
       Validation.relateTensorsToInstructions(testNarrow, testWide, testInstruction);
-
+      
       assertEquals(expected, testInstruction);
     }
 
