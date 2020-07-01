@@ -20,6 +20,18 @@ public class InvalidTensorReadException extends Exception {
 
     @Override
     public String getMessage() {
+        if (tensor <= 0) {
+            return "Tried to read tensor: " +
+                tensor +
+                " at " +
+                memory +
+                "memory location (tile: " +
+                tile +
+                " address: " +
+                address +
+                ") but memory location was not allocated";
+        }
+        
         return "Tried to read tensor: " +
             tensor +
             " at " +

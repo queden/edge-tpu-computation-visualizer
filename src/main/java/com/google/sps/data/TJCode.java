@@ -47,9 +47,7 @@ public class TJCode {
                         tensor = memoryAccess.getTensor();
                         address = trace.getAddress();
 
-                        if (narrowMemory[tile][address] <= 0) {
-                            throw new InvalidTensorAddressException(address, trace.getTag(), "narrow read");
-                        } else if (narrowMemory[tile][address] != tensor) {
+                        if (narrowMemory[tile][address] != tensor) {
                             throw new InvalidTensorReadException(tensor, tile, address, narrowMemory[tile][address], "narrow");
                         }
                     }
@@ -62,9 +60,7 @@ public class TJCode {
                         tensor = memoryAccess.getTensor();
                         address = trace.getAddress();
 
-                        if (wideMemory[tile][address] <= 0) {
-                            throw new InvalidTensorAddressException(address, trace.getTag(), "wide read");
-                        } else if (wideMemory[tile][address] != tensor) {
+                        if (wideMemory[tile][address] != tensor) {
                             throw new InvalidTensorReadException(tensor, tile, address, wideMemory[tile][address], "wide");
                         }
                     }
