@@ -18,12 +18,12 @@ public class WriteValidator {
         int[][] narrow, int[][] wide, Map<Integer, Instruction> instructionTagtoInstruction, List<TraceEntry> traces){
         for (int i = 0; i < traces.size(); i++) {
             TraceEntry trace = traces.get(i);
-             // get the list of masks for each tile
+            Instruction instruction = instructionTagtoInstruction.get(trace.getInstructionTag()); 
+            // get the list of masks for each tile
             List<Boolean> masks = instruction.getMaskList();
             if (trace.getAccessType().toString() == "WRITE_NARROW") {
                 // get what the instruction is 
                     // * check for empty / non-existant instruction
-                Instruction instruction = instructionTagtoInstruction.get(trace.getInstructionTag()); 
                 // itterate through the tiles
                 for (int tile = 0; tile < 16; tile++) {
                     if (masks.get(tile)) {
@@ -37,7 +37,6 @@ public class WriteValidator {
                 }
             }
             if (trace.getAccessType().toString() == "WRITE_WIDE") {
-                Instruction instruction = instructionTagtoInstruction.get(trace.getInstructionTag());
                 for (int tile = 0; tile < 16; tile++) {
                     if (masks.get(tile)) {
                         MemoryAccess narrowWrite = instruction.getWideWrite();
