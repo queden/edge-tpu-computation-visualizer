@@ -28,7 +28,7 @@ public class TJCode {
     private static int[][] narrowMemory = new int[16][128 * 1024];
     private static int[][] wideMemory = new int[16][256 * 1024];
 
-    public static void readValidation(List<TraceEntry> traces, Map<Integer, Instruction> tagToInstructions) {
+    public static void readValidation(List<TraceEntry> traces, Map<Integer, Instruction> tagToInstructions) throws InvalidTensorReadException {
         Boolean[] maskList;
         MemoryAccess memoryAccess;
         Instruction instruction;
