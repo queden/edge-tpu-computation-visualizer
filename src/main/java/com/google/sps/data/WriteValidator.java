@@ -15,16 +15,15 @@ public class WriteValidator {
     int[][] wide = new int[16][256 * 1024];
 
     public static void writeValidation(
-        int[][] narrow, int[][] wide, List<Instruction> instructions, Map<Integer, Instruction> instructionTagtoInstruction, SimulationTrace simulationTrace){
-        List<TraceEntry> traces = simulationTrace.getTraceEntryList();
+        int[][] narrow, int[][] wide, Map<Integer, Instruction> instructionTagtoInstruction, List<TraceEntry> traces){
         for (int i = 0; i < traces.size(); i++) {
             TraceEntry trace = traces.get(i);
+             // get the list of masks for each tile
+            List<Boolean> masks = instruction.getMaskList();
             if (trace.getAccessType().toString() == "WRITE_NARROW") {
                 // get what the instruction is 
                     // * check for empty / non-existant instruction
-                Instruction instruction = instructionTagtoInstruction.get(trace.getInstructionTag());
-                // get the list of masks for each tile
-                List<Boolean> masks = instruction.getMaskList();
+                Instruction instruction = instructionTagtoInstruction.get(trace.getInstructionTag()); 
                 // itterate through the tiles
                 for (int tile = 0; tile < 16; tile++) {
                     if (masks.get(tile)) {
@@ -39,7 +38,6 @@ public class WriteValidator {
             }
             if (trace.getAccessType().toString() == "WRITE_WIDE") {
                 Instruction instruction = instructionTagtoInstruction.get(trace.getInstructionTag());
-                List<Boolean> masks = instruction.getMaskList();
                 for (int tile = 0; tile < 16; tile++) {
                     if (masks.get(tile)) {
                         MemoryAccess narrowWrite = instruction.getWideWrite();
