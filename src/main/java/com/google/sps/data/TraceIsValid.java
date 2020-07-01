@@ -57,7 +57,7 @@ public class TraceIsValid {
             }
 
             if (expectedTensor != traceTensor) {
-                throw 
+                throw new InvalidTensorOperationException(address, expectedTensor, traceTensor, traceEntry.getInstructionTag(), accessType);
             }
         }
     }
