@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 package com.google.sps.data;
 import static org.junit.Assert.*;
 import com.google.sps.exceptions.*;
@@ -32,7 +33,7 @@ import org.junit.runners.model.RunnerBuilder;
   ValidationTest.TestAllocationMemory.class,
   ValidationTest.TestTensorToInstruction.class
 })
-  
+
 public final class ValidationTest extends Suite {
   private static SimulationTraceProto.TensorAllocation.Builder allocationBuilder =
       SimulationTraceProto.TensorAllocation.newBuilder();
@@ -118,7 +119,7 @@ public final class ValidationTest extends Suite {
       }
       assertArrayEquals(testMemory, Validation.getAllocationArray(testAllocation, 128));
     }
- 
+
     @Test
     public void TestAllocationMemoryOverlap() {
       // ** Treats nested memory allocations in a time sensitive format. Whichever tensor was added
@@ -212,7 +213,7 @@ public final class ValidationTest extends Suite {
                   }));
 
       Validation.relateTensorsToInstructions(testNarrow, testWide, testInstruction);
-      
+
       assertEquals(expected, testInstruction);
     }
 
