@@ -6,6 +6,20 @@ import java.util.Map;
 import java.util.List;
 
 public class TraceIsValid {
+
+    // Sizes in KB of narrow and wide memory.
+    public static final int NARROW_SIZE = 128;
+    public static final int WIDE_SIZE = 256;
+
+    // Number of tiles.
+    public static final int NUM_TILES = 16;
+
+    // Memory access types.
+    public static final String NARROW_READ = "Narrow Read";
+    public static final String NARROW_WRITE = "Narrow Write";
+    public static final String WIDE_READ = "Wide Read";
+    public static final String WIDE_WRITE = "Wide Write";
+
     public static int getTracesTensor(int traceAddress, TraceEntry.AccessType traceAccessType, Instruction instruction) {
         MemoryAccess memoryAccess;
         
@@ -24,30 +38,26 @@ public class TraceIsValid {
         return tensor;
     } 
 
-    public static void validateTraceEntries (List<TraceEntry> traceEntries, Map<Integer, Instruction> instructionTagtoInstruction) throws Exception {
-        int[][] narrow = new int[16][128 * 1024];
-        int[][] wide = new int[16][256 * 1024];
+    public static void validateTraceEntries (List<TraceEntry> traceEntries, Map<Integer, Instruction> instructionTagtoInstruction, int[] wideAllocation, int[] narrowAllocation) throws Exception {
+        int[][] narrow = new int[NUM_TILES][NARROW_SIZE * 1024];
+        int[][] wide = new int[NUM_TILES][WIDE_SIZE * 1024];
         
         for (TraceEntry traceEntry : traceEntries) {
             Instruction instruction = instructionTagtoInstruction.get(traceEntry.getInstructionTag());
-            List<Boolean> masks = instruction.getMaskList();
             TraceEntry.AccessType accessType = traceEntry.getAccessType();
             int address = traceEntry.getAddress();
 
-            int traceTensor = getTracesTensor(traceEntry.getAddress(), accessType, instruction);
-            for (int tile = 0; tile < 16; tile++) {
-                if (masks.get(tile)) {
-                    Boolean valid;
-                    if (accessType == TraceEntry.AccessType.READ_NARROW || accessType == TraceEntry.AccessType.WRITE_NARROW) {
-                        valid = narrow[tile][address] == traceTensor;
-                    } else {
-                        valid = wide[tile][address] == traceTensor;
-                    }
+            int traceTensor = getTracesTensor(address, accessType, instruction);
+            int expectedTensor;
 
-                    if (!valid) {
-                        throw new Exception("TODO: Write custom exception"); //TODO: Write Custom Exception
-                    }
-                }
+            if (accessType == TraceEntry.AccessType.READ_NARROW || accessType == TraceEntry.AccessType.WRITE_NARROW) {
+                expectedTensor = narrowAllocation[address];
+            } else {
+                expectedTensor = wideAllocation[address];
+            }
+
+            if (expectedTensor != traceTensor) {
+                throw 
             }
         }
     }
