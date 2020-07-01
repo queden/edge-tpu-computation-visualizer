@@ -1,7 +1,5 @@
 package com.google.sps.exceptions;
 
-import com.google.sps.data.*;
-
 public class InvalidTensorReadException extends Exception {
     private int tensor;
     private int tile;

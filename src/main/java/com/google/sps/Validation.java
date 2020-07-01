@@ -1,4 +1,4 @@
-package com.google.sps.data;
+package com.google.sps;
 
 import com.google.sps.exceptions.*;
 import com.google.sps.proto.SimulationTraceProto.*;

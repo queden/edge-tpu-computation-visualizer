@@ -1,6 +1,5 @@
 package com.google.sps.exceptions;
 
-import com.google.sps.data.*;
 import com.google.sps.proto.SimulationTraceProto.*;
 
 public class InvalidTensorWriteException extends Exception {
