@@ -21,9 +21,8 @@ public class InvalidTensorOperationException extends Exception {
     /** Outputs information related to the exception. */
     @Override
     public String getMessage() {
-      String returnString;
       if (allocatedTensor == -1) {
-        returnString = "No tensor allocation found at address "
+        return "No tensor allocation found at address "
           + traceAddress
           + " while validating a "
           + memoryAccess
@@ -34,7 +33,7 @@ public class InvalidTensorOperationException extends Exception {
           + ".";
       }
       else {
-        returnString = memoryAccess 
+        return memoryAccess 
           + " on tensor "
           + traceTensor
           + " at address "
@@ -45,7 +44,5 @@ public class InvalidTensorOperationException extends Exception {
           + allocatedTensor
           + ".";
       }
-      
-      return returnString;
     }
 }
