@@ -37,31 +37,34 @@ public class TJCode {
 
         for (TraceEntry trace : traces) {
             instruction = tagToInstructions.get(trace.getInstructionTag());
+            maskList = (Boolean[]) Arrays.asList(instruction.getMaskList()).toArray();
 
             if (trace.getAccessType() == TraceEntry.AccessType.READ_NARROW) {
                 memoryAccess = instruction.getNarrowRead();
-                maskList = (Boolean[]) Arrays.asList(instruction.getMaskList()).toArray();
 
                 for (int tile = 0; tile < 16; tile++) {
                     if (maskList[tile]) {
                         tensor = memoryAccess.getTensor();
                         address = trace.getAddress();
 
-                        if (narrowMemory[tile][address] != tensor) {
+                        if (narrowMemory[tile][address] <= 0) {
+                            throw new InvalidTensorAddressException(address, trace.getTag(), "narrow read");
+                        } else if (narrowMemory[tile][address] != tensor) {
                             throw new InvalidTensorReadException(tensor, tile, address, narrowMemory[tile][address], "narrow");
                         }
                     }
                 }
             } else if (trace.getAccessType() == TraceEntry.AccessType.READ_WIDE) {
                 memoryAccess = instruction.getWideRead();
-                maskList = (Boolean[]) Arrays.asList(instruction.getMaskList()).toArray();
 
                 for (int tile = 0; tile < 16; tile++) {
                     if (maskList[tile]) {
                         tensor = memoryAccess.getTensor();
                         address = trace.getAddress();
 
-                        if (wideMemory[tile][address] != tensor) {
+                        if (wideMemory[tile][address] <= 0) {
+                            throw new InvalidTensorAddressException(address, trace.getTag(), "wide read");
+                        } else if (wideMemory[tile][address] != tensor) {
                             throw new InvalidTensorReadException(tensor, tile, address, wideMemory[tile][address], "wide");
                         }
                     }
