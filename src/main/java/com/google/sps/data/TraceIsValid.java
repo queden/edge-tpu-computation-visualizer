@@ -20,7 +20,7 @@ public class TraceIsValid {
     public static final String WIDE_READ = "Wide Read";
     public static final String WIDE_WRITE = "Wide Write";
 
-    public static int getTracesTensor(int traceAddress, TraceEntry.AccessType traceAccessType, Instruction instruction) {
+    public static int getTracesTensor(int traceAddress, TraceEntry.AccessType traceAccessType, Instruction instruction) throws Exception {
         MemoryAccess memoryAccess;
         
         if (traceAccessType == TraceEntry.AccessType.READ_NARROW) {
@@ -29,8 +29,10 @@ public class TraceIsValid {
             memoryAccess = instruction.getNarrowWrite();
         } else if (traceAccessType == TraceEntry.AccessType.READ_WIDE) {
             memoryAccess = instruction.getWideRead();
-        } else {
+        } else if (traceAccessType == TraceEntry.AccessType.WRITE_WIDE) {
             memoryAccess = instruction.getWideWrite();
+        } else {
+            throw new Exception("Trace has invalid access type of " + traceAccessType + ".");
         }
 
         int tensor = memoryAccess.getTensor();
