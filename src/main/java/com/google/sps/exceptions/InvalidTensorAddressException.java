@@ -1,7 +1,5 @@
 package com.google.sps.exceptions;
 
-import com.google.sps.data.*;
-
 /**
  * Exception thrown when a base address operated on by an instruction does not have a tensor
  * allocated to it.
