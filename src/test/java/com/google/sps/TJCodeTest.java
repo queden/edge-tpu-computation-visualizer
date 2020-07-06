@@ -2,7 +2,6 @@ package com.google.sps.data;
 
 import static org.junit.Assert.*;
 
-import com.google.sps.Validation;
 import com.google.sps.exceptions.*;
 import com.google.sps.proto.SimulationTraceProto.*;
 import java.util.ArrayList;
@@ -863,7 +862,7 @@ public final class TJCodeTest extends Suite {
 
         // Tests two valid read traces in a single instruction
         @Test
-        public void tesTwoValidRead() throws InvalidTensorReadException {
+        public void testTwoValidRead() throws InvalidTensorReadException {
             int i = 0;
 
             for (boolean mask : INSTRUCTION_TWO.getMaskList()) {
