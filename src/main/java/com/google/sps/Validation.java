@@ -190,7 +190,12 @@ public class Validation {
       TraceEntry.AccessType accessType = traceEntry.getAccessType();
 
       int address = traceEntry.getAddress();
-      int traceTensor = getTraceTensor(address, accessType, instruction);
+      int traceTensor = -1;
+      try {
+        traceTensor = getTraceTensor(address, accessType, instruction);
+      } catch(Exception e) {
+        System.out.println(e.getMessage());
+      }
       int expectedTensor;
 
       // Gets the expected tensor that the trace entry should be operating on based on which memory
@@ -208,19 +213,17 @@ public class Validation {
             address, expectedTensor, traceTensor, traceEntry.getInstructionTag(), accessType);
       }
 
+      List<Boolean> masks = instruction.getMaskList();
+
       // If the trace entry is a write, performs a write validation. If it a read, performs a read
       // validation.
       if (accessType == TraceEntry.AccessType.WRITE_NARROW
           || accessType == TraceEntry.AccessType.WRITE_WIDE) {
-        try {
-          writeValidation(narrow, wide, instruction, traceEntry);
-        } catch (InvalidTensorWriteException e) {
-          System.out.println(e.getMessage());
-        }
+          writeValidation(narrow, wide, masks, traceTensor, traceEntry);
       } else if (accessType == TraceEntry.AccessType.READ_NARROW
           || accessType == TraceEntry.AccessType.READ_WIDE) {
         try {
-          readValidation(narrow, wide, instruction, traceEntry);
+          readValidation(narrow, wide, masks, traceTensor, traceEntry);
         } catch (InvalidTensorReadException e) {
           System.out.println(e.getMessage());
         }
@@ -245,10 +248,26 @@ public class Validation {
     } else if (traceAccessType == TraceEntry.AccessType.WRITE_WIDE) {
       memoryAccess = instruction.getWideWrite();
     } else {
-      throw new Exception("Trace has invalid access type of " + traceAccessType + ".");
+      throw new Exception(
+          "Trace entry at address " 
+            + traceAddress 
+            + " has invalid access type of " 
+            + traceAccessType 
+            + ".");
     }
 
-    int tensor = memoryAccess.getTensor();
+    int tensor = -1;
+    if (memoryAccess.hasTensor()){
+      tensor = memoryAccess.getTensor();  
+    } 
+    else {
+      throw new Exception(
+          "Memory Access " 
+            + memoryAccess.getDescriptorForType().getName() 
+            + " for instruction " 
+            + instruction.getTag() 
+            + " has no tensor associated with it.");
+    }
 
     return tensor;
   }
@@ -258,37 +277,22 @@ public class Validation {
    * address in the memory arrays.
    */
   public static void writeValidation(
-      int[][] narrow, int[][] wide, Instruction instruction, TraceEntry traceEntry)
-      throws InvalidTensorWriteException {
-    // Get the list of masks for each tile.
-    List<Boolean> masks = instruction.getMaskList();
+      int[][] narrow, int[][] wide, List<Boolean> masks, int tensor, TraceEntry traceEntry) {
+    int address = traceEntry.getAddress();
 
     if (traceEntry.getAccessType() == TraceEntry.AccessType.WRITE_NARROW) {
       // Iterate through the tiles.
       for (int tile = 0; tile < NUM_TILES; tile++) {
         if (masks.get(tile)) {
-          // Get the tensor name.
-          MemoryAccess narrowWrite = instruction.getNarrowWrite();
-          int tensor = -1;
-          if (narrowWrite.hasTensor()) {
-            tensor = narrowWrite.getTensor();
-          } else {
-            throw new InvalidTensorWriteException(
-                instruction.getTag(), traceEntry.getAddress(), traceEntry.getAccessType());
-          }
-          }
-
           // Write the tensor name in our replicated memory.
-          narrow[tile][traceEntry.getAddress()] = tensor;
+          narrow[tile][address] = tensor;
         }
       }
     }
     if (traceEntry.getAccessType() == TraceEntry.AccessType.WRITE_WIDE) {
       for (int tile = 0; tile < NUM_TILES; tile++) {
         if (masks.get(tile)) {
-          MemoryAccess wideWrite = instruction.getWideWrite();
-          int tensor = wideWrite.getTensor();
-          wide[tile][traceEntry.getAddress()] = tensor;
+          wide[tile][address] = tensor;
         }
       }
     }
@@ -299,22 +303,13 @@ public class Validation {
    * occurs.
    */
   public static void readValidation(
-      int[][] narrow, int[][] wide, Instruction instruction, TraceEntry traceEntry)
+      int[][] narrow, int[][] wide, List<Boolean> masks, int tensor, TraceEntry traceEntry)
       throws InvalidTensorReadException {
-    MemoryAccess memoryAccess;
-    int tensor;
-    int address;
-
-    List<Boolean> masks = instruction.getMaskList();
+    int address = traceEntry.getAddress();
 
     if (traceEntry.getAccessType() == TraceEntry.AccessType.READ_NARROW) {
-      memoryAccess = instruction.getNarrowRead();
-
       for (int tile = 0; tile < NUM_TILES; tile++) {
         if (masks.get(tile)) {
-          tensor = memoryAccess.getTensor();
-          address = traceEntry.getAddress();
-
           if (narrow[tile][address] != tensor) {
             throw new InvalidTensorReadException(
                 tensor, tile, address, narrow[tile][address], "narrow");
@@ -322,13 +317,8 @@ public class Validation {
         }
       }
     } else if (traceEntry.getAccessType() == TraceEntry.AccessType.READ_WIDE) {
-      memoryAccess = instruction.getWideRead();
-
       for (int tile = 0; tile < NUM_TILES; tile++) {
         if (masks.get(tile)) {
-          tensor = memoryAccess.getTensor();
-          address = traceEntry.getAddress();
-
           if (wide[tile][address] != tensor) {
             throw new InvalidTensorReadException(
                 tensor, tile, address, wide[tile][address], "wide");
