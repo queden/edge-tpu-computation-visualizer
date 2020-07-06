@@ -215,7 +215,7 @@ public class Validation {
 
       List<Boolean> masks = instruction.getMaskList();
       if (masks.isEmpty()){
-          throw new InvalidMaskException (traceEntry.getInstructionTag(), traceEntry.getAccessType());
+          throw new InvalidMaskException(traceEntry.getInstructionTag(), traceEntry.getAccessType());
       }
       
       // If the trace entry is a write, performs a write validation. If it a read, performs a read
@@ -291,7 +291,6 @@ public class Validation {
         }
           }
         }
-      
     if (traceEntry.getAccessType() == TraceEntry.AccessType.WRITE_WIDE) {
       for (int tile = 0; tile < NUM_TILES; tile++) {
         if (masks.get(tile)) {
