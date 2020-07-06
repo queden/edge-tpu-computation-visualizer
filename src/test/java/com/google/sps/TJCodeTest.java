@@ -1,4 +1,4 @@
-package com.google.sps.data;
+package com.google.sps;
 
 import static org.junit.Assert.*;
 
