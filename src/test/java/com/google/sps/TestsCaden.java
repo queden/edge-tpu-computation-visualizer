@@ -49,7 +49,7 @@ public final class TestsCaden extends Suite {
 
             expectedTensor = 2;
 
-            recievedTensor = Validation.getTraceTensor(traceAddress, traceAccessType);
+            recievedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
             
             assertEquals(expectedTensor, recievedTensor);
         }
@@ -65,7 +65,7 @@ public final class TestsCaden extends Suite {
 
             expectedTensor = 2;
 
-            recievedTensor = Validation.getTraceTensor(traceAddress, traceAccessType);
+            recievedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
             
             assertEquals(expectedTensor, recievedTensor);
         }
@@ -81,7 +81,7 @@ public final class TestsCaden extends Suite {
 
             expectedTensor = 2;
 
-            recievedTensor = Validation.getTraceTensor(traceAddress, traceAccessType);
+            recievedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
             
             assertEquals(expectedTensor, recievedTensor);
         }
@@ -97,7 +97,7 @@ public final class TestsCaden extends Suite {
 
             expectedTensor = 2;
 
-            recievedTensor = Validation.getTraceTensor(traceAddress, traceAccessType);
+            recievedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
             
             assertEquals(expectedTensor, recievedTensor);
         }
@@ -113,7 +113,7 @@ public final class TestsCaden extends Suite {
 
             expectedTensor = 2;
 
-            recievedTensor = Validation.getTraceTensor(traceAddress, traceAccessType);
+            recievedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
             
             assertEquals(expectedTensor, recievedTensor);
         }
@@ -129,7 +129,7 @@ public final class TestsCaden extends Suite {
 
             expectedTensor = 2;
 
-            recievedTensor = Validation.getTraceTensor(traceAddress, traceAccessType);
+            recievedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
             
             assertEquals(expectedTensor, recievedTensor);
         }
@@ -145,7 +145,7 @@ public final class TestsCaden extends Suite {
 
             expectedTensor = 2;
 
-            recievedTensor = Validation.getTraceTensor(traceAddress, traceAccessType);
+            recievedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
             
             assertEquals(expectedTensor, recievedTensor);
         }
@@ -161,7 +161,7 @@ public final class TestsCaden extends Suite {
 
             expectedTensor = 2;
 
-            recievedTensor = Validation.getTraceTensor(traceAddress, traceAccessType);
+            recievedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
             
             assertEquals(expectedTensor, recievedTensor);
         }
@@ -177,7 +177,7 @@ public final class TestsCaden extends Suite {
 
             expectedTensor = 2;
 
-            recievedTensor = Validation.getTraceTensor(traceAddress, traceAccessType);
+            recievedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
             
             assertEquals(expectedTensor, recievedTensor);
         }
@@ -194,7 +194,7 @@ public final class TestsCaden extends Suite {
 
             expectedTensor = 2;
 
-            recievedTensor = Validation.getTraceTensor(traceAddress, traceAccessType);
+            recievedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
             
             assertEquals(expectedTensor, recievedTensor);
         }
