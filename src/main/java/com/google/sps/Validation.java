@@ -214,7 +214,10 @@ public class Validation {
       }
 
       List<Boolean> masks = instruction.getMaskList();
-
+      if (masks.isEmpty()){
+          throw new InvalidMaskException(traceEntry.getInstructionTag(), traceEntry.getAccessType());
+      }
+      
       // If the trace entry is a write, performs a write validation. If it a read, performs a read
       // validation.
       if (accessType == TraceEntry.AccessType.WRITE_NARROW
@@ -279,7 +282,6 @@ public class Validation {
   public static void writeValidation(
       int[][] narrow, int[][] wide, List<Boolean> masks, int tensor, TraceEntry traceEntry) {
     int address = traceEntry.getAddress();
-
     if (traceEntry.getAccessType() == TraceEntry.AccessType.WRITE_NARROW) {
       // Iterate through the tiles.
       for (int tile = 0; tile < NUM_TILES; tile++) {
@@ -287,8 +289,8 @@ public class Validation {
           // Write the tensor name in our replicated memory.
           narrow[tile][address] = tensor;
         }
-      }
-    }
+          }
+        }
     if (traceEntry.getAccessType() == TraceEntry.AccessType.WRITE_WIDE) {
       for (int tile = 0; tile < NUM_TILES; tile++) {
         if (masks.get(tile)) {
