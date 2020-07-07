@@ -19,7 +19,9 @@ import com.google.sps.exceptions.*;
 import com.google.sps.proto.SimulationTraceProto;
 import com.google.sps.proto.SimulationTraceProto.Instruction;
 import com.google.sps.proto.SimulationTraceProto.TensorAllocation;
+import com.google.sps.proto.SimulationTraceProto.TraceEntry;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Arrays;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,7 +34,8 @@ import org.junit.runners.model.RunnerBuilder;
 @RunWith(ValidationTest.class)
 @Suite.SuiteClasses({
   ValidationTest.TestAllocationMemory.class,
-  ValidationTest.TestTensorToInstruction.class
+  ValidationTest.TestTensorToInstruction.class,
+  ValidationTest.TestWriteValidation.class
 })
 
 public final class ValidationTest extends Suite {
@@ -44,6 +47,8 @@ public final class ValidationTest extends Suite {
       SimulationTraceProto.Instruction.newBuilder();
   private static SimulationTraceProto.MemoryAccess.Builder memAccessBuilder =
       SimulationTraceProto.MemoryAccess.newBuilder();
+  private static SimulationTraceProto.TraceEntry.Builder traceBuilder =
+      SimulationTraceProto.TraceEntry.newBuilder();
   public ValidationTest(Class<?> klass, RunnerBuilder builder) throws InitializationError {
     super(klass, builder);
   }
@@ -187,7 +192,6 @@ public final class ValidationTest extends Suite {
     @Test
     public void testEmptyMemoryAccess() throws InvalidTensorAddressException {
       // Add no tensor field to an instruction with empty memory access //
-      System.out.println(testInstruction);
       testInstruction =
           new ArrayList(
               Arrays.asList(
@@ -433,6 +437,162 @@ public final class ValidationTest extends Suite {
       Validation.relateTensorsToInstructions(testNarrow, testWide, testInstruction);
 
       assertEquals(expected, testInstruction);
+    }
+  }
+  public static class TestWriteValidation {
+    private static int[][] testNarrow;
+    private static int[][] testWide;
+    private static int[][] expectedNarrow;
+    private static int[][] expectedWide;
+    private static int tensor;
+    public static final TraceEntry.AccessType NARROWWRITE = TraceEntry.AccessType.WRITE_NARROW;
+    public static final TraceEntry.AccessType WIDEWRITE = TraceEntry.AccessType.WRITE_WIDE;
+    private static TraceEntry testTrace;
+
+    @Before
+    public void setUp() {
+      testNarrow = new int[16][128 * 1024];
+      testWide = new int[16][256 * 1024];
+      expectedNarrow = new int[16][128 * 1024];
+      expectedWide = new int[16][256 * 1024];
+    }
+ 
+    @Test
+    public void testEmptyTrace() throws Exception {  
+      List<Boolean> mask = new ArrayList(); 
+      for (int i = 0; i < 16; i++){
+            mask.add(false);
+        } 
+      testTrace = traceBuilder.build();
+      Validation.writeValidation(testNarrow, testWide, mask, tensor, testTrace); 
+      assertEquals(expectedNarrow, testNarrow);
+    }
+    @Test
+    public void testNonEmptyTraceNarrow() throws Exception {
+        tensor = 7;
+        List<Boolean> mask = new ArrayList();
+        for (int i = 0; i < 16; i++){
+            mask.add(true);
+        }
+        testTrace =
+                traceBuilder.setAccessType(NARROWWRITE).setInstructionTag(0).setAddress(1000).build();
+                  
+        for (int i = 0; i < 16; i++){
+            expectedNarrow[i][1000] = 7;
+        }
+        Validation.writeValidation(testNarrow, testWide, mask, tensor, testTrace);
+        
+        assertArrayEquals(expectedNarrow, testNarrow);
+    }
+    @Test
+    public void testNonEmptyTraceWide() throws Exception {
+        tensor = 7;
+        List<Boolean> mask = new ArrayList();
+        for (int i = 0; i < 16; i++){
+            mask.add(true);
+        }
+        testTrace =
+                traceBuilder.setAccessType(WIDEWRITE).setInstructionTag(0).setAddress(1000).build();
+                  
+        for (int i = 0; i < 16; i++){
+            expectedWide[i][1000] = 7;
+        }
+        Validation.writeValidation(testNarrow, testWide, mask, tensor, testTrace);
+        assertArrayEquals(expectedWide, testWide);
+    }
+    @Test
+    public void testFalseMaskNarrow() throws Exception {
+        tensor = 7;
+        List<Boolean> mask = new ArrayList();
+        for (int i = 0; i < 16; i++){
+            mask.add(false);
+        }
+        testTrace =
+                traceBuilder.setAccessType(NARROWWRITE).setInstructionTag(0).setAddress(1200).build();
+                  
+        Validation.writeValidation(testNarrow, testWide, mask, tensor, testTrace);
+        assertArrayEquals(expectedNarrow, testNarrow);
+    }
+    @Test
+    public void testFalseMaskWide() throws Exception {
+        tensor = 7;
+        List<Boolean> mask = new ArrayList();
+        for (int i = 0; i < 16; i++){
+            mask.add(false);
+        }
+        testTrace =
+                traceBuilder.setAccessType(WIDEWRITE).setInstructionTag(0).setAddress(1200).build();
+        Validation.writeValidation(testNarrow, testWide, mask, tensor, testTrace);
+        assertArrayEquals(expectedWide, testWide);
+    }
+//different masks
+    @Test
+    public void testVariedMasksWide() throws Exception {
+        tensor = 7;
+        List<Boolean> mask = new ArrayList();
+        for (int i = 0; i < 8; i++){
+            mask.add(false);
+            mask.add(true);
+        }
+        testTrace =
+                traceBuilder.setAccessType(WIDEWRITE).setInstructionTag(0).setAddress(1200).build();
+        for (int i = 1; i < 16; i += 2){
+            expectedWide[i][1200] = 7;
+        }
+        Validation.writeValidation(testNarrow, testWide, mask, tensor, testTrace);
+        assertArrayEquals(expectedWide, testWide);
+    }
+//empty mask -- throw exception
+    @Test 
+    public void testEmptyMask() throws Exception {
+        tensor = 7;
+        List<Boolean> mask = new ArrayList();
+        for (int i = 0; i < 16; i++){
+            mask.add(false);
+        } 
+        testTrace =
+                traceBuilder.setAccessType(WIDEWRITE).setInstructionTag(0).setAddress(1200).build();
+       Validation.writeValidation(testNarrow, testWide, mask, tensor, testTrace);
+       assertArrayEquals(expectedWide, testWide);
+    }
+//no accesstype
+    @Test(expected = Exception.class)
+    public void testNoAccessType() throws Exception {
+        tensor = 7;
+        List<Boolean> mask = new ArrayList();
+        for (int i = 0; i < 16; i++){
+            mask.add(false);
+        } 
+        testTrace =
+                traceBuilder.clearAccessType().setInstructionTag(0).setAddress(1200).build();
+       Validation.writeValidation(testNarrow, testWide, mask, tensor, testTrace);
+       assertArrayEquals(expectedWide, testWide);
+    }
+//no write accesstype
+    @Test 
+    public void testNoWriteAccessType() throws Exception {
+        tensor = 7;
+        List<Boolean> mask = new ArrayList();
+        for (int i = 0; i < 16; i++){
+            mask.add(false);
+        } 
+        testTrace =
+                traceBuilder.setAccessType(TraceEntry.AccessType.READ_WIDE).setInstructionTag(0).setAddress(1200).build();
+       Validation.writeValidation(testNarrow, testWide, mask, tensor, testTrace);
+       assertArrayEquals(expectedWide, testWide);
+    }
+//no address
+    @Test(expected = Exception.class)
+    public void testNoAddress() throws Exception {
+        tensor = 7;
+        List<Boolean> mask = new ArrayList();
+        for (int i = 0; i < 16; i++){
+            mask.add(false);
+        } 
+        testTrace =
+                traceBuilder.setAccessType(WIDEWRITE).setInstructionTag(0).clearAddress().build();
+       Validation.writeValidation(testNarrow, testWide, mask, tensor, testTrace);
+       assertArrayEquals(expectedWide, testWide);
     }
   }
 }
