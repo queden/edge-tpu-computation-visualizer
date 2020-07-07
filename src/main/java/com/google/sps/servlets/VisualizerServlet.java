@@ -1,75 +1,60 @@
 package com.google.sps.servlets;
 
-import com.google.appengine.api.datastore.Blob;
-import com.google.appengine.api.datastore.DatastoreService;
-import com.google.appengine.api.datastore.DatastoreServiceFactory;
-import com.google.appengine.api.datastore.Entity;
-import com.google.appengine.api.datastore.PreparedQuery;
-import com.google.appengine.api.datastore.Query;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.protobuf.TextFormat;
+import com.google.sps.Validation;
+import com.google.sps.proto.SimulationTraceProto.*;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.FileInputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.Part;
+import javax.servlet.ServletException;
 
 @WebServlet("/visualizer")
+@MultipartConfig()
 public class VisualizerServlet extends HttpServlet {
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // Query query = new Query("Comment");
-
-        // DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-        // PreparedQuery results = datastore.prepare(query);
-
-        // Integer numComments = Integer.parseInt(request.getParameter("num-comments"));
-        // CommentObject.Builder commentBuilder;
-
-        // List<CommentObject> comments = new ArrayList<>();
-        // for (Entity entity : results.asIterable()) {
-
-        //     if (numComments > 0) {
-        //         long id = entity.getKey().getId();
-        //         CommentObject comment = 
-        //             CommentObject.parseFrom(((Blob) entity.getProperty("commentInfo")).getBytes());
-
-        //         comments.add(comment);
-        //         numComments--;
-        //     }
-        // }
-
         // GsonBuilder gsonBuilder = new GsonBuilder();
         // Gson gson = gsonBuilder.registerTypeAdapter(CommentObject.class, new CommentAdapter()).create();
 
         // response.setContentType("application/json;");
         // response.getWriter().println(gson.toJson(comments));
+        response.sendRedirect("/index.html");
     }
 
     @Override
-    public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {        
-        // String commentText = request.getParameter("comment-text");
-            
-        // if (commentText.length() > 0) {
-        //     long timestamp = System.currentTimeMillis();
-            
-        //     Entity newComment = new Entity("Comment");
+    public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {        
+        Part filePart = request.getPart("file-input");
+        InputStream fileInputStream = filePart.getInputStream();
 
-        //     CommentObject.Builder commentBuilder = CommentObject.newBuilder();
-        //     commentBuilder.setText(commentText);
-        //     commentBuilder.setTime(timestamp);
+        File saveFile = new File("uploaded-file/" + filePart.getSubmittedFileName());
+        // Files.copy(fileInputStream, saveFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
-        //     newComment.setProperty("commentInfo", new Blob(commentBuilder.build().toByteArray()));
+        // String fileURL = "http://localhost:8080/uploaded-file/" + filePart.getSubmittedFileName();
 
-        //     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-        //     datastore.put(newComment);
-        // }
+        InputStreamReader reader = new InputStreamReader(fileInputStream, "ASCII");
+        SimulationTrace.Builder builder = SimulationTrace.newBuilder();
+        TextFormat.merge(reader, builder);
 
-        // response.sendRedirect("/index.html");
+        SimulationTrace simulationTrace = builder.build();
+    
+        Validation validation = new Validation(simulationTrace);
+        System.out.println(simulationTrace.getNumTiles());
 
-
+        response.sendRedirect("/index.html");
     }
 }

@@ -8,6 +8,13 @@ import java.util.List;
 import java.util.Map;
 
 public class Validation {
+    private final SimulationTrace SIMULATION_TRACE;
+
+    public Validation(SimulationTrace simulationTrace) {
+        this.SIMULATION_TRACE = simulationTrace;
+
+        validate(SIMULATION_TRACE);
+    }
 
   // Sizes in KB of narrow and wide memory.
   public static final int NARROW_SIZE = 128;

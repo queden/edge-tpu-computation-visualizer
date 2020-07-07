@@ -33,10 +33,15 @@
             <!-- <input id="file-input" type="file" /> -->
 
             <!-- TJ Code -->
-            <form action="/visualizer" method="POST" onsubmit="sendFile()">
-                <input id="file-input" type="file"/>
-                <input type="submit"/>
+            <form action="/visualizer" method="POST" enctype="multipart/form-data">
+                <input name="file-input" type="file"/>
+                <input type="submit" value="Upload"/>
             </form>
+
+            <p> Uploaded File: </p>
+            <p id="uploaded-file"></p>
+            <h2> Run Simulation </h2>
+            <button onclick="runSimulation()">Run!</button>
         </div>
     </div>
 
