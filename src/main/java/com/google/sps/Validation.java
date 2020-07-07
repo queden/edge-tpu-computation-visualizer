@@ -284,13 +284,13 @@ public class Validation {
    */
   public static void writeValidation(
       int[][] narrow, int[][] wide, List<Boolean> masks, int tensor, TraceEntry traceEntry) throws Exception{
-    if (!traceEntry.hasAddress()) {
+    if (!traceEntry.hasAddress() || !traceEntry.hasAccessType()) {
         throw new Exception(
           "Trace with access type " 
             + traceEntry.getAccessType() 
             + " and instruction " 
             + traceEntry.getInstructionTag()
-            + " has no memory address associated with it.");
+            + " has no memory address or memory access associated with it.");
     }     
     int address = traceEntry.getAddress();
     if (traceEntry.getAccessType() == TraceEntry.AccessType.WRITE_NARROW) {
