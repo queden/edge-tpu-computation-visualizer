@@ -170,7 +170,7 @@ public class Validation {
       Map<Integer, Instruction> instructionTagtoInstruction,
       int[] wideAllocation,
       int[] narrowAllocation)
-      throws Exception {
+      throws Exception, InvalidTensorOperationException {
     // Arrays to simulate the narrow and wide memories for each tile.
     int[][] narrow = new int[NUM_TILES][NARROW_SIZE * 1024];
     int[][] wide = new int[NUM_TILES][WIDE_SIZE * 1024];
@@ -249,17 +249,36 @@ public class Validation {
    */
   public static int getTraceTensor(
       int traceAddress, TraceEntry.AccessType traceAccessType, Instruction instruction)
-      throws Exception {
-    MemoryAccess memoryAccess;
+      throws Exception, MemoryAccessException {
+    MemoryAccess memoryAccess = null;
+
+    // Tracks if the corresponding instruction has the trace entry's access type.
+    Boolean hasAccessType = true;
 
     if (traceAccessType == TraceEntry.AccessType.READ_NARROW) {
-      memoryAccess = instruction.getNarrowRead();
+      if (instruction.hasNarrowRead()) {
+        memoryAccess = instruction.getNarrowRead();
+      } else {
+        hasAccessType = false;
+      }
     } else if (traceAccessType == TraceEntry.AccessType.WRITE_NARROW) {
-      memoryAccess = instruction.getNarrowWrite();
+      if (instruction.hasNarrowWrite()) { 
+        memoryAccess = instruction.getNarrowWrite();
+      } else {
+        hasAccessType = false;
+      }
     } else if (traceAccessType == TraceEntry.AccessType.READ_WIDE) {
-      memoryAccess = instruction.getWideRead();
+      if (instruction.hasWideRead()) {
+        memoryAccess = instruction.getWideRead();
+      } else {
+        hasAccessType = false;
+      }
     } else if (traceAccessType == TraceEntry.AccessType.WRITE_WIDE) {
-      memoryAccess = instruction.getWideWrite();
+      if (instruction.hasWideWrite()) {
+        memoryAccess = instruction.getWideWrite();
+      } else {
+        hasAccessType = false;
+      }
     } else {
       throw new Exception(
           "Trace entry at address " 
@@ -269,6 +288,14 @@ public class Validation {
             + ".");
     }
 
+    // Throws MemoryAccessException if instruction does not have the expected
+    // access type.
+    if (!hasAccessType) {
+      throw new MemoryAccessException(traceAccessType, instruction.getTag());
+    }
+
+    // Gets the corresponding tensor. Throws an exception if there is no tensor
+    // associated with the correct access type.
     int tensor = -1;
     if (memoryAccess.hasTensor()){
       tensor = memoryAccess.getTensor();  
