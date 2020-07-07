@@ -831,6 +831,11 @@ public final class TJCodeTest extends Suite {
             .setAddress(564)
             .build();
 
+        private final TraceEntry TRACE_FOUR = TraceEntry.newBuilder()
+            .setInstructionTag(4)
+            .setAddress(21)
+            .build();
+
         @Before
         public void setUp() {
             narrow = new int[16][128 * 1024];
