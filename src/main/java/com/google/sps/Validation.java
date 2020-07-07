@@ -174,7 +174,10 @@ public class Validation {
     // Arrays to simulate the narrow and wide memories for each tile.
     int[][] narrow = new int[NUM_TILES][NARROW_SIZE * 1024];
     int[][] wide = new int[NUM_TILES][WIDE_SIZE * 1024];
-
+    if (traceEntries.isEmpty()) {
+        throw new Exception(
+            "No trace entry to be validated "); 
+      }
     // Iterates over each trace entry, ensures that it is operating on the correct tensor and
     // validates based on if it is a write or a read.
     for (TraceEntry traceEntry : traceEntries) {
@@ -188,7 +191,14 @@ public class Validation {
       }
 
       TraceEntry.AccessType accessType = traceEntry.getAccessType();
-
+      if (!traceEntry.hasAddress()) {
+        throw new Exception(
+          "Trace with access type " 
+            + traceEntry.getAccessType() 
+            + " and instruction " 
+            + traceEntry.getInstructionTag()
+            + " has no memory address associated with it.");
+       }
       int address = traceEntry.getAddress();
       int traceTensor = -1;
       try {
@@ -280,7 +290,7 @@ public class Validation {
    * address in the memory arrays.
    */
   public static void writeValidation(
-      int[][] narrow, int[][] wide, List<Boolean> masks, int tensor, TraceEntry traceEntry) {
+      int[][] narrow, int[][] wide, List<Boolean> masks, int tensor, TraceEntry traceEntry) {  
     int address = traceEntry.getAddress();
     if (traceEntry.getAccessType() == TraceEntry.AccessType.WRITE_NARROW) {
       // Iterate through the tiles.
