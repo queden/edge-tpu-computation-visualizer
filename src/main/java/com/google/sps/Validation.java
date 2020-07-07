@@ -174,7 +174,10 @@ public class Validation {
     // Arrays to simulate the narrow and wide memories for each tile.
     int[][] narrow = new int[NUM_TILES][NARROW_SIZE * 1024];
     int[][] wide = new int[NUM_TILES][WIDE_SIZE * 1024];
-
+    if (traceEntries.isEmpty()) {
+        throw new Exception(
+            "No trace entry to be validated "); 
+      }
     // Iterates over each trace entry, ensures that it is operating on the correct tensor and
     // validates based on if it is a write or a read.
     for (TraceEntry traceEntry : traceEntries) {
