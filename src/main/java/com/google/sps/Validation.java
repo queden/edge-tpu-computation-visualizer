@@ -3,6 +3,7 @@ package com.google.sps;
 import com.google.sps.exceptions.*;
 import com.google.sps.proto.SimulationTraceProto.*;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +32,8 @@ public class Validation {
 
   /** Given a Simulation Trace, validates the trace and outputs any errors found */
   public static void validate(SimulationTrace simulationTrace) {
-    List<Instruction> instructions = simulationTrace.getInstructionList();
+    ArrayList<Instruction> instructions = new ArrayList<Instruction>();
+    instructions.addAll(simulationTrace.getInstructionList());
 
     // TODO: May need to catch ArrayIndexOutOfBoundsException
     int[] narrowAllocation =
