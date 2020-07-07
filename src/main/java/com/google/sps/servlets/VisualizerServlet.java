@@ -8,8 +8,6 @@ import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.sps.data.CommentAdapter;
-import com.google.sps.data.Comments.CommentObject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,8 +16,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-@WebServlet("/data")
-public class DataServlet extends HttpServlet {
+@WebServlet("/visualizer")
+public class VisualizerServlet extends HttpServlet {
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -72,6 +70,6 @@ public class DataServlet extends HttpServlet {
 
         // response.sendRedirect("/index.html");
 
-        
+
     }
 }
