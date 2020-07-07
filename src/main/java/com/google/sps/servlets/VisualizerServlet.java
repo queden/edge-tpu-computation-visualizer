@@ -41,10 +41,15 @@ public class VisualizerServlet extends HttpServlet {
         Part filePart = request.getPart("file-input");
         InputStream fileInputStream = filePart.getInputStream();
 
-        File saveFile = new File("uploaded-file/" + filePart.getSubmittedFileName());
-        // Files.copy(fileInputStream, saveFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        File saveFile = new File("capstone/step-capstone/src/main/webapp/uploaded-file/" + filePart.getSubmittedFileName());
+        
+        // if (Files.exists(saveFile.toPath())) {
+        //     Files.copy(fileInputStream, saveFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        // } else {
+        //     Files.copy(fileInputStream, saveFile.toPath(), StandardCopyOption.ATOMIC_MOVE);
+        // }
 
-        // String fileURL = "http://localhost:8080/uploaded-file/" + filePart.getSubmittedFileName();
+        String fileURL = "http://localhost:8080/uploaded-file/" + filePart.getSubmittedFileName();
 
         InputStreamReader reader = new InputStreamReader(fileInputStream, "ASCII");
         SimulationTrace.Builder builder = SimulationTrace.newBuilder();
@@ -52,7 +57,7 @@ public class VisualizerServlet extends HttpServlet {
 
         SimulationTrace simulationTrace = builder.build();
     
-        Validation validation = new Validation(simulationTrace);
+        // Validation validation = new Validation(simulationTrace);
         System.out.println(simulationTrace.getNumTiles());
 
         response.sendRedirect("/index.html");
