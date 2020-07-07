@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Hashtable;
 import java.util.List;
+import com.google.sps.exceptions.*;
 import com.google.sps.proto.SimulationTraceProto.*;
 import static org.junit.Assert.*;
 import org.junit.Before;
@@ -40,7 +41,7 @@ public final class TestsCaden extends Suite {
 
         // Trace is narrow read, instruction has narrow read, confirm returned tensor
         @Test
-        public void testValidNarrowRead() {
+        public void testValidNarrowRead() throws Exception, MemoryAccessException {
             traceAccessType = TraceEntry.AccessType.READ_NARROW;
 
             instructionBuilder
@@ -56,7 +57,7 @@ public final class TestsCaden extends Suite {
 
         // Trace is narrow write, instruction has narrow write, confirm returned tensor
         @Test
-        public void testValidNarrowWrite() {
+        public void testValidNarrowWrite() throws Exception, MemoryAccessException {
             traceAccessType = TraceEntry.AccessType.WRITE_NARROW;
 
             instructionBuilder
@@ -72,7 +73,7 @@ public final class TestsCaden extends Suite {
 
         // Trace is wide read, instruction has wide read, confirm returned tensor
         @Test
-        public void testValidWideRead() {
+        public void testValidWideRead() throws Exception, MemoryAccessException {
             traceAccessType = TraceEntry.AccessType.READ_WIDE;
 
             instructionBuilder
@@ -88,7 +89,7 @@ public final class TestsCaden extends Suite {
 
         // Trace is wide write, instruction has wide write, confirm returned tensor
         @Test
-        public void testValidWideWrite() {
+        public void testValidWideWrite() throws Exception, MemoryAccessException {
             traceAccessType = TraceEntry.AccessType.WRITE_WIDE;
 
             instructionBuilder
@@ -104,7 +105,7 @@ public final class TestsCaden extends Suite {
 
         // Trace is narrow read, instruction does not have narrow read, catch MAE
         @Test(expected = MemoryAccessException.class)
-        public void testInvalidNarrowRead() {
+        public void testInvalidNarrowRead() throws Exception, MemoryAccessException {
             traceAccessType = TraceEntry.AccessType.READ_NARROW;
 
             instructionBuilder
@@ -120,7 +121,7 @@ public final class TestsCaden extends Suite {
 
         // Trace is narrow write, instruction does not have narrow write, catch MAE
         @Test(expected = MemoryAccessException.class)
-        public void testInvalidNarrowWrite() {
+        public void testInvalidNarrowWrite() throws Exception, MemoryAccessException {
             traceAccessType = TraceEntry.AccessType.WRITE_NARROW;
 
             instructionBuilder
@@ -136,7 +137,7 @@ public final class TestsCaden extends Suite {
 
         // Trace is wide read, instruction does not have wide read, catch MAE
         @Test(expected = MemoryAccessException.class)
-        public void testInvalidWideRead() {
+        public void testInvalidWideRead() throws Exception, MemoryAccessException {
             traceAccessType = TraceEntry.AccessType.READ_WIDE;
 
             instructionBuilder
@@ -152,7 +153,7 @@ public final class TestsCaden extends Suite {
 
         // Trace is wide write, instruction does not have wide write, catch MAE
         @Test(expected = MemoryAccessException.class)
-        public void testInvalidWideWrite() {
+        public void testInvalidWideWrite() throws Exception, MemoryAccessException {
             traceAccessType = TraceEntry.AccessType.WRITE_WIDE;
 
             instructionBuilder
@@ -168,7 +169,7 @@ public final class TestsCaden extends Suite {
 
         // Trace has null access type
         @Test(expected = Exception.class)
-        public void testNullAccessTraceEntry() {
+        public void testNullAccessTraceEntry() throws Exception, MemoryAccessException {
             traceAccessType = null;
 
             instructionBuilder
@@ -185,7 +186,7 @@ public final class TestsCaden extends Suite {
         // Instruction has the correct access type, but that MemoryAccess does not have 
         // a tensor associated with it.
         @Test(expected = Exception.class)
-        public void testValidMemoryAccessWithoutCorrespondingTraceEntry() {
+        public void testValidMemoryAccessWithoutCorrespondingTraceEntry() throws Exception, MemoryAccessException {
             traceAccessType = TraceEntry.AccessType.READ_NARROW;
 
             instructionBuilder
