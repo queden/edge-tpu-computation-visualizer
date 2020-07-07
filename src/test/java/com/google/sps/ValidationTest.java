@@ -458,7 +458,7 @@ public final class ValidationTest extends Suite {
     }
  
     @Test
-    public void testEmptyTrace() throws Exception {  
+    public void testEmptyTrace() {  
       List<Boolean> mask = new ArrayList(); 
       for (int i = 0; i < 16; i++){
             mask.add(false);
@@ -468,7 +468,7 @@ public final class ValidationTest extends Suite {
       assertEquals(expectedNarrow, testNarrow);
     }
     @Test
-    public void testNonEmptyTraceNarrow() throws Exception {
+    public void testNonEmptyTraceNarrow() {
         tensor = 7;
         List<Boolean> mask = new ArrayList();
         for (int i = 0; i < 16; i++){
@@ -485,7 +485,7 @@ public final class ValidationTest extends Suite {
         assertArrayEquals(expectedNarrow, testNarrow);
     }
     @Test
-    public void testNonEmptyTraceWide() throws Exception {
+    public void testNonEmptyTraceWide() {
         tensor = 7;
         List<Boolean> mask = new ArrayList();
         for (int i = 0; i < 16; i++){
@@ -501,7 +501,7 @@ public final class ValidationTest extends Suite {
         assertArrayEquals(expectedWide, testWide);
     }
     @Test
-    public void testFalseMaskNarrow() throws Exception {
+    public void testFalseMaskNarrow() {
         tensor = 7;
         List<Boolean> mask = new ArrayList();
         for (int i = 0; i < 16; i++){
@@ -514,7 +514,7 @@ public final class ValidationTest extends Suite {
         assertArrayEquals(expectedNarrow, testNarrow);
     }
     @Test
-    public void testFalseMaskWide() throws Exception {
+    public void testFalseMaskWide() {
         tensor = 7;
         List<Boolean> mask = new ArrayList();
         for (int i = 0; i < 16; i++){
@@ -527,7 +527,7 @@ public final class ValidationTest extends Suite {
     }
 //different masks
     @Test
-    public void testVariedMasksWide() throws Exception {
+    public void testVariedMasksWide() {
         tensor = 7;
         List<Boolean> mask = new ArrayList();
         for (int i = 0; i < 8; i++){
@@ -542,35 +542,10 @@ public final class ValidationTest extends Suite {
         Validation.writeValidation(testNarrow, testWide, mask, tensor, testTrace);
         assertArrayEquals(expectedWide, testWide);
     }
-//empty mask -- throw exception
-    @Test 
-    public void testEmptyMask() throws Exception {
-        tensor = 7;
-        List<Boolean> mask = new ArrayList();
-        for (int i = 0; i < 16; i++){
-            mask.add(false);
-        } 
-        testTrace =
-                traceBuilder.setAccessType(WIDEWRITE).setInstructionTag(0).setAddress(1200).build();
-       Validation.writeValidation(testNarrow, testWide, mask, tensor, testTrace);
-       assertArrayEquals(expectedWide, testWide);
-    }
-//no accesstype
-    @Test(expected = Exception.class)
-    public void testNoAccessType() throws Exception {
-        tensor = 7;
-        List<Boolean> mask = new ArrayList();
-        for (int i = 0; i < 16; i++){
-            mask.add(false);
-        } 
-        testTrace =
-                traceBuilder.clearAccessType().setInstructionTag(0).setAddress(1200).build();
-       Validation.writeValidation(testNarrow, testWide, mask, tensor, testTrace);
-       assertArrayEquals(expectedWide, testWide);
-    }
+
 //no write accesstype
     @Test 
-    public void testNoWriteAccessType() throws Exception {
+    public void testNoWriteAccessType() {
         tensor = 7;
         List<Boolean> mask = new ArrayList();
         for (int i = 0; i < 16; i++){
@@ -578,19 +553,6 @@ public final class ValidationTest extends Suite {
         } 
         testTrace =
                 traceBuilder.setAccessType(TraceEntry.AccessType.READ_WIDE).setInstructionTag(0).setAddress(1200).build();
-       Validation.writeValidation(testNarrow, testWide, mask, tensor, testTrace);
-       assertArrayEquals(expectedWide, testWide);
-    }
-//no address
-    @Test(expected = Exception.class)
-    public void testNoAddress() throws Exception {
-        tensor = 7;
-        List<Boolean> mask = new ArrayList();
-        for (int i = 0; i < 16; i++){
-            mask.add(false);
-        } 
-        testTrace =
-                traceBuilder.setAccessType(WIDEWRITE).setInstructionTag(0).clearAddress().build();
        Validation.writeValidation(testNarrow, testWide, mask, tensor, testTrace);
        assertArrayEquals(expectedWide, testWide);
     }
