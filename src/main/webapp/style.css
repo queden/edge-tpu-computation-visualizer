@@ -1,0 +1,47 @@
+
+/* This is a style sheet for the components of the html page. */
+ 
+#nav-bar {
+    background-color: #000100;
+    width: 100vw;
+    height: 10vh;
+    max-width:100%;
+}
+ 
+#heading-content {
+  width: 100vw;
+  height: 15vh;
+  max-width:100%;
+  max-height:100%;
+  background-color: #FFFFFF;
+  justify-content: center;
+  align-items: center; 
+}
+ 
+#heading {
+  font-family: Poppins;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 64px;
+  text-align: center;
+  margin: 20px 0;
+  padding: 10px;
+}
+
+#body-content {
+  width: 100vw;
+  height: 75vh;
+  max-width:100%;
+  max-height:100%;
+}
+#body-text {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: normal;
+  font-size: 30px;
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  -ms-transform: translateY(-50%);
+  transform: translateY(-50%); 
+}
