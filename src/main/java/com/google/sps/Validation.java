@@ -51,6 +51,22 @@ public class Validation {
 
     Map<Integer, Instruction> instructionTagtoInstruction =
         relateIntructionTagtoInstructionTable(instructions);
+
+    List<TraceEntry> traceEntries = simulationTrace.getTraceEntryList();
+
+    try {
+      validateTraceEntries(
+          traceEntries, 
+          instructionTagtoInstruction, 
+          wideAllocation, 
+          narrowAllocation);
+    } catch (InvalidTensorOperationException e) {
+      System.out.println(e.getMessage());
+    } catch (Exception e) {
+      System.out.println(e.getMessage());
+    }
+    
+    System.out.println("Simulation complete");
   }
 
   /**

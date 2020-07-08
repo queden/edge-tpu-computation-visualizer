@@ -57,7 +57,7 @@ public class VisualizerServlet extends HttpServlet {
 
         SimulationTrace simulationTrace = builder.build();
     
-        // Validation validation = new Validation(simulationTrace);
+        Validation validation = new Validation(simulationTrace);
         System.out.println(simulationTrace.getNumTiles());
 
         response.sendRedirect("/index.html");
