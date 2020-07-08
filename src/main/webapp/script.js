@@ -16,40 +16,9 @@ var ele = document.getElementById('container');
 if(ele) {
     ele.style.visibility = "visible";
  }  
-var heatmapData =  [
-        { 'Region': '1', 'Tile 0': 93, 'Tile 1': 45, 'Tile 2': 101, 'Tile 3': 112, 'Tile 4': 103, 'Tile 5': 121, 'Tile 6': 121, 'Tile 7': 121, 'Tile 8': 121, 'Tile 9': 93, 'Tile 10': 101, 'Tile 11': 112, 'Tile 12': 103, 'Tile 13': 121, 'Tile 14': 121, 'Tile 15': 121},
-        { 'Region': '2', 'Tile 0': 100, 'Tile 1': 14, 'Tile 2': 101, 'Tile 3': 112, 'Tile 4': 103, 'Tile 5': 121, 'Tile 6': 121, 'Tile 7': 121, 'Tile 8': 121, 'Tile 9': 93, 'Tile 10': 101, 'Tile 11': 112, 'Tile 12': 103, 'Tile 13': 121, 'Tile 14': 121, 'Tile 15': 121},
-        { 'Region': '3', 'Tile 0': 67, 'Tile 1': 45, 'Tile 2': 101, 'Tile 3': 112, 'Tile 4': 103, 'Tile 5': 121, 'Tile 6': 121, 'Tile 7': 121, 'Tile 8': 121, 'Tile 9': 93, 'Tile 10': 101, 'Tile 11': 112, 'Tile 12': 103, 'Tile 13': 121, 'Tile 14': 121, 'Tile 15': 121},
-        { 'Region': '4', 'Tile 0': 32, 'Tile 1': 98, 'Tile 2': 101, 'Tile 3': 112, 'Tile 4': 103, 'Tile 5': 121, 'Tile 6': 121, 'Tile 7': 121, 'Tile 8': 121, 'Tile 9': 93, 'Tile 10': 101, 'Tile 11': 112, 'Tile 12': 103, 'Tile 13': 121, 'Tile 14': 121, 'Tile 15': 121},
-        { 'Region': '5', 'Tile 0': 32, 'Tile 1': 44, 'Tile 2': 101, 'Tile 3': 112, 'Tile 4': 103, 'Tile 5': 121, 'Tile 6': 121, 'Tile 7': 121, 'Tile 8': 121, 'Tile 9': 93, 'Tile 10': 101, 'Tile 11': 112, 'Tile 12': 103, 'Tile 13': 121, 'Tile 14': 121, 'Tile 15': 121},
-        { 'Region': '6', 'Tile 0': 53, 'Tile 1': 65, 'Tile 2': 101, 'Tile 3': 112, 'Tile 4': 103, 'Tile 5': 121, 'Tile 6': 121, 'Tile 7': 121, 'Tile 8': 121, 'Tile 9': 93, 'Tile 10': 101, 'Tile 11': 112, 'Tile 12': 103, 'Tile 13': 121, 'Tile 14': 121, 'Tile 15': 121},
-        { 'Region': '7', 'Tile 0': 23, 'Tile 1': 25, 'Tile 2': 101, 'Tile 3': 112, 'Tile 4': 103, 'Tile 5': 121, 'Tile 6': 121, 'Tile 7': 121, 'Tile 8': 121, 'Tile 9': 93, 'Tile 10': 101, 'Tile 11': 112, 'Tile 12': 103, 'Tile 13': 121, 'Tile 14': 121, 'Tile 15': 121},
-        { 'Region': '8', 'Tile 0': 23, 'Tile 1': 85, 'Tile 2': 101, 'Tile 3': 112, 'Tile 4': 103, 'Tile 5': 121, 'Tile 6': 121, 'Tile 7': 121, 'Tile 8': 121, 'Tile 9': 93, 'Tile 10': 101, 'Tile 11': 112, 'Tile 12': 103, 'Tile 13': 121, 'Tile 14': 121, 'Tile 15': 121},
-        { 'Region': '9', 'Tile 0': 84, 'Tile 1': 69, 'Tile 2': 101, 'Tile 3': 112, 'Tile 4': 103, 'Tile 5': 121, 'Tile 6': 121, 'Tile 7': 121, 'Tile 8': 121, 'Tile 9': 93, 'Tile 10': 101, 'Tile 11': 112, 'Tile 12': 103, 'Tile 13': 121, 'Tile 14': 121, 'Tile 15': 121},
-        { 'Region': '10', 'Tile 0': 88, 'Tile 1': 36, 'Tile 2': 101, 'Tile 3': 112, 'Tile 4': 103, 'Tile 5': 121, 'Tile 6': 121, 'Tile 7': 121, 'Tile 8': 121, 'Tile 9': 93, 'Tile 10': 101, 'Tile 11': 112, 'Tile 12': 103, 'Tile 13': 121, 'Tile 14': 121, 'Tile 15': 121},
-        { 'Region': '11', 'Tile 0': 58, 'Tile 1': 62, 'Tile 2': 101, 'Tile 3': 112, 'Tile 4': 103, 'Tile 5': 121, 'Tile 6': 121, 'Tile 7': 121, 'Tile 8': 121, 'Tile 9': 93, 'Tile 10': 101, 'Tile 11': 112, 'Tile 12': 103, 'Tile 13': 121, 'Tile 14': 121, 'Tile 15': 121},
-        { 'Region': '12', 'Tile 0': 87, 'Tile 1': 53, 'Tile 2': 101, 'Tile 3': 112, 'Tile 4': 103, 'Tile 5': 121, 'Tile 6': 121, 'Tile 7': 121, 'Tile 8': 121, 'Tile 9': 93, 'Tile 10': 101, 'Tile 11': 112, 'Tile 12': 103, 'Tile 13': 121, 'Tile 14': 121, 'Tile 15': 121},
-        { 'Region': '13', 'Tile 0': 78, 'Tile 1': 24, 'Tile 2': 101, 'Tile 3': 112, 'Tile 4': 103, 'Tile 5': 121, 'Tile 6': 121, 'Tile 7': 121, 'Tile 8': 121, 'Tile 9': 93, 'Tile 10': 101, 'Tile 11': 112, 'Tile 12': 103, 'Tile 13': 121, 'Tile 14': 121, 'Tile 15': 121},
-        { 'Region': '14', 'Tile 0': 48, 'Tile 1': 15, 'Tile 2': 101, 'Tile 3': 112, 'Tile 4': 103, 'Tile 5': 121, 'Tile 6': 121, 'Tile 7': 121, 'Tile 8': 121, 'Tile 9': 93, 'Tile 10': 101, 'Tile 11': 112, 'Tile 12': 103, 'Tile 13': 121, 'Tile 14': 121, 'Tile 15': 121},
-        { 'Region': '15', 'Tile 0': 84, 'Tile 1': 57, 'Tile 2': 101, 'Tile 3': 112, 'Tile 4': 103, 'Tile 5': 121, 'Tile 6': 121, 'Tile 7': 121, 'Tile 8': 121, 'Tile 9': 93, 'Tile 10': 101, 'Tile 11': 112, 'Tile 12': 103, 'Tile 13': 121, 'Tile 14': 121, 'Tile 15': 121},
-        { 'Region': '16', 'Tile 0': 78, 'Tile 1': 48, 'Tile 2': 101, 'Tile 3': 112, 'Tile 4': 103, 'Tile 5': 121, 'Tile 6': 121, 'Tile 7': 121, 'Tile 8': 121, 'Tile 9': 93, 'Tile 10': 101, 'Tile 11': 112, 'Tile 12': 103, 'Tile 13': 121, 'Tile 14': 121, 'Tile 15': 121},
-        { 'Region': '17', 'Tile 0': 84, 'Tile 1': 86, 'Tile 2': 101, 'Tile 3': 112, 'Tile 4': 103, 'Tile 5': 121, 'Tile 6': 121, 'Tile 7': 121, 'Tile 8': 121, 'Tile 9': 93, 'Tile 10': 101, 'Tile 11': 112, 'Tile 12': 103, 'Tile 13': 121, 'Tile 14': 121, 'Tile 15': 121},
-        { 'Region': '18', 'Tile 0': 8, 'Tile 1': 59, 'Tile 2': 101, 'Tile 3': 112, 'Tile 4': 103, 'Tile 5': 121, 'Tile 6': 121, 'Tile 7': 121, 'Tile 8': 121, 'Tile 9': 93, 'Tile 10': 101, 'Tile 11': 112, 'Tile 12': 103, 'Tile 13': 121, 'Tile 14': 121, 'Tile 15': 121},
-        { 'Region': '19', 'Tile 0': 78, 'Tile 1': 91, 'Tile 2': 101, 'Tile 3': 112, 'Tile 4': 103, 'Tile 5': 121, 'Tile 6': 121, 'Tile 7': 121, 'Tile 8': 121, 'Tile 9': 93, 'Tile 10': 101, 'Tile 11': 112, 'Tile 12': 103, 'Tile 13': 121, 'Tile 14': 121, 'Tile 15': 121},
-        { 'Region': '20', 'Tile 0': 15, 'Tile 1': 27, 'Tile 2': 101, 'Tile 3': 112, 'Tile 4': 103, 'Tile 5': 121, 'Tile 6': 121, 'Tile 7': 121, 'Tile 8': 121, 'Tile 9': 93, 'Tile 10': 101, 'Tile 11': 112, 'Tile 12': 103, 'Tile 13': 121, 'Tile 14': 121, 'Tile 15': 121},
-        { 'Region': '21', 'Tile 0': 94, 'Tile 1': 28, 'Tile 2': 101, 'Tile 3': 112, 'Tile 4': 103, 'Tile 5': 121, 'Tile 6': 121, 'Tile 7': 121, 'Tile 8': 121, 'Tile 9': 93, 'Tile 10': 101, 'Tile 11': 112, 'Tile 12': 103, 'Tile 13': 121, 'Tile 14': 121, 'Tile 15': 121},
-        { 'Region': '22', 'Tile 0': 97, 'Tile 1': 39, 'Tile 2': 101, 'Tile 3': 112, 'Tile 4': 103, 'Tile 5': 121, 'Tile 6': 121, 'Tile 7': 121, 'Tile 8': 121, 'Tile 9': 93, 'Tile 10': 101, 'Tile 11': 112, 'Tile 12': 103, 'Tile 13': 121, 'Tile 14': 121, 'Tile 15': 121},
-        { 'Region': '23', 'Tile 0': 98, 'Tile 1': 86, 'Tile 2': 101, 'Tile 3': 112, 'Tile 4': 103, 'Tile 5': 121, 'Tile 6': 121, 'Tile 7': 121, 'Tile 8': 121, 'Tile 9': 93, 'Tile 10': 101, 'Tile 11': 112, 'Tile 12': 103, 'Tile 13': 121, 'Tile 14': 121, 'Tile 15': 121},
-        { 'Region': '24', 'Tile 0': 54, 'Tile 1': 45, 'Tile 2': 101, 'Tile 3': 112, 'Tile 4': 103, 'Tile 5': 121, 'Tile 6': 121, 'Tile 7': 121, 'Tile 8': 121, 'Tile 9': 93, 'Tile 10': 101, 'Tile 11': 112, 'Tile 12': 103, 'Tile 13': 121, 'Tile 14': 121, 'Tile 15': 121},
-        { 'Region': '25', 'Tile 0': 15, 'Tile 1': 19, 'Tile 2': 101, 'Tile 3': 112, 'Tile 4': 103, 'Tile 5': 121, 'Tile 6': 121, 'Tile 7': 121, 'Tile 8': 121, 'Tile 9': 93, 'Tile 10': 101, 'Tile 11': 112, 'Tile 12': 103, 'Tile 13': 121, 'Tile 14': 121, 'Tile 15': 121},
-        { 'Region': '26', 'Tile 0': 54, 'Tile 1': 86, 'Tile 2': 101, 'Tile 3': 112, 'Tile 4': 103, 'Tile 5': 121, 'Tile 6': 121, 'Tile 7': 121, 'Tile 8': 121, 'Tile 9': 93, 'Tile 10': 101, 'Tile 11': 112, 'Tile 12': 103, 'Tile 13': 121, 'Tile 14': 121, 'Tile 15': 121},
-        { 'Region': '27', 'Tile 0': 94, 'Tile 1': 48, 'Tile 2': 101, 'Tile 3': 112, 'Tile 4': 103, 'Tile 5': 121, 'Tile 6': 121, 'Tile 7': 121, 'Tile 8': 121, 'Tile 9': 93, 'Tile 10': 101, 'Tile 11': 112, 'Tile 12': 103, 'Tile 13': 121, 'Tile 14': 121, 'Tile 15': 121},
-        { 'Region': '28', 'Tile 0': 59, 'Tile 1': 25, 'Tile 2': 101, 'Tile 3': 112, 'Tile 4': 103, 'Tile 5': 121, 'Tile 6': 121, 'Tile 7': 121, 'Tile 8': 121, 'Tile 9': 93, 'Tile 10': 101, 'Tile 11': 112, 'Tile 12': 103, 'Tile 13': 121, 'Tile 14': 121, 'Tile 15': 121},
-        { 'Region': '29', 'Tile 0': 84, 'Tile 1': 14, 'Tile 2': 101, 'Tile 3': 112, 'Tile 4': 103, 'Tile 5': 121, 'Tile 6': 121, 'Tile 7': 121, 'Tile 8': 121, 'Tile 9': 93, 'Tile 10': 101, 'Tile 11': 112, 'Tile 12': 103, 'Tile 13': 121, 'Tile 14': 121, 'Tile 15': 121},
-        { 'Region': '30', 'Tile 0': 69, 'Tile 1': 86, 'Tile 2': 101, 'Tile 3': 112, 'Tile 4': 103, 'Tile 5': 121, 'Tile 6': 121, 'Tile 7': 121, 'Tile 8': 121, 'Tile 9': 93, 'Tile 10': 101, 'Tile 11': 112, 'Tile 12': 103, 'Tile 13': 121, 'Tile 14': 121, 'Tile 15': 121},
-        { 'Region': '31', 'Tile 0': 14, 'Tile 1': 95, 'Tile 2': 101, 'Tile 3': 112, 'Tile 4': 103, 'Tile 5': 121, 'Tile 6': 121, 'Tile 7': 121, 'Tile 8': 121, 'Tile 9': 93, 'Tile 10': 101, 'Tile 11': 112, 'Tile 12': 103, 'Tile 13': 121, 'Tile 14': 121, 'Tile 15': 121},
-        { 'Region': '32', 'Tile 0': 78, 'Tile 1': 48, 'Tile 2': 101, 'Tile 3': 112, 'Tile 4': 103, 'Tile 5': 121, 'Tile 6': 121, 'Tile 7': 121, 'Tile 8': 121, 'Tile 9': 93, 'Tile 10': 101, 'Tile 11': 112, 'Tile 12': 103, 'Tile 13': 121, 'Tile 14': 121, 'Tile 15': 121}
-        ];
+fetch("heatmapData.json")
+  .then(response => response.json())
+  .then((heatmapData) => {
 
 var heatmap = new ej.heatmap.HeatMap({
     titleSettings: {
@@ -100,3 +69,4 @@ var heatmap = new ej.heatmap.HeatMap({
 });
         
 heatmap.appendTo('#element');
+});
