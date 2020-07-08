@@ -1,5 +1,11 @@
 package com.google.sps.servlets;
 
+import com.google.appengine.api.datastore.Blob;
+import com.google.appengine.api.datastore.DatastoreService;
+import com.google.appengine.api.datastore.DatastoreServiceFactory;
+import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.PreparedQuery;
+import com.google.appengine.api.datastore.Query;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.protobuf.TextFormat;
@@ -38,27 +44,6 @@ public class ReportServlet extends HttpServlet {
 
     @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {        
-        Part filePart = request.getPart("file-input");
-        InputStream fileInputStream = filePart.getInputStream();
-
-        File saveFile = new File("capstone/step-capstone/src/main/webapp/uploaded-file/" + filePart.getSubmittedFileName());
-        
-        if (Files.exists(saveFile.toPath())) {
-            Files.copy(fileInputStream, saveFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        } else {
-            Files.copy(fileInputStream, saveFile.toPath(), StandardCopyOption.ATOMIC_MOVE);
-        }
-
-        String fileURL = "http://localhost:8080/uploaded-file/" + filePart.getSubmittedFileName();
-
-        InputStreamReader reader = new InputStreamReader(fileInputStream, "ASCII");
-        SimulationTrace.Builder builder = SimulationTrace.newBuilder();
-        TextFormat.merge(reader, builder);
-
-        SimulationTrace simulationTrace = builder.build();
-    
-        Validation validation = new Validation(simulationTrace);
-        System.out.println(simulationTrace.getNumTiles());
 
         response.sendRedirect("/report.html");
     }

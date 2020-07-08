@@ -1,5 +1,13 @@
 package com.google.sps.servlets;
 
+import com.google.appengine.api.datastore.Blob;
+import com.google.appengine.api.datastore.DatastoreService;
+import com.google.appengine.api.datastore.DatastoreServiceFactory;
+import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.PreparedQuery;
+import com.google.appengine.api.datastore.Query;
+import com.google.appengine.api.datastore.Query.SortDirection;
+import com.google.appengine.api.datastore.FetchOptions;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.protobuf.TextFormat;
@@ -28,37 +36,61 @@ public class VisualizerServlet extends HttpServlet {
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        System.out.println("query");
+        Query query = new Query("Files").addSort("timestamp", SortDirection.DESCENDING);
+
+        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+        PreparedQuery results = datastore.prepare(query);
+
+        // TODO: Cranky if I didn't initialize
+        Entity retrievedSimulationTrace = null;
+
+        // TODO: Bootlegged way of getting the most recent entity
+        for (Entity entity : results.asIterable()) {
+            retrievedSimulationTrace = entity;
+            break;
+        }
+
+        SimulationTrace simulationTrace = 
+            SimulationTrace.parseFrom(((Blob) retrievedSimulationTrace.getProperty("simulation-trace")).getBytes());
+
+        // Test if the simulation trace was correctly retrieved
+        Validation validation = new Validation(simulationTrace);
+        System.out.println(simulationTrace.getNumTiles());
+
         // GsonBuilder gsonBuilder = new GsonBuilder();
         // Gson gson = gsonBuilder.registerTypeAdapter(CommentObject.class, new CommentAdapter()).create();
 
         // response.setContentType("application/json;");
         // response.getWriter().println(gson.toJson(comments));
+
+        // TODO: Correct redirect?
         response.sendRedirect("/index.html");
     }
 
     @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {        
+        // Retrieve the uploaded file
         Part filePart = request.getPart("file-input");
         InputStream fileInputStream = filePart.getInputStream();
-
-        File saveFile = new File("capstone/step-capstone/src/main/webapp/uploaded-file/" + filePart.getSubmittedFileName());
-        
-        // if (Files.exists(saveFile.toPath())) {
-        //     Files.copy(fileInputStream, saveFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        // } else {
-        //     Files.copy(fileInputStream, saveFile.toPath(), StandardCopyOption.ATOMIC_MOVE);
-        // }
-
-        String fileURL = "http://localhost:8080/uploaded-file/" + filePart.getSubmittedFileName();
-
+            
+        // Create a simulation trace out of the uploaded file
         InputStreamReader reader = new InputStreamReader(fileInputStream, "ASCII");
         SimulationTrace.Builder builder = SimulationTrace.newBuilder();
         TextFormat.merge(reader, builder);
 
         SimulationTrace simulationTrace = builder.build();
-    
-        Validation validation = new Validation(simulationTrace);
-        System.out.println(simulationTrace.getNumTiles());
+
+        // Put the trace into datastore
+        Entity simulationTraceUpload = new Entity("Files");
+        simulationTraceUpload.setProperty("timestamp", System.currentTimeMillis());
+        simulationTraceUpload.setProperty("simulation-trace", new Blob(simulationTrace.toByteArray()));
+
+        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+        datastore.put(simulationTraceUpload);
+
+        // Test if the entity was made correctly
+        System.out.println(simulationTraceUpload.getProperty("timestamp"));
 
         response.sendRedirect("/index.html");
     }

@@ -13,7 +13,12 @@
 // limitations under the License.
 
 async function runSimulation() {
-    
+
+}
+
+// Test if the simulation trace was correctly formed out of datastore
+function getViz() {
+    fetch('/visualizer', {method: 'GET'});
 }
 
 var ele = document.getElementById('container');
