@@ -1,0 +1,58 @@
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.FileInputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
+import javax.servlet.annotation.MultipartConfig;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.Part;
+import javax.servlet.ServletException;
+
+@WebServlet("/report")
+@MultipartConfig()
+public class ReportServlet extends HttpServlet {
+
+    @Override
+    public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        // GsonBuilder gsonBuilder = new GsonBuilder();
+        // Gson gson = gsonBuilder.registerTypeAdapter(CommentObject.class, new CommentAdapter()).create();
+
+        // response.setContentType("application/json;");
+        // response.getWriter().println(gson.toJson(comments));
+        response.sendRedirect("/report.html");
+    }
+
+    @Override
+    public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {        
+        Part filePart = request.getPart("file-input");
+        InputStream fileInputStream = filePart.getInputStream();
+
+        File saveFile = new File("capstone/step-capstone/src/main/webapp/uploaded-file/" + filePart.getSubmittedFileName());
+        
+        if (Files.exists(saveFile.toPath())) {
+            Files.copy(fileInputStream, saveFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        } else {
+            Files.copy(fileInputStream, saveFile.toPath(), StandardCopyOption.ATOMIC_MOVE);
+        }
+
+        String fileURL = "http://localhost:8080/uploaded-file/" + filePart.getSubmittedFileName();
+
+        InputStreamReader reader = new InputStreamReader(fileInputStream, "ASCII");
+        SimulationTrace.Builder builder = SimulationTrace.newBuilder();
+        TextFormat.merge(reader, builder);
+
+        SimulationTrace simulationTrace = builder.build();
+    
+        Validation validation = new Validation(simulationTrace);
+        System.out.println(simulationTrace.getNumTiles());
+
+        response.sendRedirect("/report.html");
+    }
+}
