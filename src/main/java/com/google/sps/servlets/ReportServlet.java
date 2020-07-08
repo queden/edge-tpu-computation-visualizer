@@ -31,6 +31,8 @@ import javax.servlet.ServletException;
 @WebServlet("/report")
 @MultipartConfig()
 public class ReportServlet extends HttpServlet {
+    private static final SimulationTrace simulationTrace;
+    private static final Validation validation;
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -39,11 +41,36 @@ public class ReportServlet extends HttpServlet {
 
         // response.setContentType("application/json;");
         // response.getWriter().println(gson.toJson(comments));
-        response.sendRedirect("/report.html");
+
+        Gson gson = new Gson();
+
+        String json = gson.toJson(validation.getNarrowArray()) + gson.toJson(validation.getWideArray()) + gson.toJson(validation.getErrors());
+        response.setContentType("application/json;");
+        response.getWriter().println(json);
+        // response.sendRedirect("/report.html");
     }
 
     @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {        
+        String process = request.getParameter("process").toString();
+
+        if (process.equals("pre")) {
+            Query query = new Query("Files").addSort("timestamp", SortDirection.DESCENDING);
+
+            DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+            PreparedQuery results = datastore.prepare(query);
+
+            Entity retrievedSimulationTrace = results.asIterable().iterator().next();
+
+            simulationTrace = 
+                SimulationTrace.parseFrom(((Blob) retrievedSimulationTrace.getProperty("simulation-trace")).getBytes());
+
+            validation = new Validation(simulationTrace);
+
+            validation.preProcess();
+        } else {
+            validation.postProcess(Integer.parseInt(request.getParameter("start")));
+        }
 
         response.sendRedirect("/report.html");
     }

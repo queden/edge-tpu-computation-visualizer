@@ -13,7 +13,17 @@
 // limitations under the License.
 
 async function runSimulation() {
+    const preprocess = await fetch("/report?process=pre");
+    const preprocessResponse = preprocess.json();
 
+    // Process json intializations
+
+    for (i = 0; i < preprocessResponse.traces; i += 1000) {
+        const traceProcess = await fetch("report?process=post&start=" + i);
+        const traceResponse = traceProcess.json();
+
+        // Process json trace information
+    }
 }
 
 // Test if the simulation trace was correctly formed out of datastore
