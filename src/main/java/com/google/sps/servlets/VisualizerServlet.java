@@ -43,13 +43,13 @@ public class VisualizerServlet extends HttpServlet {
         PreparedQuery results = datastore.prepare(query);
 
         // TODO: Cranky if I didn't initialize
-        Entity retrievedSimulationTrace = null;
+        Entity retrievedSimulationTrace = results.asIterable().iterator().next();
 
         // TODO: Bootlegged way of getting the most recent entity
-        for (Entity entity : results.asIterable()) {
-            retrievedSimulationTrace = entity;
-            break;
-        }
+        // for (Entity entity : results.asIterable()) {
+        //     retrievedSimulationTrace = entity;
+        //     break;
+        // }
 
         SimulationTrace simulationTrace = 
             SimulationTrace.parseFrom(((Blob) retrievedSimulationTrace.getProperty("simulation-trace")).getBytes());
