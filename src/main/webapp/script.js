@@ -13,13 +13,13 @@
 // limitations under the License.
 
 async function runSimulation() {
-    const preprocess = await fetch("/report?process=pre");
+    const preprocess = await fetch("/report?process=pre", {method: "POST"});
     const preprocessResponse = preprocess.json();
 
     // Process json intializations
 
     for (i = 0; i < preprocessResponse.traces; i += 1000) {
-        const traceProcess = await fetch("report?process=post&start=" + i);
+        const traceProcess = await fetch("report?process=post&start=" + i, {method: "POST"});
         const traceResponse = traceProcess.json();
 
         // Process json trace information
