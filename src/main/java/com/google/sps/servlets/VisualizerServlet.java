@@ -43,11 +43,11 @@ public class VisualizerServlet extends HttpServlet {
 
         File saveFile = new File("capstone/step-capstone/src/main/webapp/uploaded-file/" + filePart.getSubmittedFileName());
         
-        if (Files.exists(saveFile.toPath())) {
-            Files.copy(fileInputStream, saveFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        } else {
-            Files.copy(fileInputStream, saveFile.toPath(), StandardCopyOption.ATOMIC_MOVE);
-        }
+        // if (Files.exists(saveFile.toPath())) {
+        //     Files.copy(fileInputStream, saveFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        // } else {
+        //     Files.copy(fileInputStream, saveFile.toPath(), StandardCopyOption.ATOMIC_MOVE);
+        // }
 
         String fileURL = "http://localhost:8080/uploaded-file/" + filePart.getSubmittedFileName();
 
