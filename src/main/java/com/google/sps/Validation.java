@@ -9,13 +9,18 @@ import java.util.List;
 import java.util.Map;
 
 public class Validation {
-    private final SimulationTrace SIMULATION_TRACE;
+  private static SimulationTrace simulationTrace;
 
-    public Validation(SimulationTrace simulationTrace) {
-        this.SIMULATION_TRACE = simulationTrace;
+  private static ArrayList<Instruction> instructions;
+  private static int[] narrowAllocation;
+  private static int[] wideAllocation;
+  private static Map<Integer, Instruction> instructionTagtoInstruction;
+  private static List<TraceEntry> traceEntries;
 
-        validate(SIMULATION_TRACE);
-    }
+  public Validation(SimulationTrace simulationTrace) {
+    this.simulationTrace = simulationTrace;
+    instructions = new ArrayList<Instruction>();
+  }
 
   // Sizes in KB of narrow and wide memory.
   public static final int NARROW_SIZE = 128;
@@ -30,52 +35,73 @@ public class Validation {
   public static final String WIDE_READ = "Wide Read";
   public static final String WIDE_WRITE = "Wide Write";
 
-  /** Given a Simulation Trace, validates the trace and outputs any errors found */
-  public static void validate(SimulationTrace simulationTrace) {
-    ArrayList<Instruction> instructions = new ArrayList<Instruction>();
+  public static void preProcess() {
     instructions.addAll(simulationTrace.getInstructionList());
 
     // TODO: May need to catch ArrayIndexOutOfBoundsException
-    int[] narrowAllocation =
+    narrowAllocation =
         getAllocationArray(simulationTrace.getTensorAllocationNarrowList(), NARROW_SIZE);
-    int[] wideAllocation =
+    wideAllocation =
         getAllocationArray(simulationTrace.getTensorAllocationWideList(), WIDE_SIZE);
 
     try {
-      relateTensorsToInstructions(narrowAllocation, wideAllocation, instructions);
+      relateTensorsToInstructions();
     } catch (InvalidTensorAddressException e) {
       System.out.println(e.getMessage());
     } catch (ArrayIndexOutOfBoundsException e) {
       System.out.println(e.getMessage());
     }
 
-    Map<Integer, Instruction> instructionTagtoInstruction =
-        relateIntructionTagtoInstructionTable(instructions);
+    relateIntructionTagtoInstructionTable();
 
-    List<TraceEntry> traceEntries = simulationTrace.getTraceEntryList();
+  }
 
+  public static void process(long start, long end) {
     try {
-      validateTraceEntries(
-          traceEntries, 
-          instructionTagtoInstruction, 
-          wideAllocation, 
-          narrowAllocation);
+      validateTraceEntries(start, end);
     } catch (InvalidTensorOperationException e) {
       System.out.println(e.getMessage());
     } catch (Exception e) {
       System.out.println(e.getMessage());
     }
-    
+
     System.out.println("Simulation complete");
   }
+
+//   /** Given a Simulation Trace, validates the trace and outputs any errors found */
+//   public static void validate(SimulationTrace simulationTrace) {
+//     ArrayList<Instruction> instructions = new ArrayList<Instruction>();
+//     instructions.addAll(simulationTrace.getInstructionList());
+
+//     // TODO: May need to catch ArrayIndexOutOfBoundsException
+//     int[] narrowAllocation =
+//         getAllocationArray(simulationTrace.getTensorAllocationNarrowList(), NARROW_SIZE);
+//     int[] wideAllocation =
+//         getAllocationArray(simulationTrace.getTensorAllocationWideList(), WIDE_SIZE);
+
+//     try {
+//       relateTensorsToInstructions(narrowAllocation, wideAllocation, instructions);
+//     } catch (InvalidTensorAddressException e) {
+//       System.out.println(e.getMessage());
+//     } catch (ArrayIndexOutOfBoundsException e) {
+//       System.out.println(e.getMessage());
+//     }
+
+//     Map<Integer, Instruction> instructionTagtoInstruction =
+//         relateIntructionTagtoInstructionTable(instructions);
+
+//     List<TraceEntry> traceEntries = simulationTrace.getTraceEntryList();
+
+    
+    
+//   }
 
   /**
    * Given an array showing the narrow and wide tensor allocations in memory, populates each
    * instruction with the tensor that they operate on. Throws a InvalidTensorAddressException if the
    * instruction operates on a memory address that does not hold a tensor.
    */
-  public static void relateTensorsToInstructions(
-      int[] narrowAllocation, int[] wideAllocation, List<Instruction> instructions)
+  public static void relateTensorsToInstructions()
       throws InvalidTensorAddressException {
     // Loops over each instruction and fills in the tensor field for the instruction's operations.
     for (int i = 0; i < instructions.size(); i++) {
@@ -175,26 +201,17 @@ public class Validation {
   }
 
   /** Given a list of instructions, maps each instruction tag to its corresponding instruction. */
-  public static Map<Integer, Instruction> relateIntructionTagtoInstructionTable(
-      List<Instruction> instructions) {
-    Map<Integer, Instruction> instructionTagtoInstruction = new Hashtable<>();
-
+  public static void relateIntructionTagtoInstructionTable() {
     for (Instruction instruction : instructions) {
       instructionTagtoInstruction.put(instruction.getTag(), instruction);
     }
-
-    return instructionTagtoInstruction;
   }
 
   /**
    * Given a list of trace entries, validates that trace entries proceeded in the right order and
    * operated on the correct traces.
    */
-  public static void validateTraceEntries(
-      List<TraceEntry> traceEntries,
-      Map<Integer, Instruction> instructionTagtoInstruction,
-      int[] wideAllocation,
-      int[] narrowAllocation)
+  public static void validateTraceEntries(long start, long end)
       throws Exception, InvalidTensorOperationException {
     // Arrays to simulate the narrow and wide memories for each tile.
     int[][] narrow = new int[NUM_TILES][NARROW_SIZE * 1024];
@@ -205,7 +222,8 @@ public class Validation {
       }
     // Iterates over each trace entry, ensures that it is operating on the correct tensor and
     // validates based on if it is a write or a read.
-    for (TraceEntry traceEntry : traceEntries) {
+    for (long i = start; i < end; i++) {
+      TraceEntry traceEntry = traceEntries.get((int) i);
       // Gets the trace entries corresponding instruction and ensures it exists.
       Instruction instruction = instructionTagtoInstruction.get(traceEntry.getInstructionTag());
       if (instruction == null) {

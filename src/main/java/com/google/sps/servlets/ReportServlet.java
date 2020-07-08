@@ -4,6 +4,7 @@ import com.google.appengine.api.datastore.Blob;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.Query.SortDirection;
 import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
 import com.google.gson.Gson;
@@ -31,24 +32,24 @@ import javax.servlet.ServletException;
 @WebServlet("/report")
 @MultipartConfig()
 public class ReportServlet extends HttpServlet {
-    private static final SimulationTrace simulationTrace;
-    private static final Validation validation;
+    private static SimulationTrace simulationTrace;
+    private static Validation validation;
 
-    @Override
-    public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // GsonBuilder gsonBuilder = new GsonBuilder();
-        // Gson gson = gsonBuilder.registerTypeAdapter(CommentObject.class, new CommentAdapter()).create();
+    // @Override
+    // public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    //     // GsonBuilder gsonBuilder = new GsonBuilder();
+    //     // Gson gson = gsonBuilder.registerTypeAdapter(CommentObject.class, new CommentAdapter()).create();
 
-        // response.setContentType("application/json;");
-        // response.getWriter().println(gson.toJson(comments));
+    //     // response.setContentType("application/json;");
+    //     // response.getWriter().println(gson.toJson(comments));
 
-        Gson gson = new Gson();
+    //     Gson gson = new Gson();
 
-        String json = gson.toJson(validation.getNarrowArray()) + gson.toJson(validation.getWideArray()) + gson.toJson(validation.getErrors());
-        response.setContentType("application/json;");
-        response.getWriter().println(json);
-        // response.sendRedirect("/report.html");
-    }
+    //     String json = gson.toJson(validation.getNarrowArray()) + gson.toJson(validation.getWideArray()) + gson.toJson(validation.getErrors());
+    //     response.setContentType("application/json;");
+    //     response.getWriter().println(json);
+    //     // response.sendRedirect("/report.html");
+    // }
 
     @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {        
@@ -69,7 +70,8 @@ public class ReportServlet extends HttpServlet {
 
             validation.preProcess();
         } else {
-            validation.postProcess(Integer.parseInt(request.getParameter("start")));
+            long start = Long.parseLong(request.getParameter("start"));
+            validation.process(start, start + 1000);
         }
 
         response.sendRedirect("/report.html");
