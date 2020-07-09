@@ -27,57 +27,22 @@ async function runSimulation() {
 
     for (i = 0; i < preprocessResponse.total; i += 1000) {
         // Run through the traces, information processing will happen within the function
-        runTraces(i);
+        await runTraces(i);
     }
 }
 
 // Async function, wasn't sure if the asynchronous calls were messing up the sequential calls
-// async function runTraces(start) {
-//     const box = document.getElementById("test-box");
-//     const traceResponse = await fetch('/report?process=post&start=' + start, {method: 'GET'});
-//     const traceProcess = await traceResponse.json();
-
-//     console.log(traceProcess.traces);
-
-//     // Process json trace information
-//     var responseMessage = document.createElement("p");
-//     responseMessage.innerHTML = "Call " + (traceProcess.call + 1) + ": " + traceProcess.traces;
-//     box.appendChild(responseMessage);
-// }
-
-// Auxillary run function to try and stabilize the calls, didn't work, still out of order
-// function auxillaryRun(start) {
-//     runTraces(start);
-// }
-
-
-// Promise handling method using arrow functions, didn't work to stabilize
-// function runTraces(start) {
-//     fetch('/report?process=post&start=' + start, {method: 'GET'}).then(response => response.json()).then((traceProcess) => {
-//         const box = document.getElementById("test-box");
-//         console.log(traceProcess.traces);
-
-//         // Process json trace information
-//         var responseMessage = document.createElement("p");
-//         responseMessage.innerHTML = "Call " + (traceProcess.call + 1) + ": " + traceProcess.traces;
-//         box.appendChild(responseMessage);
-//     });
-// }
-
-function runTraces(start) {
+async function runTraces(start) {
     const box = document.getElementById("test-box");
+    const traceResponse = await fetch('/report?process=post&start=' + start, {method: 'GET'});
+    const traceProcess = await traceResponse.json();
 
-    let fetchCall = 
-        [fetch('/report?process=post&start=' + start, {method: 'GET'})
-            .then(function(response) { return response.json(); })];
+    console.log(traceProcess.traces);
 
-    Promise.all(fetchCall).then((traceInfo) => {
-        let responseMessage = document.createElement("p");
-        responseMessage.innerHTML = "Call " + (traceInfo[0].call + 1) + ": " + traceInfo[0].traces;
-        box.appendChild(responseMessage);
-
-        return;
-    });
+    // Process json trace information
+    var responseMessage = document.createElement("p");
+    responseMessage.innerHTML = "Call " + (traceProcess.call + 1) + ": " + traceProcess.traces;
+    box.appendChild(responseMessage);
 }
 
 // Test if the simulation trace was correctly formed out of datastore
