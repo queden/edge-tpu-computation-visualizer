@@ -36,9 +36,11 @@ public class Validation {
 
   public Validation(SimulationTrace simulationTrace) {
     this.simulationTrace = simulationTrace;
+    traceEntries = simulationTrace.getTraceEntryList();
     instructions = new ArrayList<Instruction>();
     narrow = new int[NUM_TILES][NARROW_SIZE * 1024];
     wide = new int[NUM_TILES][WIDE_SIZE * 1024];
+    instructionTagtoInstruction = new Hashtable<Integer, Instruction>();
   }
 
   public static PreProcessResults preProcess() {
@@ -82,7 +84,7 @@ public class Validation {
 
     relateIntructionTagtoInstructionTable();
 
-    return new PreProcessResults(isError, message);
+    return new PreProcessResults(isError, message, traceEntries.size());
   }
 
   public static ProcessResults process(long start, long end) {
@@ -202,7 +204,9 @@ public class Validation {
   /** Given a list of instructions, maps each instruction tag to its corresponding instruction. */
   private static void relateIntructionTagtoInstructionTable() {
     for (Instruction instruction : instructions) {
-      instructionTagtoInstruction.put(instruction.getTag(), instruction);
+      int instructionTag = instruction.getTag();
+      System.out.println("instruction tag is " + instructionTag);
+      instructionTagtoInstruction.put(instructionTag, instruction);
     }
   }
 
@@ -219,10 +223,14 @@ public class Validation {
     }
     // Iterates over each trace entry, ensures that it is operating on the correct tensor and
     // validates based on if it is a write or a read.
-    for (long i = start; i < end; i++) {
+
+    long bound = (end <= traceEntries.size()) ? end : traceEntries.size();
+
+    for (long i = start; i < bound; i++) {
       TraceEntry traceEntry = traceEntries.get((int) i);
       // Gets the trace entries corresponding instruction and ensures it exists.
       Instruction instruction = instructionTagtoInstruction.get(traceEntry.getInstructionTag());
+      System.out.println(instructionTagtoInstruction.toString());
       if (instruction == null) {
         throw new Exception(
             "Instruction with key "

@@ -12,6 +12,7 @@ import com.google.gson.GsonBuilder;
 import com.google.protobuf.TextFormat;
 import com.google.sps.Validation;
 import com.google.sps.proto.SimulationTraceProto.*;
+import com.google.sps.results.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,33 +44,50 @@ public class ReportServlet extends HttpServlet {
 
         // response.setContentType("application/json;");
         // response.getWriter().println(gson.toJson(comments));
-        
-        String json = "{";
+
+        String json;
 
         // Or we can just make an object to call the gson on
         if (process.equals("pre")) {
-            System.out.println("pre");
-            json += "\"message\": ";
-            json +=  "\"" + "test init" + "\"";
-            json += ", ";
-            json += "\"total\": " + 10000;
+            Query query = new Query("Files").addSort("timestamp", SortDirection.DESCENDING);
+
+            DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+            PreparedQuery results = datastore.prepare(query);
+
+            Entity retrievedSimulationTrace = results.asIterable().iterator().next();
+
+            simulationTrace =
+                SimulationTrace.parseFrom(((Blob) retrievedSimulationTrace.getProperty("simulation-trace")).getBytes());
+
+            validation = new Validation(simulationTrace);
+
+            PreProcessResults preProcessResults = validation.preProcess();
+
+            json = new Gson().toJson(preProcessResults);
+
+            // System.out.println("pre");
+            // json += "\"message\": ";
+            // json +=  "\"" + "test init" + "\"";
+            // json += ", ";
+            // json += "\"total\": " + 10000;
         } else {
             // System.out.println("post");
             long start = Long.parseLong(request.getParameter("start"));
-            System.out.println(start);
+            System.out.println("Start is " + start);
 
-            json += "\"traces\": ";
-            json += "\"" + start + " to " + (start + 1000) + "\"";
-            json += ", ";
-            json += "\"call\": " + start/1000;
+            ProcessResults processResults = validation.process(start, start + 1000);
+
+            json = new Gson().toJson(processResults);
+
+            // json += "\"traces\": ";
+            // json += "\"" + start + " to " + (start + 1000) + "\"";
+            // json += ", ";
+            // json += "\"call\": " + start/1000;
         }
 
-        json += "}";
-
-        Gson gson = new Gson();
+        // json += "}";
 
         response.setContentType("application/json;");
-        // response.getWriter().println(gson.toJson(json));
         response.getWriter().println(json);
     }
 
