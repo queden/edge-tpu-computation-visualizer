@@ -37,21 +37,43 @@ public class ReportServlet extends HttpServlet {
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String process = request.getParameter("process");
+        String process = request.getParameter("process").toString();
         // GsonBuilder gsonBuilder = new GsonBuilder();
         // Gson gson = gsonBuilder.registerTypeAdapter(CommentObject.class, new CommentAdapter()).create();
 
         // response.setContentType("application/json;");
         // response.getWriter().println(gson.toJson(comments));
+        
+        String json = "{";
+
+        // Or we can just make an object to call the gson on
+        if (process.equals("pre")) {
+            System.out.println("pre");
+            json += "\"message\": ";
+            json +=  "\"" + "test init" + "\"";
+            json += ", ";
+            json += "\"total\": " + 10000;
+        } else {
+            // System.out.println("post");
+            long start = Long.parseLong(request.getParameter("start"));
+            System.out.println(start);
+
+            json += "\"traces\": ";
+            json += "\"" + start + " to " + (start + 1000) + "\"";
+            json += ", ";
+            json += "\"call\": " + start/1000;
+        }
+
+        json += "}";
 
         Gson gson = new Gson();
-        String json = "test";
 
-        // String json = gson.toJson(validation.getNarrowArray()) + gson.toJson(validation.getWideArray()) + gson.toJson(validation.getErrors());
         response.setContentType("application/json;");
-        response.getWriter().println(gson.toJson(json));
+        // response.getWriter().println(gson.toJson(json));
+        response.getWriter().println(json);
     }
 
+    // Currently not used
     @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {        
         String process = request.getParameter("process").toString();

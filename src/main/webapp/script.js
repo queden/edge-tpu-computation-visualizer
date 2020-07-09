@@ -13,26 +13,55 @@
 // limitations under the License.
 
 async function runSimulation() {
-    console.log("clicked");
+    // console.log("clicked");
     const preprocess = await fetch('/report?process=pre', {method: 'GET'});
     const preprocessResponse = await preprocess.json();
 
-    // Process json intializations
+    // Process initial json information
     const box = document.getElementById("test-box");
     box.innerHTML = '';
     const init = document.createElement("p");
-    init.innerHTML = preprocessResponse.text;
+    // console.log(preprocessResponse.total);
+    init.innerHTML = preprocessResponse.message;
     box.appendChild(init);
 
-    for (i = 0; i < preprocessResponse.traces; i += 1000) {
-        const traceProcess = await fetch('report?process=post&start=' + i, {method: 'GET'});
-        const traceResponse = await traceProcess.json();
+    for (i = 0; i < preprocessResponse.total; i += 1000) {
+        // Run through the traces, information processing will happen within the function
+        runTraces(i);
+    }
+}
+
+// Async function, wasn't sure if the asynchronous calls were messing up the sequential calls
+// async function runTraces(start) {
+//     const box = document.getElementById("test-box");
+//     const traceResponse = await fetch('/report?process=post&start=' + start, {method: 'GET'});
+//     const traceProcess = await traceResponse.json();
+
+//     console.log(traceProcess.traces);
+
+//     // Process json trace information
+//     var responseMessage = document.createElement("p");
+//     responseMessage.innerHTML = "Call " + (traceProcess.call + 1) + ": " + traceProcess.traces;
+//     box.appendChild(responseMessage);
+// }
+
+// Auxillary run function to try and stabilize the calls, didn't work, still out of order
+// function auxillaryRun(start) {
+//     runTraces(start);
+// }
+
+
+// Promise handling method using arrow functions, didn't work to stabilize
+function runTraces(start) {
+    fetch('/report?process=post&start=' + start, {method: 'GET'}).then(response => response.json()).then((traceProcess) => {
+        const box = document.getElementById("test-box");
+        console.log(traceProcess.traces);
 
         // Process json trace information
-        const responseMessage = document.createElement("p");
-        responseMessage.innerHTML = "processed traces (" + i + " - " + (i + 1000) + ")";
+        var responseMessage = document.createElement("p");
+        responseMessage.innerHTML = "Call " + (traceProcess.call + 1) + ": " + traceProcess.traces;
         box.appendChild(responseMessage);
-    }
+    });
 }
 
 // Test if the simulation trace was correctly formed out of datastore
