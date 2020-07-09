@@ -52,15 +52,31 @@ async function runSimulation() {
 
 
 // Promise handling method using arrow functions, didn't work to stabilize
-function runTraces(start) {
-    fetch('/report?process=post&start=' + start, {method: 'GET'}).then(response => response.json()).then((traceProcess) => {
-        const box = document.getElementById("test-box");
-        console.log(traceProcess.traces);
+// function runTraces(start) {
+//     fetch('/report?process=post&start=' + start, {method: 'GET'}).then(response => response.json()).then((traceProcess) => {
+//         const box = document.getElementById("test-box");
+//         console.log(traceProcess.traces);
 
-        // Process json trace information
-        var responseMessage = document.createElement("p");
-        responseMessage.innerHTML = "Call " + (traceProcess.call + 1) + ": " + traceProcess.traces;
+//         // Process json trace information
+//         var responseMessage = document.createElement("p");
+//         responseMessage.innerHTML = "Call " + (traceProcess.call + 1) + ": " + traceProcess.traces;
+//         box.appendChild(responseMessage);
+//     });
+// }
+
+function runTraces(start) {
+    const box = document.getElementById("test-box");
+
+    let fetchCall = 
+        [fetch('/report?process=post&start=' + start, {method: 'GET'})
+            .then(function(response) { return response.json(); })];
+
+    Promise.all(fetchCall).then((traceInfo) => {
+        let responseMessage = document.createElement("p");
+        responseMessage.innerHTML = "Call " + (traceInfo[0].call + 1) + ": " + traceInfo[0].traces;
         box.appendChild(responseMessage);
+
+        return;
     });
 }
 

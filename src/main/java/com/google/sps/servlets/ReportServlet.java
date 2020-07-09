@@ -59,7 +59,7 @@ public class ReportServlet extends HttpServlet {
             System.out.println(start);
 
             json += "\"traces\": ";
-            json += "\"" + start + " to " + (start + 1000) + "\"";
+            json += "\"" + start + " to " + (start + 1000) + ", time: " + System.currentTimeMillis() + "\"";
             json += ", ";
             json += "\"call\": " + start/1000;
         }
