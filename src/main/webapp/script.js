@@ -13,16 +13,25 @@
 // limitations under the License.
 
 async function runSimulation() {
-    const preprocess = await fetch("/report?process=pre", {method: "POST"});
-    const preprocessResponse = preprocess.json();
+    console.log("clicked");
+    const preprocess = await fetch('/report?process=pre', {method: 'GET'});
+    const preprocessResponse = await preprocess.json();
 
     // Process json intializations
+    const box = document.getElementById("test-box");
+    box.innerHTML = '';
+    const init = document.createElement("p");
+    init.innerHTML = preprocessResponse.text;
+    box.appendChild(init);
 
     for (i = 0; i < preprocessResponse.traces; i += 1000) {
-        const traceProcess = await fetch("report?process=post&start=" + i, {method: "POST"});
-        const traceResponse = traceProcess.json();
+        const traceProcess = await fetch('report?process=post&start=' + i, {method: 'GET'});
+        const traceResponse = await traceProcess.json();
 
         // Process json trace information
+        const responseMessage = document.createElement("p");
+        responseMessage.innerHTML = "processed traces (" + i + " - " + (i + 1000) + ")";
+        box.appendChild(responseMessage);
     }
 }
 
