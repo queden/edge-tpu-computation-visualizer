@@ -1575,11 +1575,12 @@ public final class ValidationTest extends Suite {
                         .addAllCounter(Arrays.asList()))
                 .build();
 
-        private final TraceEntry TRACE_ONE = TraceEntry.newBuilder()
-            .setAccessType(TraceEntry.AccessType.READ_NARROW)
-            .setInstructionTag(1)
-            .setAddress(189)
-            .build();
+        private final TraceEntry TRACE_ONE = 
+            TraceEntry.newBuilder()
+                    .setAccessType(TraceEntry.AccessType.READ_NARROW)
+                    .setInstructionTag(1)
+                    .setAddress(189)
+                    .build();
 
         private final Instruction INSTRUCTION_TWO =
             Instruction.newBuilder()
@@ -1600,17 +1601,19 @@ public final class ValidationTest extends Suite {
                         .addAllCounter(Arrays.asList()))
                 .build();
 
-        private final TraceEntry TRACE_TWO_ONE = TraceEntry.newBuilder()
-            .setAccessType(TraceEntry.AccessType.READ_NARROW)
-            .setInstructionTag(12)
-            .setAddress(796)
-            .build();
+        private final TraceEntry TRACE_TWO_ONE = 
+            TraceEntry.newBuilder()
+                .setAccessType(TraceEntry.AccessType.READ_NARROW)
+                .setInstructionTag(12)
+                .setAddress(796)
+                .build();
 
-        private final TraceEntry TRACE_TWO_TWO = TraceEntry.newBuilder()
-            .setAccessType(TraceEntry.AccessType.READ_WIDE)
-            .setInstructionTag(12)
-            .setAddress(10240)
-            .build();
+        private final TraceEntry TRACE_TWO_TWO = 
+            TraceEntry.newBuilder()
+                .setAccessType(TraceEntry.AccessType.READ_WIDE)
+                .setInstructionTag(12)
+                .setAddress(10240)
+                .build();
 
         private final Instruction INSTRUCTION_THREE =
             Instruction.newBuilder()
@@ -1626,11 +1629,12 @@ public final class ValidationTest extends Suite {
                         .addAllCounter(Arrays.asList()))
                 .build();
 
-        private final TraceEntry TRACE_THREE = TraceEntry.newBuilder()
-            .setAccessType(TraceEntry.AccessType.READ_WIDE)
-            .setInstructionTag(5)
-            .setAddress(564)
-            .build();
+        private final TraceEntry TRACE_THREE = 
+            TraceEntry.newBuilder()
+              .setAccessType(TraceEntry.AccessType.READ_WIDE)
+              .setInstructionTag(5)
+              .setAddress(564)
+              .build();
 
         @Before
         public void setUp() {
