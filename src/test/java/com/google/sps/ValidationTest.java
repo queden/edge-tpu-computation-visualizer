@@ -565,13 +565,12 @@ public final class ValidationTest extends Suite {
         private int traceAddress;
         private TraceEntry.AccessType traceAccessType;
         private int expectedTensor;
-        private int recievedTensor;
+        private int receivedTensor;
 
         @Before
         public void setUp() {
             instructionBuilder = Instruction.newBuilder();
             memoryAccessBuilder = MemoryAccess.newBuilder();
-            traceAddress = 0;
         }
 
         // Trace is narrow read, instruction has narrow read, confirm returned tensor
@@ -579,15 +578,35 @@ public final class ValidationTest extends Suite {
         public void testValidNarrowRead() throws Exception, MemoryAccessException {
             traceAccessType = TraceEntry.AccessType.READ_NARROW;
 
+            traceAddress = 0;
+
             instructionBuilder
                 .setNarrowRead(memoryAccessBuilder.setTensor(2).setBaseAddress(0))
                 .setTag(0);
 
             expectedTensor = 2;
 
-            recievedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
+            receivedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
             
-            assertEquals(expectedTensor, recievedTensor);
+            assertEquals(expectedTensor, receivedTensor);
+        }
+
+        // Trace is narrow read, instruction has narrow read, confirm returned tensor
+        @Test
+        public void testValidNarrowReadNonZeroAddress() throws Exception, MemoryAccessException {
+            traceAccessType = TraceEntry.AccessType.READ_NARROW;
+
+            traceAddress = 400;
+
+            instructionBuilder
+                .setNarrowRead(memoryAccessBuilder.setTensor(2).setBaseAddress(400))
+                .setTag(0);
+
+            expectedTensor = 2;
+
+            receivedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
+            
+            assertEquals(expectedTensor, receivedTensor);
         }
 
         // Trace is narrow write, instruction has narrow write, confirm returned tensor
@@ -595,15 +614,35 @@ public final class ValidationTest extends Suite {
         public void testValidNarrowWrite() throws Exception, MemoryAccessException {
             traceAccessType = TraceEntry.AccessType.WRITE_NARROW;
 
+            traceAddress = 0;
+
             instructionBuilder
                 .setNarrowWrite(memoryAccessBuilder.setTensor(2).setBaseAddress(0))
                 .setTag(0);
 
             expectedTensor = 2;
 
-            recievedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
+            receivedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
             
-            assertEquals(expectedTensor, recievedTensor);
+            assertEquals(expectedTensor, receivedTensor);
+        }
+
+        // Trace is narrow write, instruction has narrow write, confirm returned tensor
+        @Test
+        public void testValidNarrowWriteNonZeroAddress() throws Exception, MemoryAccessException {
+            traceAccessType = TraceEntry.AccessType.WRITE_NARROW;
+
+            traceAddress = 400;
+
+            instructionBuilder
+                .setNarrowWrite(memoryAccessBuilder.setTensor(2).setBaseAddress(400))
+                .setTag(0);
+
+            expectedTensor = 2;
+
+            receivedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
+            
+            assertEquals(expectedTensor, receivedTensor);
         }
 
         // Trace is wide read, instruction has wide read, confirm returned tensor
@@ -611,15 +650,35 @@ public final class ValidationTest extends Suite {
         public void testValidWideRead() throws Exception, MemoryAccessException {
             traceAccessType = TraceEntry.AccessType.READ_WIDE;
 
+            traceAddress = 0;
+
             instructionBuilder
                 .setWideRead(memoryAccessBuilder.setTensor(2).setBaseAddress(0))
                 .setTag(0);
 
             expectedTensor = 2;
 
-            recievedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
+            receivedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
             
-            assertEquals(expectedTensor, recievedTensor);
+            assertEquals(expectedTensor, receivedTensor);
+        }
+
+        // Trace is wide read, instruction has wide read, confirm returned tensor
+        @Test
+        public void testValidWideReadNonZeroAddress() throws Exception, MemoryAccessException {
+            traceAccessType = TraceEntry.AccessType.READ_WIDE;
+
+            traceAddress = 400;
+
+            instructionBuilder
+                .setWideRead(memoryAccessBuilder.setTensor(2).setBaseAddress(400))
+                .setTag(0);
+
+            expectedTensor = 2;
+
+            receivedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
+            
+            assertEquals(expectedTensor, receivedTensor);
         }
 
         // Trace is wide write, instruction has wide write, confirm returned tensor
@@ -627,15 +686,35 @@ public final class ValidationTest extends Suite {
         public void testValidWideWrite() throws Exception, MemoryAccessException {
             traceAccessType = TraceEntry.AccessType.WRITE_WIDE;
 
+            traceAddress = 0;
+
             instructionBuilder
                 .setWideWrite(memoryAccessBuilder.setTensor(2).setBaseAddress(0))
                 .setTag(0);
 
             expectedTensor = 2;
 
-            recievedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
+            receivedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
             
-            assertEquals(expectedTensor, recievedTensor);
+            assertEquals(expectedTensor, receivedTensor);
+        }
+
+        // Trace is wide write, instruction has wide write, confirm returned tensor
+        @Test
+        public void testValidWideWriteNonZeroAddress() throws Exception, MemoryAccessException {
+            traceAccessType = TraceEntry.AccessType.WRITE_WIDE;
+
+            traceAddress = 400;
+
+            instructionBuilder
+                .setWideWrite(memoryAccessBuilder.setTensor(2).setBaseAddress(400))
+                .setTag(0);
+
+            expectedTensor = 2;
+
+            receivedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
+            
+            assertEquals(expectedTensor, receivedTensor);
         }
 
         // Trace is narrow read, instruction does not have narrow read, catch MAE
@@ -643,15 +722,17 @@ public final class ValidationTest extends Suite {
         public void testInvalidNarrowRead() throws Exception, MemoryAccessException {
             traceAccessType = TraceEntry.AccessType.READ_NARROW;
 
+            traceAddress = 0;
+
             instructionBuilder
                 .setWideRead(memoryAccessBuilder.setTensor(2).setBaseAddress(0))
                 .setTag(0);
 
             expectedTensor = 2;
 
-            recievedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
+            receivedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
             
-            assertEquals(expectedTensor, recievedTensor);
+            assertEquals(expectedTensor, receivedTensor);
         }
 
         // Trace is narrow write, instruction does not have narrow write, catch MAE
@@ -659,15 +740,17 @@ public final class ValidationTest extends Suite {
         public void testInvalidNarrowWrite() throws Exception, MemoryAccessException {
             traceAccessType = TraceEntry.AccessType.WRITE_NARROW;
 
+            traceAddress = 0;
+
             instructionBuilder
                 .setWideWrite(memoryAccessBuilder.setTensor(2).setBaseAddress(0))
                 .setTag(0);
 
             expectedTensor = 2;
 
-            recievedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
+            receivedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
             
-            assertEquals(expectedTensor, recievedTensor);
+            assertEquals(expectedTensor, receivedTensor);
         }
 
         // Trace is wide read, instruction does not have wide read, catch MAE
@@ -675,15 +758,17 @@ public final class ValidationTest extends Suite {
         public void testInvalidWideRead() throws Exception, MemoryAccessException {
             traceAccessType = TraceEntry.AccessType.READ_WIDE;
 
+            traceAddress = 0;
+
             instructionBuilder
                 .setNarrowRead(memoryAccessBuilder.setTensor(2).setBaseAddress(0))
                 .setTag(0);
 
             expectedTensor = 2;
 
-            recievedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
+            receivedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
             
-            assertEquals(expectedTensor, recievedTensor);
+            assertEquals(expectedTensor, receivedTensor);
         }
 
         // Trace is wide write, instruction does not have wide write, catch MAE
@@ -691,15 +776,17 @@ public final class ValidationTest extends Suite {
         public void testInvalidWideWrite() throws Exception, MemoryAccessException {
             traceAccessType = TraceEntry.AccessType.WRITE_WIDE;
 
+            traceAddress = 0;
+
             instructionBuilder
                 .setNarrowWrite(memoryAccessBuilder.setTensor(2).setBaseAddress(0))
                 .setTag(0);
 
             expectedTensor = 2;
 
-            recievedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
+            receivedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
             
-            assertEquals(expectedTensor, recievedTensor);
+            assertEquals(expectedTensor, receivedTensor);
         }
 
         // Trace has null access type
@@ -707,15 +794,17 @@ public final class ValidationTest extends Suite {
         public void testNullAccessTraceEntry() throws Exception, MemoryAccessException {
             traceAccessType = null;
 
+            traceAddress = 0;
+
             instructionBuilder
                 .setNarrowRead(memoryAccessBuilder.setTensor(2).setBaseAddress(0))
                 .setTag(0);
 
             expectedTensor = 2;
 
-            recievedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
+            receivedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
             
-            assertEquals(expectedTensor, recievedTensor);
+            assertEquals(expectedTensor, receivedTensor);
         }
 
         // Instruction has the correct access type, but that MemoryAccess does not have 
@@ -724,15 +813,17 @@ public final class ValidationTest extends Suite {
         public void testValidMemoryAccessWithoutCorrespondingTraceEntry() throws Exception, MemoryAccessException {
             traceAccessType = TraceEntry.AccessType.READ_NARROW;
 
+            traceAddress = 0;
+
             instructionBuilder
                 .setNarrowRead(memoryAccessBuilder.setBaseAddress(0))
                 .setTag(0);
 
             expectedTensor = 2;
 
-            recievedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
+            receivedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
             
-            assertEquals(expectedTensor, recievedTensor);
+            assertEquals(expectedTensor, receivedTensor);
         }
     }
 
