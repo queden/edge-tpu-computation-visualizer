@@ -1,27 +1,12 @@
-// Copyright 2019 Google LLC
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     https://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 async function runSimulation() {
-    // console.log("clicked");
     const preprocess = await fetch('/report?process=pre', {method: 'GET'});
     const preprocessResponse = await preprocess.json();
 
     // Process initial json information
+    // TODO: Substitute
     const box = document.getElementById("test-box");
     box.innerHTML = '';
     const init = document.createElement("p");
-    // console.log(preprocessResponse.total);
     init.innerHTML = preprocessResponse.message;
     box.appendChild(init);
 
@@ -37,17 +22,11 @@ async function runTraces(start) {
     const traceResponse = await fetch('/report?process=post&start=' + start, {method: 'GET'});
     const traceProcess = await traceResponse.json();
 
-    console.log(traceProcess.traces);
-
     // Process json trace information
+    // TODO: Substitute
     var responseMessage = document.createElement("p");
     responseMessage.innerHTML = "Call " + (traceProcess.call + 1) + ": " + traceProcess.traces;
     box.appendChild(responseMessage);
-}
-
-// Test if the simulation trace was correctly formed out of datastore
-function getViz() {
-    fetch('/visualizer', {method: 'GET'});
 }
 
 var ele = document.getElementById('container');
