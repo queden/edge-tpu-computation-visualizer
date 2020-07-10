@@ -13,6 +13,7 @@ import com.google.sps.proto.SimulationTraceProto.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Date;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
@@ -40,8 +41,11 @@ public class VisualizerServlet extends HttpServlet {
         SimulationTrace simulationTrace = builder.build();
 
         // Put the simulation trace proto into datastore
-        Entity simulationTraceUpload = new Entity("Files");
-        simulationTraceUpload.setProperty("timestamp", System.currentTimeMillis());
+        Date date = new Date();
+
+        Entity simulationTraceUpload = new Entity("File");
+        simulationTraceUpload.setProperty("time", date);
+        simulationTraceUpload.setProperty("name", filePart.getSubmittedFileName().toString());
         simulationTraceUpload.setProperty("simulation-trace", new Blob(simulationTrace.toByteArray()));
 
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();

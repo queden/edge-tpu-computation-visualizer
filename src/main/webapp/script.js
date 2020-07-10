@@ -1,5 +1,46 @@
+async function loadFiles() {
+    const call = await fetch('/report?process=loadfiles', {method: 'GET'});
+    const files = await call.json();
+
+    const select = document.getElementById("uploaded-files");
+    select.innerHTML = '';
+
+    files.forEach((file) => {
+        select.appendChild(createFile(file));
+    });
+}
+
+function createFile(file) {
+    const selectOption = document.createElement("option");
+    selectOption.value = file.id;
+    selectOption.text = file.name + " at " + file.date;
+    return selectOption;
+}
+
+// async function getComments() {
+//     var numC = document.getElementById("numComments").value;
+//     const response = await fetch('/data?num-comments='+numC);
+//     const comments = await response.json();
+//     const commentBox = document.getElementById("comment-box");
+//     commentBox.innerHTML = '';
+
+//     comments.forEach((comment) => {
+//         commentBox.appendChild(createComment(comment));
+//     });
+// }
+
+// function createComment(comment) {
+//     const p = document.createElement("p");
+//     p.className = "comments-p";
+//     p.innerHTML = comment.text;
+//     return p;
+// }
+
 async function runSimulation() {
-    const preprocess = await fetch('/report?process=pre', {method: 'GET'});
+    const select = document.getElementById("uploaded-files");
+    const file = select.options[select.selectedIndex].value;
+
+    const preprocess = await fetch('/report?process=pre&file=' + file, {method: 'GET'});
     const preprocessResponse = await preprocess.json();
 
     // Process initial json information
@@ -16,7 +57,6 @@ async function runSimulation() {
     }
 }
 
-// Async function, wasn't sure if the asynchronous calls were messing up the sequential calls
 async function runTraces(start) {
     const box = document.getElementById("test-box");
     const traceResponse = await fetch('/report?process=post&start=' + start, {method: 'GET'});
@@ -72,7 +112,7 @@ var heatmap = new ej.heatmap.HeatMap({
     titleSettings: {
             text: 'Tile Visualization',
             textStyle: {
-                size: '15px',
+                size: '25px',
                 fontWeight: '500',
                 fontStyle: 'Normal',
                 fontFamily: 'Montserrat'
