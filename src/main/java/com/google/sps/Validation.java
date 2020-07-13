@@ -230,7 +230,6 @@ public class Validation {
       TraceEntry traceEntry = traceEntries.get((int) i);
       // Gets the trace entries corresponding instruction and ensures it exists.
       Instruction instruction = instructionTagtoInstruction.get(traceEntry.getInstructionTag());
-      System.out.println(instructionTagtoInstruction.toString());
       if (instruction == null) {
         throw new Exception(
             "Instruction with key "
