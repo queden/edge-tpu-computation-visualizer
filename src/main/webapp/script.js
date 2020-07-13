@@ -35,7 +35,9 @@ async function runVisualization() {
     init.innerHTML = preprocessResponse.message;
     box.appendChild(init);
 
-    for (i = 0; i < preprocessResponse.total; i += 1000) {
+    console.log(preprocessResponse)
+
+    for (i = 0; i < preprocessResponse.numTraces; i += 1000) {
         // Run through the traces, information processing will happen within the function
         await runTraces(i);
     }
@@ -43,15 +45,25 @@ async function runVisualization() {
 
 // Processes the different chunks of specified trace indicies
 // start is the beginning index of the traces to be processed
+
 async function runTraces(start) {
     const box = document.getElementById("test-box");
     const traceResponse = await fetch('/report?process=post&start=' + start, {method: 'GET'});
     const traceProcess = await traceResponse.json();
 
+    box.appendChild(responseMessage);
+
     // Process json trace information
     // TODO: Substitute
     var responseMessage = document.createElement("p");
-    responseMessage.innerHTML = "Call " + (traceProcess.call + 1) + ": " + traceProcess.traces;
+
+    if (traceProcess.error == null) {
+        responseMessage.innerHTML += "Traces validated";
+    }
+    else {
+        responseMessage.innerHTML = traceProcess.error.message;
+    }
+
     box.appendChild(responseMessage);
 }
 

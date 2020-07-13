@@ -13,6 +13,7 @@ import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.gson.Gson;
 import com.google.sps.Validation;
 import com.google.sps.proto.SimulationTraceProto.*;
+import com.google.sps.results.*;
 import java.io.IOException;
 import java.util.Date;
 import java.text.SimpleDateFormat;
@@ -34,7 +35,7 @@ public class ReportServlet extends HttpServlet {
         throws IOException {
 
         String process = request.getParameter("process").toString();
-        String json = "{";
+        String json;
 
         if (process.equals("loadfiles")) {
             Query query = new Query("File").addSort("time", SortDirection.DESCENDING);
@@ -82,35 +83,25 @@ public class ReportServlet extends HttpServlet {
 
             SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
             String date = formatter.format((Date) retrievedSimulationTrace.getProperty("time"));
+            System.out.println(date);
 
-            json += "\"message\": ";
-            json +=  "\"" + date + "\"";
-            json += ", ";
-            json += "\"total\": " + 10000;
-            json += "}";
+            validation = new Validation(simulationTrace);
 
-            // validation = new Validation(simulationTrace);
+            PreProcessResults preProcessResults = validation.preProcess();
 
-            // validation.preProcess();
+            json = new Gson().toJson(preProcessResults);
         } else {
             // Substitute with return object's gson.json()
             long start = Long.parseLong(request.getParameter("start"));
 
-            json += "\"traces\": ";
-            json += "\"" + start + " to " + (start + 1000) + ", time: " + System.currentTimeMillis() + "\"";
-            json += ", ";
-            json += "\"call\": " + start/1000;
-            json += "}";
+            System.out.println("Start is " + start);
 
-            // Actual validation code
-            // long start = Long.parseLong(request.getParameter("start"));
-            // validation.process(start, start + 1000);
+            ProcessResults processResults = validation.process(start, start + 1000);
+
+            json = new Gson().toJson(processResults);
         }
 
-        Gson gson = new Gson();
-
         response.setContentType("application/json;");
-        // response.getWriter().println(gson.toJson(json));
         response.getWriter().println(json);
     }
 }
