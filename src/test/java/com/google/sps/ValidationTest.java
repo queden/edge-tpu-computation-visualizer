@@ -1529,6 +1529,7 @@ public final class ValidationTest extends Suite {
     public static class TestReadValidate {
         // /* // Un-comment for testing purposes
         private final static int NUM_TILES = 16;
+        private static List<Boolean> maskList;
 
         public static boolean readValidation(
             int[][] narrow, int[][] wide, List<Boolean> masks, int tensor, TraceEntry traceEntry)
@@ -1645,15 +1646,13 @@ public final class ValidationTest extends Suite {
         // Tests a valid read trace
         @Test
         public void testValidRead() throws InvalidTensorReadException {
-            int i = 0;
+            maskList = INSTRUCTION_ONE.getMaskList();
 
-            for (boolean mask : INSTRUCTION_ONE.getMaskList()) {
-                if (mask) {
+            for (int i = 0; i < maskList.size(); i++) {
+                if (maskList.get(i)) {
                     narrow[i][INSTRUCTION_ONE.getNarrowRead().getBaseAddress()] = 
                         INSTRUCTION_ONE.getNarrowRead().getTensor(); 
                 }
-
-                i++;
             }
 
             assertTrue(
@@ -1668,18 +1667,16 @@ public final class ValidationTest extends Suite {
         // Tests two valid read traces in a single instruction
         @Test
         public void testTwoValidRead() throws InvalidTensorReadException {
-            int i = 0;
+            maskList = INSTRUCTION_TWO.getMaskList();
 
-            for (boolean mask : INSTRUCTION_TWO.getMaskList()) {
-                if (mask) {
+            for (int i = 0; i < maskList.size(); i++) {
+                if (maskList.get(i)) {
                     narrow[i][INSTRUCTION_TWO.getNarrowRead().getBaseAddress()] = 
                         INSTRUCTION_TWO.getNarrowRead().getTensor();
 
                     wide[i][INSTRUCTION_TWO.getWideRead().getBaseAddress()] = 
                         INSTRUCTION_TWO.getWideRead().getTensor();
                 }
-
-                i++;
             }
 
             assertTrue(
@@ -1702,15 +1699,13 @@ public final class ValidationTest extends Suite {
         // Tests an invalid read trace
         @Test (expected = InvalidTensorReadException.class)
         public void testInvalidRead() throws InvalidTensorReadException {
-            int i = 0;
+            maskList = INSTRUCTION_THREE.getMaskList();
 
-            for (boolean mask : INSTRUCTION_THREE.getMaskList()) {
-                if (mask) {
+            for (int i = 0; i < maskList.size(); i++) {
+                if (maskList.get(i)) {
                     wide[i][INSTRUCTION_THREE.getWideRead().getBaseAddress()] = 
                         INSTRUCTION_THREE.getWideRead().getTensor(); 
                 }
-
-                i++;
             }
 
             assertTrue(
@@ -1725,15 +1720,13 @@ public final class ValidationTest extends Suite {
         // Tests a valid and invalid read trace in a single instruction
         @Test (expected = InvalidTensorReadException.class)
         public void testValidandInvalidRead() throws InvalidTensorReadException {
-            int i = 0;
+            maskList = INSTRUCTION_TWO.getMaskList();
 
-            for (boolean mask : INSTRUCTION_TWO.getMaskList()) {
-                if (mask) {
+            for (int i = 0; i < maskList.size(); i++) {
+                if (mask.get(i)) {
                     narrow[i][INSTRUCTION_TWO.getNarrowRead().getBaseAddress()] = 
                         INSTRUCTION_TWO.getNarrowRead().getTensor();
                 }
-
-                i++;
             }
 
             assertTrue(
