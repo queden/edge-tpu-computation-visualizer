@@ -42,11 +42,11 @@ public class ReportServlet extends HttpServlet {
             DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
             PreparedQuery results = datastore.prepare(query);
 
+            // Uncomment to purge datastore of all entities
             // for (Entity entity : results.asIterable()) {
             //     datastore.delete(entity.getKey());
             // }
 
-            // HashSet<LoadFile> files = new HashSet<>();
             ArrayList<LoadFile> files = new ArrayList<>();
             SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 
