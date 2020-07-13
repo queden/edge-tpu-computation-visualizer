@@ -1,5 +1,5 @@
 
-/* This is a style sheet for the components of the html page. */
+/* This is a style sheet for the components of the html pages. */
  
 #nav-bar {
     background-color: #000100;
@@ -34,6 +34,7 @@
   max-width:100%;
   max-height:100%;
 }
+
 #body-text {
   font-family: 'Montserrat';
   font-style: normal;
@@ -44,6 +45,10 @@
   top: 50%;
   -ms-transform: translateY(-50%);
   transform: translateY(-50%); 
+}
+
+p {
+    font-size: 17px;
 }
 
 rect.bordered {

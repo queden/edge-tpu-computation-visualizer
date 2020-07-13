@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="UTF-8">
 
     <!--Stylesheets from bootstrap and materialize. Used to incorporate the pre-made templates offered by the
     two sites. -->
@@ -9,9 +8,15 @@
     <link rel="stylesheet" href="style.css">
     <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
     <script src="script.js"></script>
+    <style>
+        input[type=file], input[type=submit] {
+            font-size: 18px;
+            cursor: pointer;
+        }
+    </style>
   </head>
 
-  <body onload="getViz()">
+  <body>
 
       <!--The navigation bar. -->
 
@@ -31,13 +36,13 @@
         <div id="body-text">
             <h2> Upload File </h2>
 
-            <!-- TJ Code -->
             <form action="/visualizer" method="POST" enctype="multipart/form-data">
                 <input name="file-input" type="file"/>
                 <input type="submit" value="Upload"/>
             </form>
 
-            <h2> Run Simulation </h2>
+            <h2> Go to Visualizer </h2>
+            <p> *Click if file previously uploaded </p>
             <form action="/report.html">
                 <input type="submit" value="Go to Visualizer" />
             </form>
