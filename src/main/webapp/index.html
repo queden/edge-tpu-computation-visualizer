@@ -11,7 +11,7 @@
     <script src="script.js"></script>
   </head>
 
-  <body>
+  <body onload="getViz()">
 
       <!--The navigation bar. -->
 
@@ -30,7 +30,17 @@
     <div id="body-content">
         <div id="body-text">
             <h2> Upload File </h2>
-            <input id="file-input" type="file" />
+
+            <!-- TJ Code -->
+            <form action="/visualizer" method="POST" enctype="multipart/form-data">
+                <input name="file-input" type="file"/>
+                <input type="submit" value="Upload"/>
+            </form>
+
+            <h2> Run Simulation </h2>
+            <form action="/report.html">
+                <input type="submit" value="Go to Visualizer" />
+            </form>
         </div>
     </div>
 

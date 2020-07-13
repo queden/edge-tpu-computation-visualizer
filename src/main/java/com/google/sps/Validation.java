@@ -1,13 +1,25 @@
 package com.google.sps;
 
 import com.google.sps.exceptions.*;
+import com.google.sps.results.*;
 import com.google.sps.proto.SimulationTraceProto.*;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
 public class Validation {
+  private static SimulationTrace simulationTrace;
+
+  private static ArrayList<Instruction> instructions;
+  private static int[] narrowAllocation;
+  private static int[] wideAllocation;
+  private static Map<Integer, Instruction> instructionTagtoInstruction;
+  private static List<TraceEntry> traceEntries;
+
+  private static int[][] narrow;
+  private static int[][] wide;
 
   // Sizes in KB of narrow and wide memory.
   public static final int NARROW_SIZE = 128;
@@ -22,26 +34,67 @@ public class Validation {
   public static final String WIDE_READ = "Wide Read";
   public static final String WIDE_WRITE = "Wide Write";
 
-  /** Given a Simulation Trace, validates the trace and outputs any errors found */
-  public static void validate(SimulationTrace simulationTrace) {
-    List<Instruction> instructions = simulationTrace.getInstructionList();
+  public Validation(SimulationTrace simulationTrace) {
+    this.simulationTrace = simulationTrace;
+    traceEntries = simulationTrace.getTraceEntryList();
+    instructions = new ArrayList<Instruction>();
+    narrow = new int[NUM_TILES][NARROW_SIZE * 1024];
+    wide = new int[NUM_TILES][WIDE_SIZE * 1024];
+    instructionTagtoInstruction = new Hashtable<Integer, Instruction>();
+  }
 
-    // TODO: May need to catch ArrayIndexOutOfBoundsException
-    int[] narrowAllocation =
-        getAllocationArray(simulationTrace.getTensorAllocationNarrowList(), NARROW_SIZE);
-    int[] wideAllocation =
-        getAllocationArray(simulationTrace.getTensorAllocationWideList(), WIDE_SIZE);
+  public static PreProcessResults preProcess() {
+    boolean isError = false;
+    String message = "Preprocessing completed successfully.";
+
+    instructions.addAll(simulationTrace.getInstructionList());
 
     try {
-      relateTensorsToInstructions(narrowAllocation, wideAllocation, instructions);
-    } catch (InvalidTensorAddressException e) {
-      System.out.println(e.getMessage());
+      narrowAllocation =
+        getAllocationArray(simulationTrace.getTensorAllocationNarrowList(), NARROW_SIZE);
     } catch (ArrayIndexOutOfBoundsException e) {
-      System.out.println(e.getMessage());
+      message = e.getMessage();
+      isError = true;
     }
 
-    Map<Integer, Instruction> instructionTagtoInstruction =
-        relateIntructionTagtoInstructionTable(instructions);
+    try {
+      wideAllocation =
+        getAllocationArray(simulationTrace.getTensorAllocationWideList(), WIDE_SIZE);
+    } catch (ArrayIndexOutOfBoundsException e) {
+      if (!isError) {
+        message = e.getMessage();
+        isError = true;
+      }
+    }
+    
+
+    try {
+      relateTensorsToInstructions();
+    } catch (InvalidTensorAddressException e) {
+      if (!isError) {
+        message = e.getMessage();
+        isError = true;
+      }    
+    } catch (ArrayIndexOutOfBoundsException e) {
+      if (!isError) {
+        message = e.getMessage();
+        isError = true;
+      }    
+    }
+
+    relateIntructionTagtoInstructionTable();
+
+    return new PreProcessResults(isError, message, traceEntries.size());
+  }
+
+  public static ProcessResults process(long start, long end) {
+    try {
+      validateTraceEntries(start, end);
+    } catch (Exception e) {
+      return new ProcessResults(e, narrow, wide);
+    }
+
+    return new ProcessResults(null, narrow, wide);
   }
 
   /**
@@ -49,8 +102,7 @@ public class Validation {
    * instruction with the tensor that they operate on. Throws a InvalidTensorAddressException if the
    * instruction operates on a memory address that does not hold a tensor.
    */
-  public static void relateTensorsToInstructions(
-      int[] narrowAllocation, int[] wideAllocation, List<Instruction> instructions)
+  private static void relateTensorsToInstructions()
       throws InvalidTensorAddressException {
     // Loops over each instruction and fills in the tensor field for the instruction's operations.
     for (int i = 0; i < instructions.size(); i++) {
@@ -133,7 +185,7 @@ public class Validation {
    * representing that memory. -1 array entries represent no tensor present at that location, values
    * >= 0 represent a tensor with a label of that value.
    */
-  public static int[] getAllocationArray(List<TensorAllocation> allocations, int memorySize) {
+  private static int[] getAllocationArray(List<TensorAllocation> allocations, int memorySize) {
     int[] memory = new int[memorySize * 1024];
 
     Arrays.fill(memory, -1);
@@ -150,39 +202,35 @@ public class Validation {
   }
 
   /** Given a list of instructions, maps each instruction tag to its corresponding instruction. */
-  public static Map<Integer, Instruction> relateIntructionTagtoInstructionTable(
-      List<Instruction> instructions) {
-    Map<Integer, Instruction> instructionTagtoInstruction = new Hashtable<>();
-
+  private static void relateIntructionTagtoInstructionTable() {
     for (Instruction instruction : instructions) {
-      instructionTagtoInstruction.put(instruction.getTag(), instruction);
+      int instructionTag = instruction.getTag();
+      System.out.println("instruction tag is " + instructionTag);
+      instructionTagtoInstruction.put(instructionTag, instruction);
     }
-
-    return instructionTagtoInstruction;
   }
 
   /**
    * Given a list of trace entries, validates that trace entries proceeded in the right order and
    * operated on the correct traces.
    */
-  public static void validateTraceEntries(
-      List<TraceEntry> traceEntries,
-      Map<Integer, Instruction> instructionTagtoInstruction,
-      int[] wideAllocation,
-      int[] narrowAllocation)
-      throws Exception, InvalidTensorOperationException {
+  private static void validateTraceEntries(long start, long end)
+      throws MemoryAccessException, InvalidTensorOperationException, InvalidMaskException, InvalidTensorReadException, Exception {
     // Arrays to simulate the narrow and wide memories for each tile.
-    int[][] narrow = new int[NUM_TILES][NARROW_SIZE * 1024];
-    int[][] wide = new int[NUM_TILES][WIDE_SIZE * 1024];
     if (traceEntries.isEmpty()) {
         throw new Exception(
             "No trace entry to be validated "); 
-      }
+    }
     // Iterates over each trace entry, ensures that it is operating on the correct tensor and
     // validates based on if it is a write or a read.
-    for (TraceEntry traceEntry : traceEntries) {
+
+    long bound = (end <= traceEntries.size()) ? end : traceEntries.size();
+
+    for (long i = start; i < bound; i++) {
+      TraceEntry traceEntry = traceEntries.get((int) i);
       // Gets the trace entries corresponding instruction and ensures it exists.
       Instruction instruction = instructionTagtoInstruction.get(traceEntry.getInstructionTag());
+      System.out.println(instructionTagtoInstruction.toString());
       if (instruction == null) {
         throw new Exception(
             "Instruction with key "
@@ -201,11 +249,9 @@ public class Validation {
        }
       int address = traceEntry.getAddress();
       int traceTensor = -1;
-      try {
-        traceTensor = getTraceTensor(address, accessType, instruction);
-      } catch(Exception e) {
-        System.out.println(e.getMessage());
-      }
+
+      traceTensor = getTraceTensor(address, accessType, instruction);
+
       int expectedTensor;
 
       // Gets the expected tensor that the trace entry should be operating on based on which memory
@@ -232,14 +278,10 @@ public class Validation {
       // validation.
       if (accessType == TraceEntry.AccessType.WRITE_NARROW
           || accessType == TraceEntry.AccessType.WRITE_WIDE) {
-          writeValidation(narrow, wide, masks, traceTensor, traceEntry);
+        writeValidation(narrow, wide, masks, traceTensor, traceEntry);
       } else if (accessType == TraceEntry.AccessType.READ_NARROW
           || accessType == TraceEntry.AccessType.READ_WIDE) {
-        try {
-          readValidation(narrow, wide, masks, traceTensor, traceEntry);
-        } catch (InvalidTensorReadException e) {
-          System.out.println(e.getMessage());
-        }
+        readValidation(narrow, wide, masks, traceTensor, traceEntry);
       }
     }
   }
@@ -247,7 +289,7 @@ public class Validation {
   /**
    * Returns the tensor that the trace entry is operating on based on its corresponding instruction.
    */
-  public static int getTraceTensor(
+  private static int getTraceTensor(
       int traceAddress, TraceEntry.AccessType traceAccessType, Instruction instruction)
       throws Exception, MemoryAccessException {
     MemoryAccess memoryAccess = null;
@@ -316,7 +358,7 @@ public class Validation {
    * Validates that the write validation has a corresponding tensor and writes it to the correct
    * address in the memory arrays.
    */
-  public static void writeValidation(
+  private static void writeValidation(
       int[][] narrow, int[][] wide, List<Boolean> masks, int tensor, TraceEntry traceEntry) {  
     int address = traceEntry.getAddress();
     if (traceEntry.getAccessType() == TraceEntry.AccessType.WRITE_NARROW) {
@@ -341,7 +383,7 @@ public class Validation {
    * Validates that the tensor that the read trace entry is reading has been written before the read
    * occurs.
    */
-  public static void readValidation(
+  private static void readValidation(
       int[][] narrow, int[][] wide, List<Boolean> masks, int tensor, TraceEntry traceEntry)
       throws InvalidTensorReadException {
     int address = traceEntry.getAddress();
