@@ -1723,7 +1723,7 @@ public final class ValidationTest extends Suite {
             maskList = INSTRUCTION_TWO.getMaskList();
 
             for (int i = 0; i < maskList.size(); i++) {
-                if (mask.get(i)) {
+                if (maskList.get(i)) {
                     narrow[i][INSTRUCTION_TWO.getNarrowRead().getBaseAddress()] = 
                         INSTRUCTION_TWO.getNarrowRead().getTensor();
                 }
