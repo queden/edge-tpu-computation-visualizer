@@ -1,3 +1,4 @@
+// Populates the select list
 async function loadFiles() {
     const call = await fetch('/report?process=loadfiles', {method: 'GET'});
     const files = await call.json();
@@ -10,6 +11,7 @@ async function loadFiles() {
     });
 }
 
+// Creates file options out of previously uploaded files to append to the select list
 function createFile(file) {
     const selectOption = document.createElement("option");
     selectOption.value = file.id;
@@ -17,26 +19,8 @@ function createFile(file) {
     return selectOption;
 }
 
-// async function getComments() {
-//     var numC = document.getElementById("numComments").value;
-//     const response = await fetch('/data?num-comments='+numC);
-//     const comments = await response.json();
-//     const commentBox = document.getElementById("comment-box");
-//     commentBox.innerHTML = '';
-
-//     comments.forEach((comment) => {
-//         commentBox.appendChild(createComment(comment));
-//     });
-// }
-
-// function createComment(comment) {
-//     const p = document.createElement("p");
-//     p.className = "comments-p";
-//     p.innerHTML = comment.text;
-//     return p;
-// }
-
-async function runSimulation() {
+// Runs the visualization of the chosen simulation trace
+async function runVisualization() {
     const select = document.getElementById("uploaded-files");
     const file = select.options[select.selectedIndex].value;
 
@@ -57,6 +41,8 @@ async function runSimulation() {
     }
 }
 
+// Processes the different chunks of specified trace indicies
+// start is the beginning index of the traces to be processed
 async function runTraces(start) {
     const box = document.getElementById("test-box");
     const traceResponse = await fetch('/report?process=post&start=' + start, {method: 'GET'});

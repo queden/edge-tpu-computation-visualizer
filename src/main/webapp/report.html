@@ -27,17 +27,12 @@
             <div id="element"></div>
         </div>
 
-        <form action="#" onsubmit="runSimulation()" enctype="multipart/form-data">
+        <form action="#">
             <label for="uploaded-files">Choose a file: </label>
-            <select id="uploaded-files" name="uploaded-files">
-            </select>
-                <!-- <label for="cars">Choose a car:</label>
-                <select id="cars" name="cars">
-                    <option value="volvo">Volvo</option>
-                    <option value="saab">Saab</option>
-                    <option value="fiat">Fiat</option>
-                    <option value="audi">Audi</option>
-                </select> -->
+            <select id="uploaded-files" name="uploaded-files"></select>
+        </form>
+
+        <form action='#' onsubmit="runVisualization()">
             <input type="submit" value="Run!" />
         </form>
 

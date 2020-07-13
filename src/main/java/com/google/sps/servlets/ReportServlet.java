@@ -64,13 +64,6 @@ public class ReportServlet extends HttpServlet {
         } else if (process.equals("pre")) {
             
             // Substitute with return object's gson.json()
-            // json += "\"message\": ";
-            // json +=  "\"" + "test init" + "\"";
-            // json += ", ";
-            // json += "\"total\": " + 10000;
-
-            // Actual validation code
-            // Query query = new Query("Files").addSort("timestamp", SortDirection.DESCENDING);
 
             DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
             Entity retrievedSimulationTrace = null;
@@ -87,8 +80,11 @@ public class ReportServlet extends HttpServlet {
                 SimulationTrace.parseFrom(
                     ((Blob) retrievedSimulationTrace.getProperty("simulation-trace")).getBytes());
 
+            SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+            String date = formatter.format((Date) retrievedSimulationTrace.getProperty("time"));
+
             json += "\"message\": ";
-            json +=  "\"" + simulationTrace.getNumTiles() + "\"";
+            json +=  "\"" + date + "\"";
             json += ", ";
             json += "\"total\": " + 10000;
             json += "}";
