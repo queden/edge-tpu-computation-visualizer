@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // Populates the select list
 async function loadFiles() {
     const call = await fetch('/report?process=loadfiles', {method: 'GET'});
@@ -295,5 +296,6 @@ function loadMemory(){
                 })
                 .join(sep);
         }
-    });
+    };
+}
 }
