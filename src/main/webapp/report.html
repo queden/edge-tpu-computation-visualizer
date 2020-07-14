@@ -1,11 +1,34 @@
+
 <html>
-<meta charset="utf-8">
-<link rel="stylesheet" href="style.css">
-<body onload="loadMemory()">
-    <div id = "nav-bar"> 
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" href="style.css">
+        <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
+        <style>
+            input[type=submit] {
+                font-size: 20px;
+                padding: 7px 20px;
+                cursor: pointer;
+            }
+        </style>
+    </head>
+    <body onload="loadFiles()">
+        <div id = "nav-bar"> 
         </div>
         <div id="heading-content"> 
             <h1 id="heading">Computation Visualizer</h1>
+        </div>
+        <div id="container">
+            <div id="element"></div>
+        </div>
+        <form action="#">
+            <label for="uploaded-files">Choose a file: </label>
+            <select id="uploaded-files" name="uploaded-files"></select>
+        </form>
+        <form action='#' onsubmit="runVisualization()">
+            <input type="submit" value="Run!" />
+        </form>
+        <div id="test-box">
         </div>
     <p id="chart"></p>
 

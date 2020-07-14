@@ -9,10 +9,10 @@ message SimulationTrace {
   optional int32 narrow_memory_size_bytes = 3;
   optional int32 wide_memory_size_bytes = 4;
   repeated DependenceNode dependence_node = 5;
-  repeated TensorAllocation tensor_allocation_narrow = 6;
-  repeated TensorAllocation tensor_allocation_wide = 7;
+  repeated TensorAllocationTable tensor_allocation_narrow = 6;
+  repeated TensorAllocationTable tensor_allocation_wide = 7;
   repeated Instruction instruction = 8;
-  repeated TraceEntry trace_entry = 9;
+  repeated TraceEvent trace_event = 9;
 }
 
 message DependenceNode {
@@ -21,11 +21,21 @@ message DependenceNode {
   repeated int32 operands = 3;
 }
 
-message TensorAllocation {
+message TensorInfo {
   optional string name = 1;
-  optional int32 label = 2;
-  optional int32 start_address = 3;
+  optional int32 tensor_label = 2;
+  optional int32 base_address = 3;
   optional int32 size = 4;  // in allocation units
+}
+
+message TensorAllocationTable {
+  repeated TensorAllocation tensor_allocation = 1;
+}
+
+message TensorAllocation {
+  optional TensorInfo tensor_info = 1;
+  repeated int32 read_instructions = 3;
+  repeated int32 write_instructions = 4;
 }
 
 message Counter {
@@ -38,23 +48,22 @@ message Counter {
    optional bool mask = 5;
 }
 
-message MemoryAccess {
-  optional int32 tensor = 1;
-  optional int32 base_address = 2;
-  repeated Counter counter = 3;
+message TensorAccess {
+  optional TensorInfo tensor_info = 1;
+  repeated Counter counter = 2;
 }
 
 message Instruction {
   optional string name = 1;
   optional int32 tag = 2;
   repeated bool mask = 3;  // One entry for each tile.
-  optional MemoryAccess narrow_read = 4;
-  optional MemoryAccess narrow_write = 5;
-  optional MemoryAccess wide_read = 6;
-  optional MemoryAccess wide_write = 7;
+  repeated TensorAccess narrow_read = 4;
+  repeated TensorAccess narrow_write = 5;
+  repeated TensorAccess wide_read = 6;
+  repeated TensorAccess wide_write = 7;
 }
 
-message TraceEntry {
+message TraceEvent {
   enum AccessType {
     READ_NARROW = 0;
     WRITE_NARROW = 1;

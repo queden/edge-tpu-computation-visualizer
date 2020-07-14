@@ -1,34 +1,70 @@
-// Copyright 2019 Google LLC
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     https://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Populates the select list
+async function loadFiles() {
+    const call = await fetch('/report?process=loadfiles', {method: 'GET'});
+    const files = await call.json();
 
-async function runSimulation() {
-    const preprocess = await fetch("/report?process=pre", {method: "POST"});
-    const preprocessResponse = preprocess.json();
+    const select = document.getElementById("uploaded-files");
+    select.innerHTML = '';
 
-    // Process json intializations
+    files.forEach((file) => {
+        select.appendChild(createFile(file));
+    });
+}
 
-    for (i = 0; i < preprocessResponse.traces; i += 1000) {
-        const traceProcess = await fetch("report?process=post&start=" + i, {method: "POST"});
-        const traceResponse = traceProcess.json();
+// Creates file options out of previously uploaded files to append to the select list
+function createFile(file) {
+    const selectOption = document.createElement("option");
+    selectOption.value = file.id;
+    selectOption.text = file.name + " at " + file.date;
+    return selectOption;
+}
 
-        // Process json trace information
+// Runs the visualization of the chosen simulation trace
+async function runVisualization() {
+    const select = document.getElementById("uploaded-files");
+    const file = select.options[select.selectedIndex].value;
+
+    const preprocess = await fetch('/report?process=pre&file=' + file, {method: 'GET'});
+    const preprocessResponse = await preprocess.json();
+
+    // Process initial json information
+    // TODO: Substitute
+    const box = document.getElementById("test-box");
+    box.innerHTML = '';
+    const init = document.createElement("p");
+    init.innerHTML = preprocessResponse.message;
+    box.appendChild(init);
+
+    console.log(preprocessResponse)
+
+    for (i = 0; i < preprocessResponse.numTraces; i += 1000) {
+        // Run through the traces, information processing will happen within the function
+        await runTraces(i);
     }
 }
 
-// Test if the simulation trace was correctly formed out of datastore
-function getViz() {
-    fetch('/visualizer', {method: 'GET'});
+// Processes the different chunks of specified trace indicies
+// start is the beginning index of the traces to be processed
+
+async function runTraces(start) {
+    const box = document.getElementById("test-box");
+    const traceResponse = await fetch('/report?process=post&start=' + start, {method: 'GET'});
+    const traceProcess = await traceResponse.json();
+
+    box.appendChild(responseMessage);
+
+    // Process json trace information
+    // TODO: Substitute
+    var responseMessage = document.createElement("p");
+
+    if (traceProcess.error == null) {
+        responseMessage.innerHTML += "Traces validated";
+    }
+    else {
+        responseMessage.innerHTML = traceProcess.error.message;
+    }
+
+    box.appendChild(responseMessage);
 }
 
 function loadMemory(){ 
@@ -193,9 +229,7 @@ function loadMemory(){
                     this.remove();
                     transitioning = false;
                 });
-            }
-            return g;
-        }
+
         // set positioning of the text
         function text(text) {
             text.attr("x", function (d) {
