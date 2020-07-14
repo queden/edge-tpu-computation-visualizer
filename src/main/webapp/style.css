@@ -57,27 +57,28 @@ text {
     font-weight: bold;
 }
 rect {
-    stroke: #fff;
+    stroke:#0096c7;;
     stroke-width: 1px;
-    fill : none;
+    fill : #023e8a;
 }
 rect.parent,
 .grandparent rect {
     stroke-width: 3px;
 }
 .grandparent:hover rect {
-    fill: grey;
+    fill: #023e8a;
 }
 .children rect.parent,
 .grandparent rect {
     cursor: pointer;
-    fill: grey;
+    fill: #023e8a;
 }
 .children rect.child {
     opacity: 0.5;
     fill : orange;
 }
 .children rect.parent {
+    fill: #023e8a;
 }
 .children:hover rect.child {
     opacity: 1;
@@ -97,7 +98,7 @@ rect.parent,
     pointer-events: auto;
     font-size: 13px;
     font-family: sans-serif;
-    fill: black;
+    fill: #023e8a;
 }
 .form-group {
     text-align:left;
@@ -108,16 +109,19 @@ rect.parent,
     padding: 7px;
     cursor: pointer;
     overflow:none;
+    color : white;
 }
 .textdiv .title {
     font-size: 102%;
     font-weight: bold;
     margin-top: 8px;
     font-size:11px !important;
+    color : white;
 }
 .textdiv p{
     line-height: 13px;
     margin:0 0 4px !important;
     padding:0px;
     font-size:10px !important;
+    color : white;
 }

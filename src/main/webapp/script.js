@@ -40,7 +40,7 @@ function loadMemory(){
         height = 600 - margin.top - margin.bottom,
         formatNumber = d3.format(","),
         transitioning;
-// set the dimensions of the internal rectangles
+// set the dimensions of the internal rectangles by adding scalers so that the object is rendered to the size we want it to. 
     var x = d3.scaleLinear()
         .domain([0, width])
         .range([0, width]);
@@ -48,10 +48,12 @@ function loadMemory(){
         .domain([0, height])
         .range([0, height]);
 // add the treemap
+    // sets the dimensions of the treemap
     var treemap = d3.treemap()
             .size([width, height])
             .paddingInner(0)
             .round(false);
+    //appends the treemap as a svg object -- if you want to understand svg more, look at https://www.tutorialspoint.com/d3js/d3js_introduction_to_svg.htm
     var svg = d3.select('#'+'chart').append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.bottom + margin.top)
@@ -60,6 +62,7 @@ function loadMemory(){
         .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
             .style("shape-rendering", "crispEdges");
+    // add a "grandparent" rectangle to the svg which will be the start rectangle 
     var grandparent = svg.append("g")
             .attr("class", "grandparent");
         grandparent.append("rect")
@@ -71,9 +74,16 @@ function loadMemory(){
             .attr("x", 6)
             .attr("y", 6 - margin.top)
             .attr("dy", ".75em");
+    // function to retrieve the data from the json file and add it to the treemap
     d3.json("data.json",function(data) {
+        // because the data is arranged in hierarchical format, we can pass it to d3.hierarchy to display it in such format.
+        // by passing the data in to d3.heirarchy, we get the option to access each node from their links (parents/children).
+        // line 82 will basically return an array of nodes associated with a specified root node. 
         var root = d3.hierarchy(data);
-        console.log(root);
+        console.log(root); //view this in your console
+        // pass in root (the array of nodes) into the treemap. 
+        //Call sum on the root to add all the quanities in "value" of the desendant nodes of each node. 
+        // call sort to order all of the node based on the sum of "value"s (in our case all of the nodes have equal value but we want it to be ordered by start.)
         treemap(root
             .sum(function (d) {
                 return d.value;
@@ -83,9 +93,9 @@ function loadMemory(){
             })
         );
         display(root);
+        //pass in root into display function
         function display(d) {
-            // write text into grandparent
-            // and activate click's handler
+            // write text into grandparent and activate click handler
             grandparent
                 .datum(d.parent)
                 .on("click", transition)
@@ -97,26 +107,29 @@ function loadMemory(){
                 .select("rect")
                 .attr("fill", function () {
                     return '#bbbbbb'
-                });
+                })
+                .style("color", "white");
+            // insert an object g1 before the "grandparents"
             var g1 = svg.insert("g", ".grandparent")
                 .datum(d)
-                .attr("class", "depth");
+                .attr("class", "depth"); //depth of the node
+            // Adds g1 who are children of the "grandparent". 
             var g = g1.selectAll("g")
                 .data(d.children)
                 .enter().
                 append("g");
             // add class and click handler to all g's with children
-            g.filter(function (d) {
+            g.filter(function (d) { //extract only the "children" 
                 return d.children;
             })
-                .classed("children", true)
-                .on("click", transition);
+                .classed("children", true)  // classname = children
+                .on("click", transition); // add the click transition
             g.selectAll(".child")
                 .data(function (d) {
-                    return d.children || [d];
+                    return d.children || [d]; //return the children of the parents or just itself
                 })
-                .enter().append("rect")
-                .attr("class", "child")
+                .enter().append("rect")  //add a rectangle for the child
+                .attr("class", "child") 
                 .call(rect);
             // add title to parents
             g.append("rect")
@@ -127,6 +140,7 @@ function loadMemory(){
                     return d.data.name;
                 });
             /* Adding a foreign object instead of a text object, allows for text wrapping */
+            // to be printed inside each rectangle
             g.append("foreignObject")
                 .call(rect)
                 .attr("class", "foreignobj")
@@ -139,16 +153,18 @@ function loadMemory(){
                     ;
                 })
                 .attr("class", "textdiv"); //textdiv class allows us to style the text easily with CSS
+            
+            // defines a recursive call to display the desendants of a node
             function transition(d) {
                 if (transitioning || !d) return;
                 transitioning = true;
-                var g2 = display(d),
+                var g2 = display(d), //recursive call 
                     t1 = g1.transition().duration(650),
                     t2 = g2.transition().duration(650);
-                // Update the domain only after entering new elements.
+                // Update the domain sizing only after entering new elements.
                 x.domain([d.x0, d.x1]);
                 y.domain([d.y0, d.y1]);
-                // Enable anti-aliasing during the transition.
+                // Enable anti-aliasing during the transition -- smoother rectangles.
                 svg.style("shape-rendering", null);
                 // Draw child nodes on top of parent nodes.
                 svg.selectAll(".depth").sort(function (a, b) {
@@ -180,6 +196,7 @@ function loadMemory(){
             }
             return g;
         }
+        // set positioning of the text
         function text(text) {
             text.attr("x", function (d) {
                 return x(d.x) + 6;
@@ -188,6 +205,7 @@ function loadMemory(){
                     return y(d.y) + 6;
                 });
         }
+        // set the positioning and dimensions of the rectangles
         function rect(rect) {
             rect
                 .attr("x", function (d) {
@@ -206,6 +224,7 @@ function loadMemory(){
                     return '#bbbbbb';
                 });
         }
+        // set the positioning and dimension of the foreign objects
         function foreign(foreign) { /* added */
             foreign
                 .attr("x", function (d) {
@@ -221,12 +240,14 @@ function loadMemory(){
                     return y(d.y1) - y(d.y0);
                 });
         }
+        // set the text to be displayed by the root -- does not get removed during transitioning 
         function name(d) {
             return breadcrumbs(d) +
                 (d.parent
                 ? " -  Click to zoom out"
                 : " - Click inside square to zoom in");
         }
+        // extract the root name. In our case it is "Narrow Memory"
         function breadcrumbs(d) {
             var res = "";
             var sep = " > ";
