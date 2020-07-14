@@ -10,7 +10,7 @@ public class InvalidTensorOperationException extends Exception {
     private int instruction; // Tag of instruction performing the operation
     private String memoryAccess; // String representing the access type
   
-    public InvalidTensorOperationException(int traceAddress, int allocatedTensor, int traceTensor, int instruction, TraceEvent.AccessType memoryAccess) {
+    public InvalidTensorOperationException(int traceAddress, int allocatedTensor, int traceTensor, int instruction, TraceEntry.AccessType memoryAccess) {
       this.traceAddress = traceAddress;
       this.allocatedTensor = allocatedTensor;
       this.traceTensor = traceTensor;

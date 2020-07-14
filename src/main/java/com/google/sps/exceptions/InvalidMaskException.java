@@ -7,7 +7,7 @@ public class InvalidMaskException extends Exception {
     private String accessType;
 
 
-    public InvalidMaskException(int instructionTag, TraceEvent.AccessType accessType) {
+    public InvalidMaskException(int instructionTag, TraceEntry.AccessType accessType) {
         super();
         this.instructionTag = instructionTag;
         this.accessType = accessType.getDescriptorForType().getName();

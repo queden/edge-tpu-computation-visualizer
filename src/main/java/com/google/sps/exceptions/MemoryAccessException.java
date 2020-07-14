@@ -7,7 +7,7 @@ public class MemoryAccessException extends Exception {
     private String expectedAccessType;
     private int instructionTag;
   
-    public MemoryAccessException(TraceEvent.AccessType expectedAccessType, int instructionTag) {
+    public MemoryAccessException(TraceEntry.AccessType expectedAccessType, int instructionTag) {
       this.expectedAccessType = expectedAccessType.getDescriptorForType().getName();
       this.instructionTag = instructionTag;
     }

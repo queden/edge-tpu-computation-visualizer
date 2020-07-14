@@ -11,8 +11,9 @@
                 cursor: pointer;
             }
         </style>
+        <script type="text/javascript" src="script.js"></script>
     </head>
-    <body onload="loadFiles()">
+    <body onload="loadFile()">
         <div id = "nav-bar"> 
         </div>
         <div id="heading-content"> 
@@ -33,6 +34,6 @@
     <p id="chart"></p>
 
     <script src="//d3js.org/d3.v4.min.js"></script>
-    <script type="text/javascript" src="script.js"></script>
+    <script type="text/javascript" src="script.js" onload="loadMemory()"></script>
     </body>
 </html>
