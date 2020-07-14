@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 // Populates the select list
 async function loadFiles() {
     const call = await fetch('/report?process=loadfiles', {method: 'GET'});
@@ -230,7 +230,9 @@ function loadMemory(){
                     this.remove();
                     transitioning = false;
                 });
-
+            }
+            return g;
+        }
         // set positioning of the text
         function text(text) {
             text.attr("x", function (d) {
@@ -296,6 +298,5 @@ function loadMemory(){
                 })
                 .join(sep);
         }
-    };
-}
+    });
 }
