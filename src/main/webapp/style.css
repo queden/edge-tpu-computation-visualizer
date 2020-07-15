@@ -16,8 +16,9 @@
   background-color: #FFFFFF;
   justify-content: center;
   align-items: center; 
+  margin-bottom: 35px;
 }
- 
+
 #heading {
   font-family: Poppins;
   font-style: normal;
@@ -51,7 +52,15 @@ body {
     font-family: 'Montserrat';
     font-style: normal;
     font-weight: normal;
-    /* font-size: 20px; */
+    font-size: 20px;
+}
+
+.select {
+    height: 20px;
+}
+
+option {
+    font-size: 15px;
 }
 
 #time-zone-box {
@@ -62,14 +71,15 @@ body {
     color: blue;
 }
 
+#time-zone-submit, #back-upload-file {
+    font-size: 18px;
+    cursor: pointer;
+    padding: 1px 6px;
+}
+
 p {
     font-size: 17px;
 }
-
-
-/* h2 {
-    font-size: 30px;
-} */
 
 #upload-box {
     margin-bottom: 30px;

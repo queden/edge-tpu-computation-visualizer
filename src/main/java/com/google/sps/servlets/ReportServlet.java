@@ -46,7 +46,8 @@ public class ReportServlet extends HttpServlet {
             PreparedQuery fileResults = datastore.prepare(queryFile);
 
             Entity zoneEntity = ((PreparedQuery) datastore.prepare(queryZone)).asIterator().next();
-            String zone = zoneEntity.getProperty("time-zone").toString();
+            String timeZone = zoneEntity.getProperty("time-zone").toString();
+            // System.out.println(timeZone);
 
             // Uncomment to purge datastore of all entities
             // for (Entity entity : results.asIterable()) {
@@ -54,43 +55,39 @@ public class ReportServlet extends HttpServlet {
             // }
 
             ArrayList<LoadFile> files = new ArrayList<>();
-            String time = "";
+            String zone = "";
+            String time;
             DateTimeFormatter formatter;
             String dateTimeString;
             ZonedDateTime dateTime;
 
             for (Entity fileEntity : fileResults.asIterable()) {
+                time = "";
                 dateTimeString = fileEntity.getProperty("date").toString();
                 formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME;
                 dateTime = ZonedDateTime.parse(dateTimeString, formatter);
-                formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss");
 
-                if (zone.equals("-04:00")) {
-                    dateTime = dateTime.withZoneSameInstant(ZoneId.of("-05:00")).minusHours(1); 
-                    time += dateTime.format(formatter);
+                formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss");
+                dateTime = dateTime.withZoneSameInstant(ZoneId.of(timeZone)); 
+                time += dateTime.format(formatter);
+
+                if (timeZone.equals("-04:00")) {                   
                     time += " EDT";
                     zone = "Eastern Daylight Time";
-                } else if (zone.equals("-09:00")) {
-                    dateTime = dateTime.withZoneSameInstant(ZoneId.of("-10:00")).minusHours(1);
-                    time += dateTime.format(formatter);
+                } else if (timeZone.equals("-09:00")) {
                     time += " HDT";
                     zone = "Hawaiian Daylight Time";
-                } else if (zone.equals("-06:00")) {
-                    dateTime = dateTime.withZoneSameInstant(ZoneId.of("-07:00")).minusHours(1);
-                    time += dateTime.format(formatter);
+                } else if (timeZone.equals("-06:00")) {
                     time += " MDT";
                     zone = "Mountain Daylight Time";
                 } else {          
-                    dateTime = dateTime.withZoneSameInstant(ZoneId.of(zone));
-                    time += dateTime.format(formatter);
-
-                    if (zone.equals("-05:00")) {
+                    if (timeZone.equals("-05:00")) {
                         time += " EST";
                         zone = " Eastern Standard Time";
-                    } else if (zone.equals("-10:00")) {
+                    } else if (timeZone.equals("-10:00")) {
                         time += " HST";
                         zone = " Hawaiian Standard Time";
-                    } else if (zone.equals("-07:00")) {
+                    } else if (timeZone.equals("-07:00")) {
                         time += " MST";
                         zone = " Mountain Standard Time";
                     } else {
@@ -105,6 +102,7 @@ public class ReportServlet extends HttpServlet {
                         (String) fileEntity.getProperty("name"), 
                         time,
                         zone));
+
             }
 
             json = new Gson().toJson(files);

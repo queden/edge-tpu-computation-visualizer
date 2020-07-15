@@ -13,7 +13,7 @@ async function uploadFile() {
     const box = document.getElementById("uploaded-file");
 
     console.log(response.name);
-    
+
     if (response.name != "null") {
         box.innerHTML = response.name + " at " + response.time;
         box.style.color = "green";

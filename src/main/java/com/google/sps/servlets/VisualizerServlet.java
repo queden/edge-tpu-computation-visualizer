@@ -14,6 +14,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.time.ZonedDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import javax.servlet.ServletException;
@@ -56,34 +57,25 @@ public class VisualizerServlet extends HttpServlet {
             Entity fileEntity = ((PreparedQuery) datastore.prepare(queryFile)).asIterator().next();
 
             String zone = zoneEntity.getProperty("time-zone").toString();
-            System.out.println(zone);
             String dateTimeString = fileEntity.getProperty("date").toString();
-            System.out.println(dateTimeString);
 
             String time = "";
             DateTimeFormatter formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME;
             ZonedDateTime dateTime = ZonedDateTime.parse(dateTimeString, formatter);
             formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss");
+            dateTime = dateTime.withZoneSameInstant(ZoneId.of(zone));
+            time += dateTime.format(formatter);
 
             if (zone.equals("-04:00")) {
-                dateTime = dateTime.withZoneSameInstant(ZoneId.of("-05:00")).minusHours(1); 
-                time += dateTime.format(formatter);
                 time += " EDT";
                 zone = "Eastern Daylight Time";
             } else if (zone.equals("-09:00")) {
-                dateTime = dateTime.withZoneSameInstant(ZoneId.of("-10:00")).minusHours(1);
-                time += dateTime.format(formatter);
                 time += " HDT";
                 zone = "Hawaiian Daylight Time";
             } else if (zone.equals("-06:00")) {
-                dateTime = dateTime.withZoneSameInstant(ZoneId.of("-07:00")).minusHours(1);
-                time += dateTime.format(formatter);
                 time += " MDT";
                 zone = "Mountain Daylight Time";
             } else {          
-                dateTime = dateTime.withZoneSameInstant(ZoneId.of(zone));
-                time += dateTime.format(formatter);
-
                 if (zone.equals("-05:00")) {
                     time += " EST";
                     zone = " Eastern Standard Time";
@@ -141,9 +133,10 @@ public class VisualizerServlet extends HttpServlet {
             SimulationTrace simulationTrace = builder.build();
 
             // Put the simulation trace proto into datastore
-            ZonedDateTime dateTime = ZonedDateTime.now(ZoneId.of(ZoneOffset.UTC));
+            ZonedDateTime dateTime = ZonedDateTime.now(ZoneId.of(ZoneOffset.UTC.getId()));
             DateTimeFormatter formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME;
-            System.out.println(dateTime.getZone());
+            DateTimeFormatter testformatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss z");
+            // System.out.println(dateTime.format(testformatter));
 
             Entity simulationTraceUpload = new Entity("File");
             simulationTraceUpload.setProperty("date", dateTime.format(formatter));
