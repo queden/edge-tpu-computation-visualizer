@@ -1,7 +1,39 @@
+async function submitTimeZone() {
+    console.log("submit");
+    const select = document.getElementById("time-zone");
+    const zone = select.options[select.selectedIndex].value;
+
+    await fetch('visualizer?time=true&zone=' + zone, {method: 'GET'});
+}
+
+async function uploadFile() {
+    const call = await fetch('/visualizer?time=false', {method: 'GET'});
+    const response = await call.json();
+
+    const box = document.getElementById("uploaded-file");
+
+    console.log(response.name);
+    
+    if (response.name != "null") {
+        box.innerHTML = response.name + " at " + response.time;
+        box.style.color = "green";
+    } else {
+        console.log("blank");
+        box.innerHTML = "Please select a file.";
+        box.style.color = "red";
+    }
+
+    const timeZoneBox = document.getElementById("time-zone-box");
+    timeZoneBox.innerHTML = "Time Zone: " + response.zone;
+}
+
 // Populates the select list
 async function loadFiles() {
     const call = await fetch('/report?process=loadfiles', {method: 'GET'});
     const files = await call.json();
+
+    const timeZoneBox = document.getElementById("time-zone-box");
+    timeZoneBox.innerHTML = "Time Zone: " + files[0].zone;
 
     const select = document.getElementById("uploaded-files");
     select.innerHTML = '';
@@ -15,7 +47,7 @@ async function loadFiles() {
 function createFile(file) {
     const selectOption = document.createElement("option");
     selectOption.value = file.id;
-    selectOption.text = file.name + " at " + file.date;
+    selectOption.text = file.name + " at " + file.dateTime;
     return selectOption;
 }
 
@@ -35,9 +67,8 @@ async function runVisualization() {
     init.innerHTML = preprocessResponse.message;
     box.appendChild(init);
 
-    console.log(preprocessResponse)
-
-    for (i = 0; i < preprocessResponse.numTraces; i += 1000) {
+    // i < prepprocessResponse.numTraces
+    for (i = 0; i < prepprocessResponse.numTraces; i += 1000) {
         // Run through the traces, information processing will happen within the function
         await runTraces(i);
     }
@@ -45,7 +76,6 @@ async function runVisualization() {
 
 // Processes the different chunks of specified trace indicies
 // start is the beginning index of the traces to be processed
-
 async function runTraces(start) {
     const box = document.getElementById("test-box");
     const traceResponse = await fetch('/report?process=post&start=' + start, {method: 'GET'});
