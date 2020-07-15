@@ -39,6 +39,9 @@ public class ReportServlet extends HttpServlet {
         String json = "";
 
         if (process.equals("loadfiles")) {
+            // Loads the files into the drop down menu
+
+            // Pulls all previously uploaded files and the last submitted time zone
             Query queryZone = new Query("Zone").addSort("time", SortDirection.DESCENDING);
             Query queryFile = new Query("File").addSort("time", SortDirection.DESCENDING);
 
@@ -60,8 +63,11 @@ public class ReportServlet extends HttpServlet {
             String dateTimeString;
             ZonedDateTime dateTime;
 
+            // Creates a collection of LoadFile objects with the proper information about their storage
             for (Entity fileEntity : fileResults.asIterable()) {
                 time = "";
+
+                // Converts the upload time of each file from UTC to the selected time zone 
                 dateTimeString = fileEntity.getProperty("date").toString();
                 formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME;
                 dateTime = ZonedDateTime.parse(dateTimeString, formatter);
@@ -70,6 +76,7 @@ public class ReportServlet extends HttpServlet {
                 dateTime = dateTime.withZoneSameInstant(ZoneId.of(timeZone)); 
                 time += dateTime.format(formatter);
 
+                // Appends the correct time zone to be displayed on the page
                 if (timeZone.equals("-04:00")) {                   
                     time += " EDT";
                     zone = "Eastern Daylight Time";
@@ -106,6 +113,8 @@ public class ReportServlet extends HttpServlet {
 
             json = new Gson().toJson(files);
         } else if (process.equals("pre")) {
+            // Executes the preprocessing of the simulation trace
+
             DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
             Entity retrievedSimulationTrace = null;
 
@@ -127,6 +136,7 @@ public class ReportServlet extends HttpServlet {
 
             json = new Gson().toJson(preProcessResults);
         } else {
+            // Executes the trace processing of the simulation trace
             long start = Long.parseLong(request.getParameter("start"));
 
             System.out.println("Start is " + start);

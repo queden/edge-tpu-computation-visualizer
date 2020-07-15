@@ -28,6 +28,7 @@ import javax.servlet.http.Part;
 @WebServlet("/visualizer")
 @MultipartConfig()
 public class VisualizerServlet extends HttpServlet {
+    // Variables to hold the information about the last uploaded file
     private static String fileName = null;
     private static String fileSize = null;
     private static String fileTrace = null;
@@ -55,7 +56,9 @@ public class VisualizerServlet extends HttpServlet {
 
             // System.out.println(((PreparedQuery) datastore.prepare(queryZone)).countEntities());
             // System.out.println(((PreparedQuery) datastore.prepare(queryFile)).countEntities());
+            //
 
+            // Pulls the last submitted file and time zone
             Entity zoneEntity = ((PreparedQuery) datastore.prepare(queryZone)).asIterator().next();
             Entity fileEntity = ((PreparedQuery) datastore.prepare(queryFile)).asIterator().next();
 
@@ -63,12 +66,15 @@ public class VisualizerServlet extends HttpServlet {
             String dateTimeString = fileEntity.getProperty("date").toString();
 
             String time = "";
+
+            // Converts the upload time from UTC to the selected time zone
             DateTimeFormatter formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME;
             ZonedDateTime dateTime = ZonedDateTime.parse(dateTimeString, formatter);
             formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss");
             dateTime = dateTime.withZoneSameInstant(ZoneId.of(zone));
             time += dateTime.format(formatter);
 
+            // Appends the correct time zone to be displayed on the page
             if (zone.equals("-04:00")) {
                 time += " EDT";
                 zone = "Eastern Daylight Time";
@@ -94,6 +100,7 @@ public class VisualizerServlet extends HttpServlet {
                 }         
             }
 
+            // JSON string holding the file/time zone information of the last uploaded file
             String json = "{";
             json += "\"name\": ";
             json += "\"" + fileName + "\"";
@@ -120,6 +127,7 @@ public class VisualizerServlet extends HttpServlet {
             json += "\"" + wideBytes + "\"";
             json += "}";
 
+            // Set to "null" to help let the user know if they failed to select a file after they clicked "upload"
             fileName = null;
             fileSize = null;
             fileTrace = null;
@@ -133,6 +141,7 @@ public class VisualizerServlet extends HttpServlet {
         } else {
             DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
+            // Puts the selected time zone into datastore
             String zone = request.getParameter("zone");
             Entity timeEntity = new Entity("Zone");
             timeEntity.setProperty("time-zone", zone);
@@ -147,6 +156,7 @@ public class VisualizerServlet extends HttpServlet {
         // Retrieve the uploaded file
         Part filePart = request.getPart("file-input");
         
+        // Will not execute if the user failed to select a file after clicking "upload"
         if (filePart.getSubmittedFileName().length() > 0) {
             InputStream fileInputStream = filePart.getInputStream();
             
@@ -171,6 +181,7 @@ public class VisualizerServlet extends HttpServlet {
             DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
             datastore.put(simulationTraceUpload);
 
+            // Updates the last uploaded file information
             fileName = filePart.getSubmittedFileName();
             fileSize = getBytes(filePart.getSize());
             fileTrace = simulationTrace.getName();
@@ -182,6 +193,7 @@ public class VisualizerServlet extends HttpServlet {
         response.sendRedirect("/index.html");
     }
 
+    // Function to retrieve the file size information in terms of Bytes/KB/MB/GB
     private static String getBytes(long size) {
         Integer level = new Integer(0);
         double bytes = (double) size;

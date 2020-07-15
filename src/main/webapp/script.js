@@ -1,11 +1,12 @@
+// Updates the time zone to be used throughout the website
 async function submitTimeZone() {
-    console.log("submit");
     const select = document.getElementById("time-zone");
     const zone = select.options[select.selectedIndex].value;
 
     await fetch('visualizer?time=true&zone=' + zone, {method: 'GET'});
 }
 
+// Handles the upload of the selected file
 async function uploadFile() {
     const call = await fetch('/visualizer?time=false', {method: 'GET'});
     const response = await call.json();
@@ -14,8 +15,10 @@ async function uploadFile() {
     box.innerHTML = '';
 
     if (response.name != "null") {
+        // Adds the uploaded file information to be displayed
         addFileInfo(response);
     } else {
+        // Alerts the user if they failed to select a file after clicking "upload"
         const p = document.createElement("p");
 
         p.innerHTML = "Please select a file.";
@@ -24,39 +27,47 @@ async function uploadFile() {
         box.appendChild(p);
     }
 
+    // Adds the correct time zone information to the page
     const timeZoneBox = document.getElementById("time-zone-box");
     timeZoneBox.innerHTML = "Time Zone: " + response.zone;
 }
 
+// Adds the uploaded file information to be displayed
 function addFileInfo(response) {
     const box = document.getElementById("uploaded-file");
 
+    // File name and time
     var p = document.createElement("p");
     p.innerHTML = response.name + " at " + response.time;
     p.style.fontWeight = "bold";
 
     box.appendChild(p);
 
+    // Appropriate size of the file
     p = document.createElement("p");
     p.innerHTML = "File size: " + response.size;
 
     box.appendChild(p);
 
+    // Name of the simulation trace in the uploaded file
     p = document.createElement("p");
     p.innerHTML = "Simulation trace name: " + response.trace;
 
     box.appendChild(p);
 
+    // Number of tiles in the simulation trace
     p = document.createElement("p");
     p.innerHTML = "Number of tiles: " + response.tiles;
 
     box.appendChild(p);
 
+    // Size of the narrow memory
     p = document.createElement("p");
     p.innerHTML = "Narrow memory size: " + response.narrow + " Bytes";
 
     box.appendChild(p);
 
+    // Size of the wide memory
     p = document.createElement("p");
     p.innerHTML = "Wide memory size: " + response.wide + " Bytes";
 
