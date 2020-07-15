@@ -11,20 +11,56 @@ async function uploadFile() {
     const response = await call.json();
 
     const box = document.getElementById("uploaded-file");
-
-    console.log(response.name);
+    box.innerHTML = '';
 
     if (response.name != "null") {
-        box.innerHTML = response.name + " at " + response.time;
-        box.style.color = "green";
+        addFileInfo(response);
     } else {
-        console.log("blank");
-        box.innerHTML = "Please select a file.";
-        box.style.color = "red";
+        const p = document.createElement("p");
+
+        p.innerHTML = "Please select a file.";
+        p.style.color = "red";
+
+        box.appendChild(p);
     }
 
     const timeZoneBox = document.getElementById("time-zone-box");
     timeZoneBox.innerHTML = "Time Zone: " + response.zone;
+}
+
+function addFileInfo(response) {
+    const box = document.getElementById("uploaded-file");
+
+    var p = document.createElement("p");
+    p.innerHTML = response.name + " at " + response.time;
+    p.style.fontWeight = "bold";
+
+    box.appendChild(p);
+
+    p = document.createElement("p");
+    p.innerHTML = "File size: " + response.size;
+
+    box.appendChild(p);
+
+    p = document.createElement("p");
+    p.innerHTML = "Simulation trace name: " + response.trace;
+
+    box.appendChild(p);
+
+    p = document.createElement("p");
+    p.innerHTML = "Number of tiles: " + response.tiles;
+
+    box.appendChild(p);
+
+    p = document.createElement("p");
+    p.innerHTML = "Narrow memory size: " + response.narrow + " Bytes";
+
+    box.appendChild(p);
+
+    p = document.createElement("p");
+    p.innerHTML = "Wide memory size: " + response.wide + " Bytes";
+
+    box.appendChild(p);
 }
 
 // Populates the select list

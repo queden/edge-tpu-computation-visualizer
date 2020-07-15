@@ -28,12 +28,15 @@ import javax.servlet.http.Part;
 @WebServlet("/visualizer")
 @MultipartConfig()
 public class VisualizerServlet extends HttpServlet {
-    private static String name = null;
+    private static String fileName = null;
+    private static String fileSize = null;
+    private static String fileTrace = null;
+    private static int fileTiles = 0;
+    private static int narrowBytes = 0;
+    private static int wideBytes = 0;
 
     @Override 
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String json = "{";
-
         if (request.getParameter("time").equals("false")) {
             Query queryZone = new Query("Zone").addSort("time", SortDirection.DESCENDING);
             Query queryFile = new Query("File").addSort("time", SortDirection.DESCENDING);
@@ -91,17 +94,42 @@ public class VisualizerServlet extends HttpServlet {
                 }         
             }
 
+            String json = "{";
             json += "\"name\": ";
-            json += "\"" + name + "\"";
+            json += "\"" + fileName + "\"";
             json += ", ";
             json += "\"time\": ";
             json += "\"" + time + "\"";
             json += ", ";
             json += "\"zone\": ";
             json += "\"" + zone + "\"";
+            json += ", ";
+            json += "\"size\": ";
+            json += "\"" + fileSize + "\"";
+            json += ", ";
+            json += "\"trace\": ";
+            json += "\"" + fileTrace + "\"";
+            json += ", ";
+            json += "\"tiles\": ";
+            json += "\"" + fileTiles + "\"";
+            json += ", ";
+            json += "\"narrow\": ";
+            json += "\"" + narrowBytes + "\"";
+            json += ", ";
+            json += "\"wide\": ";
+            json += "\"" + wideBytes + "\"";
             json += "}";
 
-            name = null;
+            fileName = null;
+            fileSize = null;
+            fileTrace = null;
+            fileTiles = 0;
+            narrowBytes = 0;
+            wideBytes = 0;
+
+            response.setContentType("application/json;");
+            response.getWriter().println(json);
+
         } else {
             DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
@@ -111,9 +139,6 @@ public class VisualizerServlet extends HttpServlet {
             timeEntity.setProperty("time", new Date());
             datastore.put(timeEntity);
         }
-
-        response.setContentType("application/json;");
-        response.getWriter().println(json);
     }
 
     @Override
@@ -136,7 +161,6 @@ public class VisualizerServlet extends HttpServlet {
             ZonedDateTime dateTime = ZonedDateTime.now(ZoneId.of(ZoneOffset.UTC.getId()));
             DateTimeFormatter formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME;
             DateTimeFormatter testformatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss z");
-            // System.out.println(dateTime.format(testformatter));
 
             Entity simulationTraceUpload = new Entity("File");
             simulationTraceUpload.setProperty("date", dateTime.format(formatter));
@@ -147,10 +171,35 @@ public class VisualizerServlet extends HttpServlet {
             DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
             datastore.put(simulationTraceUpload);
 
-            name = simulationTrace.getName();
-            // System.out.println(dateTime.format(formatter));
+            fileName = filePart.getSubmittedFileName();
+            fileSize = getBytes(filePart.getSize());
+            fileTrace = simulationTrace.getName();
+            fileTiles = simulationTrace.getNumTiles();
+            narrowBytes = simulationTrace.getNarrowMemorySizeBytes();
+            wideBytes = simulationTrace.getWideMemorySizeBytes();
         }
 
         response.sendRedirect("/index.html");
+    }
+
+    private static String getBytes(long size) {
+        Integer level = new Integer(0);
+        double bytes = (double) size;
+        String result = "";
+
+        if (bytes < Math.pow(1024, 1)) {
+            result += String.format("%.2f", bytes) + " Bytes";
+        } else if (bytes < Math.pow(1024, 2)) {
+            bytes = (double) bytes / Math.pow(1024, 1);
+            result += String.format("%.2f", bytes) + " KB";
+        } else if (bytes < Math.pow(1024, 3)) {
+            bytes = (double) bytes / Math.pow(1024, 2);
+            result += String.format("%.2f", bytes) + " MB";
+        } else {
+            bytes = (double) bytes / Math.pow(1024, 3);
+            result += String.format("%.2f", bytes) + " GB";
+        }
+
+        return result;
     }
 }

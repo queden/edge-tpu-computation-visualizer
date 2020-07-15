@@ -85,6 +85,10 @@ p {
     margin-bottom: 30px;
 }
 
+#uploaded-file {
+    color: green;
+}
+
 #input-upload-box {
     margin-bottom: 30px;
 }

@@ -28,12 +28,13 @@
 
     <div id="heading-content"> 
         <h1 id="heading">Computation Visualizer</h1>
-      <div id="time-zone-container">
-        <p id="time-zone-box"></p>
-        <form action="#" onsubmit="submitTimeZone()">
-            <label for="time-zone"> Choose a time-zone: </label>
-            <select id="time-zone" name="time-zone">
-                <option value="-05:00"> EST - -05:00 </option>
+        <div id="time-zone-container">
+            <p id="time-zone-box"></p>
+
+            <form action="#" onsubmit="submitTimeZone()">
+                <label for="time-zone"> Choose a time-zone: </label>
+                <select id="time-zone" name="time-zone">
+                    <option value="-05:00"> EST - -05:00 </option>
                     <option value="-04:00"> EDT - -04:00 </option>
                     <option value="-10:00"> HST - -10:00 </option>
                     <option value="-09:00"> HDT - -09:00 </option>
@@ -65,6 +66,7 @@
                     <option value="Pacific/Guadalcanal"> SST - Pacific/Guadalcanal </option>
                     <option value="Asia/Ho_Chi_Minh"> VST - Asia/Ho_Chi_Minh </option>
                 </select>
+                
                 <input type="submit" value="Submit"/>
             </form>
         </div>
@@ -85,7 +87,7 @@
                 </div>
 
                 <p id="last-uploaded"> Last uploaded file: </p>
-                <p id="uploaded-file"></p>
+                <div id="uploaded-file"></div>
             </div>
 
             <h2> Go to Visualizer </h2>

@@ -47,7 +47,6 @@ public class ReportServlet extends HttpServlet {
 
             Entity zoneEntity = ((PreparedQuery) datastore.prepare(queryZone)).asIterator().next();
             String timeZone = zoneEntity.getProperty("time-zone").toString();
-            // System.out.println(timeZone);
 
             // Uncomment to purge datastore of all entities
             // for (Entity entity : results.asIterable()) {
