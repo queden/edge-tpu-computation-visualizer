@@ -118,6 +118,7 @@ public class ReportServlet extends HttpServlet {
             DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
             Entity retrievedSimulationTrace = null;
 
+            // Retrieves the file based on its entity's key, throws an error if the key doesn't exist
             try {
                 Key key = new Builder("File", Long.parseLong(request.getParameter("file"))).getKey();
                 retrievedSimulationTrace = datastore.get(key);
@@ -125,6 +126,7 @@ public class ReportServlet extends HttpServlet {
                 System.out.println("file not found.");
             }
 
+            // Parses the simulation trace out of the respective entity's Blob in datastore
             SimulationTrace simulationTrace = 
                 SimulationTrace.parseFrom(
                     ((Blob) retrievedSimulationTrace.getProperty("simulation-trace")).getBytes());
