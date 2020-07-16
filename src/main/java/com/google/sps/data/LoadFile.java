@@ -3,6 +3,7 @@ package com.google.sps.data;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 // Objects to hold the file information to be displayed in the drop down menu of the report.html 
 // page
@@ -12,13 +13,17 @@ public class LoadFile {
   private String time;
   private String dateTimeString;
   private String zone;
+  private List<User> users;
+  private String user;
 
-  public LoadFile(long id, String name, String dateTimeString, String zone) {
+  public LoadFile(long id, String name, String dateTimeString, String zone, List<User> users, String user) {
     this.id = id;
     this.name = name;
     this.time = "";
     this.dateTimeString = dateTimeString;
     this.zone = zone;
+    this.users = users;
+    this.user = user;
 
     this.getTimeZone();
   }

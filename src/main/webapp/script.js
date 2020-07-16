@@ -6,15 +6,34 @@ async function submitTimeZone() {
     await fetch('visualizer?time=true&zone=' + zone, {method: 'GET'});
 }
 
+async function selectUserIndex() {
+  const newUser = document.getElementById("new-user");
+
+  if (newUser.value != "") {
+    await fetch('/visualizer?time=false&user=true&new=true&user-name=' + newUser.value, {method: 'GET'});
+  } else {
+    const select = document.getElementById("users");
+    const user = select.options[select.selectedIndex].text;
+
+    await fetch('visualizer?time=false&user=true&new=false&user-name=' + user, {method: 'GET'});
+  }
+}
+
+async function selectUserReport() {
+  const select = document.getElementById("users");
+  const user = select.options[select.selectedIndex].text;
+
+  await fetch('report?process=loadfiles&user=true&user-name=' + user, {method: 'GET'});
+}
+
 // Handles the upload of the selected file
 async function uploadFile() {
-    const call = await fetch('/visualizer?time=false', {method: 'GET'});
+    const call = await fetch('/visualizer?time=false&user=false', {method: 'GET'});
     const response = await call.json();
 
     const box = document.getElementById("uploaded-file");
     box.innerHTML = '';
 
-    console.log(response.fileName);
     if (response.fileName != "null") {
         // Adds the uploaded file information to be displayed
         addFileInfo(response);
@@ -31,9 +50,16 @@ async function uploadFile() {
         box.appendChild(p);
     }
 
+    addUsers(response.users);
+
     // Adds the correct time zone information to the page
-    const timeZoneBox = document.getElementById("time-zone-box");
+    const timeZoneBox = document.getElementById("time-zone-display");
     timeZoneBox.innerHTML = "Time Zone: " + response.zone;
+
+    const userNameBox = document.getElementById("user-name");
+    userNameBox.innerHTML = "User: " + response.currentUser;
+    console.log("user " + response.user);
+    console.log(response);
 }
 
 // Adds the uploaded file information to be displayed
@@ -43,6 +69,13 @@ function addFileInfo(response) {
     // File name and time
     var p = document.createElement("p");
     p.innerHTML = response.fileName + " at " + response.time;
+    p.style.fontWeight = "bold";
+
+    box.appendChild(p);
+
+    // User who uploaded the file
+    var p = document.createElement("p");
+    p.innerHTML = "Uploaded by: " + response.uploadUser;
     p.style.fontWeight = "bold";
 
     box.appendChild(p);
@@ -81,16 +114,35 @@ function addFileInfo(response) {
     scroll.innerHTML = "*Scroll for more information";
 }
 
+function addUsers(users) {
+  const select = document.getElementById("users");
+  select.innerHTML = '';
+
+  const selectOption = document.createElement("option");
+  selectOption.value = 0;
+  selectOption.text = "All";
+  select.appendChild(selectOption);
+
+  users.forEach((user) => {
+    select.appendChild(createUser(user));
+  });
+}
+
 // Populates the select list
 async function loadFiles() {
-    const call = await fetch('/report?process=loadfiles', {method: 'GET'});
+    const call = await fetch('/report?process=loadfiles&user=false', {method: 'GET'});
     const files = await call.json();
 
-    const timeZoneBox = document.getElementById("time-zone-box");
+    const timeZoneBox = document.getElementById("time-zone-display");
     timeZoneBox.innerHTML = "Time Zone: " + files[0].zone;
 
+    const userNameBox = document.getElementById("user-name");
+    userNameBox.innerHTML = "User: " + files[0].user;
+
+    addUsers(files[0].users);
+
     const select = document.getElementById("uploaded-files");
-    select.innerHTML = '';
+    select.innerHTML = ''; 
 
     files.forEach((file) => {
         select.appendChild(createFile(file));
@@ -103,6 +155,13 @@ function createFile(file) {
     selectOption.value = file.id;
     selectOption.text = file.name + " at " + file.time;
     return selectOption;
+}
+
+function createUser(user) {
+  const selectOption = document.createElement("option");
+  selectOption.value = user.id;
+  selectOption.text = user.userName;
+  return selectOption;
 }
 
 // Runs the visualization of the chosen simulation trace

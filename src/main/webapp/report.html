@@ -20,7 +20,7 @@
             <h1 id="heading">Computation Visualizer</h1>
 
             <div id="time-zone-container">
-                <p id="time-zone-box"></p>
+                <p id="time-zone-display"></p>
                 <form action="#" onsubmit="submitTimeZone()">
                     <label for="time-zone"> Choose a time-zone: </label>
                     <select id="time-zone" name="time-zone">
@@ -58,6 +58,17 @@
                     </select>
                     <input id="time-zone-submit" type="submit" value="Submit"/>
                 </form>
+            </div>
+
+            <div id="user-container">
+              <p id="user-name"> User: All </p>
+              <form action="#" onsubmit="selectUserReport()">
+                <label for="users"> Choose a user: </label>
+                <select id="users" name="users">
+                  <option value="All"></option>
+                </select>
+                <input id="user-submit" type="submit" value="Submit"/>
+              </form>
             </div>
 
                 <form action="/index.html">

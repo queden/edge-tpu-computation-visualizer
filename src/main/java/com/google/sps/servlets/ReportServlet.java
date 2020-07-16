@@ -9,9 +9,13 @@ import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory.Builder;
 import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
+import com.google.appengine.api.datastore.Query.Filter;
+import com.google.appengine.api.datastore.Query.FilterOperator;
+import com.google.appengine.api.datastore.Query.FilterPredicate;
 import com.google.appengine.api.datastore.Query.SortDirection;
 import com.google.gson.Gson;
 import com.google.sps.data.LoadFile;
+import com.google.sps.data.User;
 // import com.google.sps.Validation;
 import com.google.sps.proto.SimulationTraceProto.*;
 import com.google.sps.results.*;
@@ -26,6 +30,7 @@ import javax.servlet.http.HttpServletResponse;
 public class ReportServlet extends HttpServlet {
   private static SimulationTrace simulationTrace;
   // private static Validation validation;
+  private static String user = "All";
 
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -33,40 +38,63 @@ public class ReportServlet extends HttpServlet {
     String json = "";
 
     if (process.equals("loadfiles")) {
-      // Loads the files into the drop down menu
+      if (request.getParameter("user").equals("false")) {
+        // Loads the files into the drop down menu
 
-      // Pulls all previously uploaded files and the last submitted time zone
-      Query queryZone = new Query("Zone").addSort("time", SortDirection.DESCENDING);
-      Query queryFile = new Query("File").addSort("time", SortDirection.DESCENDING);
+        // Pulls all previously uploaded files and the last submitted time zone
+        Query queryZone = new Query("Zone").addSort("time", SortDirection.DESCENDING);
+        Query queryFile = new Query("File").addSort("time", SortDirection.DESCENDING);
 
-      DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-      PreparedQuery fileResults = datastore.prepare(queryFile);
+        Filter propertyFilter =
+            new FilterPredicate("user-name", FilterOperator.EQUAL, user);
 
-      Entity zoneEntity = ((PreparedQuery) datastore.prepare(queryZone)).asIterator().next();
-      String timeZone = zoneEntity.getProperty("time-zone").toString();
+        Query queryUser = new Query("User").setFilter(propertyFilter);
 
-      // Uncomment to purge datastore of all entities
-      // for (Entity entity : results.asIterable()) {
-      //     datastore.delete(entity.getKey());
-      // }
+        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+        PreparedQuery fileResults = datastore.prepare(queryFile);
+        PreparedQuery userResults = datastore.prepare(queryUser);
 
-      ArrayList<LoadFile> files = new ArrayList<>();
-      String dateTimeString;
+        Entity zoneEntity = ((PreparedQuery) datastore.prepare(queryZone)).asIterator().next();
+        // Entity userEntity = ((PreparedQuery) datastore.prepare(queryUser)).asIterator().next();
+        String timeZone = zoneEntity.getProperty("time-zone").toString();
 
-      // Creates a collection of LoadFile objects with the proper information about their storage
-      for (Entity fileEntity : fileResults.asIterable()) {
-        dateTimeString = fileEntity.getProperty("date").toString();
+        // Uncomment to purge datastore of all entities
+        // for (Entity entity : results.asIterable()) {
+        //     datastore.delete(entity.getKey());
+        // }
 
-        files.add(
-            new LoadFile(
-                fileEntity.getKey().getId(),
-                (String) fileEntity.getProperty("name"),
-                dateTimeString,
-                timeZone));
+        ArrayList<User> users = new ArrayList<>();
 
+        for (Entity entity : userResults.asIterable()) {
+            users.add(
+                new User(
+                    entity.getKey().getId(),
+                    (String) entity.getProperty("user-name")
+                ));
+        }
+
+        ArrayList<LoadFile> files = new ArrayList<>();
+        String dateTimeString;
+
+        // Creates a collection of LoadFile objects with the proper information about their storage
+        for (Entity fileEntity : fileResults.asIterable()) {
+          dateTimeString = fileEntity.getProperty("date").toString();
+
+          files.add(
+              new LoadFile(
+                  fileEntity.getKey().getId(),
+                  (String) fileEntity.getProperty("name"),
+                  dateTimeString,
+                  timeZone,
+                  users,
+                  user));
+        }
+
+        json = new Gson().toJson(files);
+      } else {
+        String name = request.getParameter("user-name");
+        user = name;
       }
-
-      json = new Gson().toJson(files);
     } else if (process.equals("pre")) {
       // Executes the preprocessing of the simulation trace
 

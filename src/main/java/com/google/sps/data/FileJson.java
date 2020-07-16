@@ -3,6 +3,8 @@ package com.google.sps.data;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 // Object to hold the user feedback information about a file after upload
 public class FileJson {
@@ -15,6 +17,9 @@ public class FileJson {
   private String time;
   private String dateTimeString;
   private String zone;
+  private List<User> users;
+  private String uploadUser;
+  private String currentUser;
 
     // Master constructor initializing all variables
     public FileJson(
@@ -25,7 +30,10 @@ public class FileJson {
         int narrowBytes, 
         int wideBytes, 
         String dateTimeString, 
-        String zone) {
+        String zone,
+        List<User> users,
+        String uploadUser,
+        String currentUser) {
       this.fileName = fileName;
       this.fileSize = fileSize;
       this.fileTrace = fileTrace;
@@ -35,6 +43,9 @@ public class FileJson {
       this.time = "";
       this.dateTimeString = dateTimeString;
       this.zone = zone;
+      this.users = users;
+      this.uploadUser = uploadUser;
+      this.currentUser = currentUser;
     }
 
     // Constructor to be used when time information is unknown
@@ -43,12 +54,13 @@ public class FileJson {
         String fileTrace, 
         int fileTiles, 
         int narrowBytes, 
-        int wideBytes) {
-      this(fileName, fileSize, fileTrace, fileTiles, narrowBytes, wideBytes, "", "");
+        int wideBytes,
+        String uploadUser) {
+      this(fileName, fileSize, fileTrace, fileTiles, narrowBytes, wideBytes, "", "", new ArrayList<User>(), uploadUser, "");
     }
 
     // Final constructor to be used combining file and time information
-    public FileJson(FileJson fileJson, String dateTimeString, String zone) {
+    public FileJson(FileJson fileJson, String dateTimeString, String zone, List<User> users, String currentUser) {
       this(
           fileJson.fileName, 
           fileJson.fileSize, 
@@ -57,13 +69,20 @@ public class FileJson {
           fileJson.narrowBytes, 
           fileJson.wideBytes, 
           dateTimeString, 
-          zone);
+          zone,
+          users,
+          fileJson.uploadUser,
+          currentUser);
       this.getTimeZone();
     }
 
     // Constructor to be used when resetting the file information
     public FileJson() {
-      this("null", "null", "null", 0 , 0 , 0);
+      this("null", "null", "null", 0 , 0 , 0, "", "", new ArrayList<User>(), "", "");
+    }
+
+    public void setCurrentUser(String user) {
+      currentUser = user;
     }
 
     // Generates the appropriate time information of the file according to the time zone

@@ -16,20 +16,12 @@
     </style>
   </head>
 
-  <body onload="uploadFile()">
-
-      <!--The navigation bar. -->
-
-    <div id = "nav-bar"> 
-
-    </div>
-
-<!--Div components dedicated to give a snippet of the about page. -->
-
+  <body onload="uploadFile(false)">
     <div id="heading-content"> 
         <h1 id="heading">Computation Visualizer</h1>
+        <!-- <div id="inputs"> -->
         <div id="time-zone-container">
-            <p id="time-zone-box"></p>
+            <p id="time-zone-display"> Time Zone: </p>
 
             <form action="#" onsubmit="submitTimeZone()">
                 <label for="time-zone"> Choose a time-zone: </label>
@@ -69,6 +61,19 @@
                 
                 <input type="submit" value="Submit"/>
             </form>
+        </div>
+
+        <div id="user-container">
+          <p id="user-name"> User: </p>
+          <form action="#" onsubmit="selectUserIndex()">
+            <label for="users"> Choose a user: </label>
+            <select id="users" name="users">
+              <option value="All"></option>
+            </select>
+            <label for="new-user"> New user: </label>
+            <input name="new-user" id="new-user" type="text"/>
+            <input type="submit" value="Submit"/>
+          </form>
         </div>
     </div>
 
