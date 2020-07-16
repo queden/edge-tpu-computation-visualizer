@@ -14,7 +14,8 @@ async function uploadFile() {
     const box = document.getElementById("uploaded-file");
     box.innerHTML = '';
 
-    if (response.name != "null") {
+    console.log(response.fileName);
+    if (response.fileName != "null") {
         // Adds the uploaded file information to be displayed
         addFileInfo(response);
     } else {
@@ -38,38 +39,38 @@ function addFileInfo(response) {
 
     // File name and time
     var p = document.createElement("p");
-    p.innerHTML = response.name + " at " + response.time;
+    p.innerHTML = response.fileName + " at " + response.time;
     p.style.fontWeight = "bold";
 
     box.appendChild(p);
 
     // Appropriate size of the file
     p = document.createElement("p");
-    p.innerHTML = "File size: " + response.size;
+    p.innerHTML = "File size: " + response.fileSize;
 
     box.appendChild(p);
 
     // Name of the simulation trace in the uploaded file
     p = document.createElement("p");
-    p.innerHTML = "Simulation trace name: " + response.trace;
+    p.innerHTML = "Simulation trace name: " + response.fileTrace;
 
     box.appendChild(p);
 
     // Number of tiles in the simulation trace
     p = document.createElement("p");
-    p.innerHTML = "Number of tiles: " + response.tiles;
+    p.innerHTML = "Number of tiles: " + response.fileTiles;
 
     box.appendChild(p);
 
     // Size of the narrow memory
     p = document.createElement("p");
-    p.innerHTML = "Narrow memory size: " + response.narrow + " Bytes";
+    p.innerHTML = "Narrow memory size: " + response.narrowBytes + " Bytes";
 
     box.appendChild(p);
 
     // Size of the wide memory
     p = document.createElement("p");
-    p.innerHTML = "Wide memory size: " + response.wide + " Bytes";
+    p.innerHTML = "Wide memory size: " + response.wideBytes + " Bytes";
 
     box.appendChild(p);
 }
@@ -94,7 +95,7 @@ async function loadFiles() {
 function createFile(file) {
     const selectOption = document.createElement("option");
     selectOption.value = file.id;
-    selectOption.text = file.name + " at " + file.dateTime;
+    selectOption.text = file.name + " at " + file.time;
     return selectOption;
 }
 
