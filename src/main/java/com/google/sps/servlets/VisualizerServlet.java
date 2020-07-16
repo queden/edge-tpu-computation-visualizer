@@ -128,7 +128,6 @@ public class VisualizerServlet extends HttpServlet {
         fileJson = new FileJson();
       }
     }        
-    
 
     response.sendRedirect("/index.html");
   }
