@@ -9,6 +9,7 @@ import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.SortDirection;
 import com.google.gson.Gson;
 import com.google.protobuf.TextFormat;
+import com.google.sps.data.FileJson;
 import com.google.sps.proto.SimulationTraceProto.*;
 import java.io.IOException;
 import java.io.InputStream;
@@ -127,7 +128,6 @@ public class VisualizerServlet extends HttpServlet {
         fileJson = new FileJson();
       }
     }        
-    
 
     response.sendRedirect("/index.html");
   }

@@ -1,4 +1,4 @@
-package com.google.sps.servlets;
+package com.google.sps.data;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -33,26 +33,27 @@ public class LoadFile {
 
     if (zone.equals("-04:00")) {
       time += " EDT";
-      zone = "Eastern Daylight Time";
+      zone = "Eastern Daylight Time (EDT)";
     } else if (zone.equals("-09:00")) {
       time += " HDT";
-      zone = "Hawaiian Daylight Time";
+      zone = "Hawaiian Daylight Time (HDT)";
     } else if (zone.equals("-06:00")) {
       time += " MDT";
-      zone = "Mountain Daylight Time";
+      zone = "Mountain Daylight Time (MDT)";
     } else {          
       if (zone.equals("-05:00")) {
         time += " EST";
-        zone = " Eastern Standard Time";
+        zone = " Eastern Standard Time (EST)";
       } else if (zone.equals("-10:00")) {
         time += " HST";
-        zone = " Hawaiian Standard Time";
+        zone = " Hawaiian Standard Time (HST)";
       } else if (zone.equals("-07:00")) {
         time += " MST";
-        zone = " Mountain Standard Time";
+        zone = " Mountain Standard Time (MST)";
       } else {
         formatter = DateTimeFormatter.ofPattern("z");
         time += " " + dateTime.format(formatter);
+        zone += " (" + dateTime.format(formatter) + ")";
       }         
     }
   }
