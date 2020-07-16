@@ -81,45 +81,53 @@ public class VisualizerServlet extends HttpServlet {
 
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response) 
-    throws IOException, ServletException {        
-    // Retrieve the uploaded file
-    Part filePart = request.getPart("file-input");
-        
-    // Will not execute if the user failed to select a file after clicking "upload"
-    if (filePart.getSubmittedFileName().length() > 0) {
-      InputStream fileInputStream = filePart.getInputStream();
-            
-      // Create a simulation trace out of the uploaded file
-      InputStreamReader reader = new InputStreamReader(fileInputStream, "ASCII");
-      SimulationTrace.Builder builder = SimulationTrace.newBuilder();
-      TextFormat.merge(reader, builder);
+    throws IOException, ServletException {
+    String upload = request.getParameter("upload");
 
-      SimulationTrace simulationTrace = builder.build();
+    if (upload.equals("true")) {
+      // Retrieve the uploaded file
+      Part filePart = request.getPart("file-input");
+          
+      // Will not execute if the user failed to select a file after clicking "upload"
+      if (filePart.getSubmittedFileName().length() > 0) {
+        InputStream fileInputStream = filePart.getInputStream();
+              
+        // Create a simulation trace out of the uploaded file
+        InputStreamReader reader = new InputStreamReader(fileInputStream, "ASCII");
+        SimulationTrace.Builder builder = SimulationTrace.newBuilder();
+        TextFormat.merge(reader, builder);
 
-      // Put the simulation trace proto into datastore
-      ZonedDateTime dateTime = ZonedDateTime.now(ZoneId.of(ZoneOffset.UTC.getId()));
-      DateTimeFormatter formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME;
+        SimulationTrace simulationTrace = builder.build();
 
-      Entity simulationTraceUpload = new Entity("File");
-      simulationTraceUpload.setProperty("date", dateTime.format(formatter));
-      simulationTraceUpload.setProperty("time", new Date());
-      simulationTraceUpload.setProperty("name", simulationTrace.getName());
-      simulationTraceUpload.setProperty(
-          "simulation-trace", new Blob(simulationTrace.toByteArray()));
+        // Put the simulation trace proto into datastore
+        ZonedDateTime dateTime = ZonedDateTime.now(ZoneId.of(ZoneOffset.UTC.getId()));
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME;
 
-      DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-      datastore.put(simulationTraceUpload);
+        Entity simulationTraceUpload = new Entity("File");
+        simulationTraceUpload.setProperty("date", dateTime.format(formatter));
+        simulationTraceUpload.setProperty("time", new Date());
+        simulationTraceUpload.setProperty("name", simulationTrace.getName());
+        simulationTraceUpload.setProperty(
+            "simulation-trace", new Blob(simulationTrace.toByteArray()));
 
-      // Updates the last uploaded file information
-      String fileName = filePart.getSubmittedFileName();
-      String fileSize = getBytes(filePart.getSize());
-      String fileTrace = simulationTrace.getName();
-      int fileTiles = simulationTrace.getNumTiles();
-      int narrowBytes = simulationTrace.getNarrowMemorySizeBytes();
-      int wideBytes = simulationTrace.getWideMemorySizeBytes();
+        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+        datastore.put(simulationTraceUpload);
 
-      fileJson = new FileJson(fileName, fileSize, fileTrace, fileTiles, narrowBytes, wideBytes);
-    }
+        // Updates the last uploaded file information
+        String fileName = filePart.getSubmittedFileName();
+        String fileSize = getBytes(filePart.getSize());
+        String fileTrace = simulationTrace.getName();
+        int fileTiles = simulationTrace.getNumTiles();
+        int narrowBytes = simulationTrace.getNarrowMemorySizeBytes();
+        int wideBytes = simulationTrace.getWideMemorySizeBytes();
+
+        fileJson = new FileJson(fileName, fileSize, fileTrace, fileTiles, narrowBytes, wideBytes);
+      } else {
+        // Resets the last uploaded file to "null" to help provide feedback to the user
+        fileJson = new FileJson();
+      }
+    }        
+    
 
     response.sendRedirect("/index.html");
   }
@@ -152,9 +160,6 @@ public class VisualizerServlet extends HttpServlet {
 
     fileJson = new FileJson(fileJson, dateTimeString, zone);
     String json = new Gson().toJson(fileJson);
-
-    // Resets the last uploaded file to "null" to help provide feedback to the user
-    fileJson = new FileJson();
 
     return json;
   }

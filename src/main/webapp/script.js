@@ -25,6 +25,9 @@ async function uploadFile() {
         p.innerHTML = "Please select a file.";
         p.style.color = "red";
 
+        const scroll = document.getElementById("scroll");
+        scroll.innerHTML = '';
+
         box.appendChild(p);
     }
 
@@ -73,6 +76,9 @@ function addFileInfo(response) {
     p.innerHTML = "Wide memory size: " + response.wideBytes + " Bytes";
 
     box.appendChild(p);
+
+    const scroll = document.getElementById("scroll");
+    scroll.innerHTML = "*Scroll for more information";
 }
 
 // Populates the select list
