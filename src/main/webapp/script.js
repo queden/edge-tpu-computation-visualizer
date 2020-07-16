@@ -1,8 +1,93 @@
+// Updates the time zone to be used throughout the website
+async function submitTimeZone() {
+    const select = document.getElementById("time-zone");
+    const zone = select.options[select.selectedIndex].value;
+
+    await fetch('visualizer?time=true&zone=' + zone, {method: 'GET'});
+}
+
+// Handles the upload of the selected file
+async function uploadFile() {
+    const call = await fetch('/visualizer?time=false', {method: 'GET'});
+    const response = await call.json();
+
+    const box = document.getElementById("uploaded-file");
+    box.innerHTML = '';
+
+    console.log(response.fileName);
+    if (response.fileName != "null") {
+        // Adds the uploaded file information to be displayed
+        addFileInfo(response);
+    } else {
+        // Alerts the user if they failed to select a file after clicking "upload"
+        const p = document.createElement("p");
+
+        p.innerHTML = "Please select a file.";
+        p.style.color = "red";
+
+        const scroll = document.getElementById("scroll");
+        scroll.innerHTML = '';
+
+        box.appendChild(p);
+    }
+
+    // Adds the correct time zone information to the page
+    const timeZoneBox = document.getElementById("time-zone-box");
+    timeZoneBox.innerHTML = "Time Zone: " + response.zone;
+}
+
+// Adds the uploaded file information to be displayed
+function addFileInfo(response) {
+    const box = document.getElementById("uploaded-file");
+
+    // File name and time
+    var p = document.createElement("p");
+    p.innerHTML = response.fileName + " at " + response.time;
+    p.style.fontWeight = "bold";
+
+    box.appendChild(p);
+
+    // Appropriate size of the file
+    p = document.createElement("p");
+    p.innerHTML = "File size: " + response.fileSize;
+
+    box.appendChild(p);
+
+    // Name of the simulation trace in the uploaded file
+    p = document.createElement("p");
+    p.innerHTML = "Simulation trace name: " + response.fileTrace;
+
+    box.appendChild(p);
+
+    // Number of tiles in the simulation trace
+    p = document.createElement("p");
+    p.innerHTML = "Number of tiles: " + response.fileTiles;
+
+    box.appendChild(p);
+
+    // Size of the narrow memory
+    p = document.createElement("p");
+    p.innerHTML = "Narrow memory size: " + response.narrowBytes + " Bytes";
+
+    box.appendChild(p);
+
+    // Size of the wide memory
+    p = document.createElement("p");
+    p.innerHTML = "Wide memory size: " + response.wideBytes + " Bytes";
+
+    box.appendChild(p);
+
+    const scroll = document.getElementById("scroll");
+    scroll.innerHTML = "*Scroll for more information";
+}
 
 // Populates the select list
 async function loadFiles() {
     const call = await fetch('/report?process=loadfiles', {method: 'GET'});
     const files = await call.json();
+
+    const timeZoneBox = document.getElementById("time-zone-box");
+    timeZoneBox.innerHTML = "Time Zone: " + files[0].zone;
 
     const select = document.getElementById("uploaded-files");
     select.innerHTML = '';
@@ -16,7 +101,7 @@ async function loadFiles() {
 function createFile(file) {
     const selectOption = document.createElement("option");
     selectOption.value = file.id;
-    selectOption.text = file.name + " at " + file.date;
+    selectOption.text = file.name + " at " + file.time;
     return selectOption;
 }
 
@@ -36,9 +121,8 @@ async function runVisualization() {
     init.innerHTML = preprocessResponse.message;
     box.appendChild(init);
 
-    console.log(preprocessResponse)
-
-    for (i = 0; i < preprocessResponse.numTraces; i += 1000) {
+    // i < prepprocessResponse.numTraces
+    for (i = 0; i < prepprocessResponse.numTraces; i += 1000) {
         // Run through the traces, information processing will happen within the function
         await runTraces(i);
     }
@@ -46,7 +130,6 @@ async function runVisualization() {
 
 // Processes the different chunks of specified trace indicies
 // start is the beginning index of the traces to be processed
-
 async function runTraces(start) {
     const box = document.getElementById("test-box");
     const traceResponse = await fetch('/report?process=post&start=' + start, {method: 'GET'});

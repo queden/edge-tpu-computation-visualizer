@@ -7,7 +7,7 @@ public class InvalidTensorWriteException extends Exception {
     private int address;
     private String accessType;
 
-    public InvalidTensorWriteException(int instructionTag, int address, TraceEntry.AccessType accessType) {
+    public InvalidTensorWriteException(int instructionTag, int address, TraceEvent.AccessType accessType) {
         super();
         this.instructionTag = instructionTag;
         this.address = address;

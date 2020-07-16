@@ -5,7 +5,7 @@
         <link rel="stylesheet" href="style.css">
         <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
         <style>
-            input[type=submit] {
+            input[type=submit], input[type=select], input[type=label] {
                 font-size: 20px;
                 padding: 7px 20px;
                 cursor: pointer;
@@ -18,10 +18,58 @@
         </div>
         <div id="heading-content"> 
             <h1 id="heading">Computation Visualizer</h1>
-        </div>
-        <div id="container">
+
+            <div id="time-zone-container">
+                <p id="time-zone-box"></p>
+                <form action="#" onsubmit="submitTimeZone()">
+                    <label for="time-zone"> Choose a time-zone: </label>
+                    <select id="time-zone" name="time-zone">
+                        <option value="-05:00"> EST - -05:00 </option>
+                        <option value="-04:00"> EDT - -04:00 </option>
+                        <option value="-10:00"> HST - -10:00 </option>
+                        <option value="-09:00"> HDT - -09:00 </option>
+                        <option value="-07:00"> MST - -07:00 </option>
+                        <option value="-06:00"> MDT - -06:00 </option>
+                        <option value="Australia/Darwin"> ACT - Australia/Darwin </option>
+                        <option value="Australia/Sydney"> AET - Australia/Sydney </option>
+                        <option value="America/Argentina/Buenos_Aires"> AGT - America/Argentina/Buenos_Aires </option>
+                        <option value="Africa/Cairo"> ART - Africa/Cairo </option>
+                        <option value="America/Anchorage"> AST - America/Anchorage </option>
+                        <option value="America/Sao_Paulo"> BET - America/Sao_Paulo </option>
+                        <option value="Asia/Dhaka"> BST - Asia/Dhaka </option>
+                        <option value="Africa/Harare"> CAT - Africa/Harare </option>
+                        <option value="America/St_Johns"> CNT - America/St_Johns </option>
+                        <option value="America/Chicago"> CST - America/Chicago </option>
+                        <option value="Asia/Shanghai"> CTT - Asia/Shanghai </option>
+                        <option value="Africa/Addis_Ababa"> EAT - Africa/Addis_Ababa </option>
+                        <option value="Europe/Paris"> ECT - Europe/Paris </option>
+                        <option value="America/Indiana/Indianapolis"> IET - America/Indiana/Indianapolis </option>
+                        <option value="Asia/Kolkata"> IST - Asia/Kolkata </option>
+                        <option value="Asia/Tokyo"> JST - Asia/Tokyo </option>
+                        <option value="Pacific/Apia"> MIT - Pacific/Apia </option>
+                        <option value="Asia/Yerevan"> NET - Asia/Yerevan </option>
+                        <option value="Pacific/Auckland"> NST - Pacific/Auckland </option>
+                        <option value="Asia/Karachi"> PLT - Asia/Karachi </option>
+                        <option value="America/Phoenix"> PNT - America/Phoenix </option>
+                        <option value="America/Puerto_Rico"> PRT - America/Puerto_Rico </option>
+                        <option value="America/Los_Angeles"> PST - America/Los_Angeles </option>
+                        <option value="Pacific/Guadalcanal"> SST - Pacific/Guadalcanal </option>
+                        <option value="Asia/Ho_Chi_Minh"> VST - Asia/Ho_Chi_Minh </option>
+                    </select>
+                    <input id="time-zone-submit" type="submit" value="Submit"/>
+                </form>
+            </div>
+
+                <form action="/index.html">
+                    <input id="back-upload-file" type="submit" value="Upload File"/>
+                </form>
+        </div>   
+
+        <p id="chart"></p>
+
+        <!-- <div id="container">
             <div id="element"></div>
-        </div>
+        </div> -->
         <form action="#">
             <label for="uploaded-files">Choose a file: </label>
             <select id="uploaded-files" name="uploaded-files"></select>
@@ -31,7 +79,7 @@
         </form>
         <div id="test-box">
         </div>
-    <p id="chart"></p>
+    <!-- <p id="chart"></p> -->
 
     <script src="//d3js.org/d3.v4.min.js"></script>
     <script type="text/javascript" src="script.js" onload="loadMemory()"></script>
