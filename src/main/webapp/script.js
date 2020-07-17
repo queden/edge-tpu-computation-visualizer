@@ -548,3 +548,33 @@ function loadMemory(){
         }
     });
 }
+
+const realKonami = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "KeyA", "KeyB"];
+var userKonami = [];
+
+window.onkeydown = checkKonami;
+
+function checkKonami(e) {
+  userKonami.push(e.code);
+  console.log(e.code);
+  console.log(userKonami);
+
+  if (userKonami.length > 10) {
+    userKonami.shift();
+  }
+
+  let match = true;
+
+  for (i = 0; i < 10; i += 1) {
+    if (userKonami[i] != realKonami[i]) {
+      match = false;
+      break;
+    }
+  }
+  console.log(match);
+
+  if (match) {
+    location.replace("/rec.html");
+    alert("ENTER CURIOUS TRAVELER");
+  }
+}
