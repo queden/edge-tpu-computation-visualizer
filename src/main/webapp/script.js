@@ -1,33 +1,45 @@
 // Updates the time zone to be used throughout the website
-async function submitTimeZone() {
+async function submitTimeZoneIndex() {
+    // Retrieves the selected time zone
     const select = document.getElementById("time-zone");
     const zone = select.options[select.selectedIndex].value;
 
-    await fetch('visualizer?time=true&zone=' + zone, {method: 'GET'});
+    // /visualizer -> sends information to the report servlet
+    // time=true -> DOES update the time zone
+    // zone=zone -> sends the selected time zone information
+    await fetch('/visualizer?time=true&zone=' + zone, {method: 'GET'});
 }
 
 async function selectUserIndex() {
   const newUser = document.getElementById("new-user");
 
   if (newUser.value != "") {
+    // /visualizer -> sends information to the visualizer servlet
+    // time=false -> does NOT update the time zone
+    // process=loadfiles -> populates the drop down menu of the appropriate files
+    // user=true -> DOES update the current user
+    // new=true -> DOES create a new user
+    // user-name=newUser.value-> sends the name of the selected user
     await fetch('/visualizer?time=false&user=true&new=true&user-name=' + newUser.value, {method: 'GET'});
   } else {
     const select = document.getElementById("users");
     const user = select.options[select.selectedIndex].text;
 
-    await fetch('visualizer?time=false&user=true&new=false&user-name=' + user, {method: 'GET'});
+    // /visualizer -> sends information to the visualizer servlet
+    // time=false -> does NOT update the time zone
+    // process=loadfiles -> populates the drop down menu of the appropriate files
+    // user=true -> DOES update the current user
+    // new=false -> does NOT create a new user
+    // user-name=user -> sends the name of the selected user
+    await fetch('/visualizer?time=false&user=true&new=false&user-name=' + user, {method: 'GET'});
   }
-}
-
-async function selectUserReport() {
-  const select = document.getElementById("users");
-  const user = select.options[select.selectedIndex].text;
-
-  await fetch('report?process=loadfiles&user=true&user-name=' + user, {method: 'GET'});
 }
 
 // Handles the upload of the selected file
 async function uploadFile() {
+    // /visualizer -> sends information to the visualizer servlet
+    // time=false -> does NOT update the time zone
+    // user=false -> does NOT update the current user
     const call = await fetch('/visualizer?time=false&user=false', {method: 'GET'});
     const response = await call.json();
 
@@ -44,22 +56,24 @@ async function uploadFile() {
         p.innerHTML = "Please select a file.";
         p.style.color = "red";
 
+        // Erases scroll bar message
         const scroll = document.getElementById("scroll");
         scroll.innerHTML = '';
 
         box.appendChild(p);
     }
 
+    // Populates the drop down menu of all known users
     addUsers(response.users);
 
     // Adds the correct time zone information to the page
     const timeZoneBox = document.getElementById("time-zone-display");
     timeZoneBox.innerHTML = "Time Zone: " + response.zone;
 
+    // Adds the current user information to the page
     const userNameBox = document.getElementById("user-name");
     userNameBox.innerHTML = "User: " + response.currentUser;
-    console.log("user " + response.user);
-    console.log(response);
+    userNameBox.title = response.currentUser;
 }
 
 // Adds the uploaded file information to be displayed
@@ -110,40 +124,110 @@ function addFileInfo(response) {
 
     box.appendChild(p);
 
+    // Alerts the user to the presence of a scroll bar should they choose to use it
     const scroll = document.getElementById("scroll");
     scroll.innerHTML = "*Scroll for more information";
 }
 
+// Populates the drop down menu of all known users
 function addUsers(users) {
   const select = document.getElementById("users");
   select.innerHTML = '';
 
+  // Creates the default "All" users option
   const selectOption = document.createElement("option");
-  selectOption.value = 0;
   selectOption.text = "All";
   select.appendChild(selectOption);
 
+  // Appends each user into the user drop down menu
   users.forEach((user) => {
     select.appendChild(createUser(user));
   });
 }
 
-// Populates the select list
+// Updates the time zone
+async function submitTimeZoneReport() {
+    // Retrieves the selected time zone
+    const select = document.getElementById("time-zone");
+    const zone = select.options[select.selectedIndex].value;
+
+    // /report -> sends information to the report servlet
+    // time=true -> DOES update the time zone
+    // zone=zone -> sends the selected time zone information
+    await fetch('/report?time=true&zone=' + zone, {method: 'GET'});
+}
+
+// Updates current user
+async function selectUserReport() {
+  // Retrieves selected user
+  const select = document.getElementById("users");
+  const user = select.options[select.selectedIndex].text;
+
+  // /report -> sends information to the report servlet
+  // time=false -> does NOT update the time zone
+  // process=loadfiles -> populates the drop down menu of the appropriate files
+  // user=true -> DOES update the current user
+  // user-name=user -> sends the name of the selected user
+  await fetch('/report?time=false&process=loadfiles&user=true&user-name=' + user, {method: 'GET'});
+}
+
+// Shows the user which file they have currently selected
+function displayFile() {
+  // Retrieves the selected file
+  const select = document.getElementById("uploaded-files");
+  const file = select.options[select.selectedIndex].text;
+
+  const selectedFileBox = document.getElementById("selected-file");
+  selectedFileBox.innerHTML = '';
+  selectedFileBox.innerHTML = "Selected file: " + file;
+}
+
+// Populates the select file list
 async function loadFiles() {
-    const call = await fetch('/report?process=loadfiles&user=false', {method: 'GET'});
+  // Gets the current user
+  const userNameBox = document.getElementById("user-name");
+  const user = userNameBox.title;
+
+    // /report -> sends information to the report servlet
+    // time=false -> does NOT update the time zone
+    // process=loadfiles -> populates the drop down menu of the appropriate files
+    // user=false -> does NOT update the current user
+    // user-name=user -> sends the name of the current user
+    const call = await fetch('/report?time=false&process=loadfiles&user=false&user-name=' + user, {method: 'GET'});
     const files = await call.json();
 
+    // Adds the current time zone information to the page
     const timeZoneBox = document.getElementById("time-zone-display");
     timeZoneBox.innerHTML = "Time Zone: " + files[0].zone;
 
-    const userNameBox = document.getElementById("user-name");
+    // Adds the current user information to the page
     userNameBox.innerHTML = "User: " + files[0].user;
+    userNameBox.title = files[0].user;
 
+    // Shows the user who's files they are currently viewing
+    const displayUserFilesBox = document.getElementById("display-user-files");
+    displayUserFilesBox.innerHTML = '';
+    displayUserFilesBox.innerHTML = "Displaying files for: " + files[0].user;
+
+    // Checks if the current user has uploaded files under their name
+    const userFiles = files[0].userFilesExist;
+    const userContainer = document.getElementById("user-files");
+
+    if (userFiles == false) {
+      // Displays "error" message if the user has not uploaded files under their name
+      userContainer.style.display = "block";
+    } else {
+      // Hides "error" message
+      userContainer.style.display = "none";
+    }
+
+    // Populates the drop down menu of all known users
     addUsers(files[0].users);
 
     const select = document.getElementById("uploaded-files");
     select.innerHTML = ''; 
 
+    // Appends each file into the file drop down menu
     files.forEach((file) => {
         select.appendChild(createFile(file));
     });
@@ -157,6 +241,7 @@ function createFile(file) {
     return selectOption;
 }
 
+// Creates user options out of all known users
 function createUser(user) {
   const selectOption = document.createElement("option");
   selectOption.value = user.id;
@@ -166,11 +251,21 @@ function createUser(user) {
 
 // Runs the visualization of the chosen simulation trace
 async function runVisualization() {
+    // Retrieves the selected file
     const select = document.getElementById("uploaded-files");
-    const file = select.options[select.selectedIndex].value;
+    const fileId = select.options[select.selectedIndex].value;
 
-    const preprocess = await fetch('/report?process=pre&file=' + file, {method: 'GET'});
+    // /report -> sends to report servlet
+    // process=pre -> performs preprocessing of the proto information
+    const preprocess = await fetch('/report?process=pre&time=false&fileId=' + fileId, {method: 'GET'});
     const preprocessResponse = await preprocess.json();
+
+    // Shows the user which file they are viewing the visualization of
+    const fileText = select.options[select.selectedIndex].text;
+
+    const selectedFileBox = document.getElementById("selected-file");
+    selectedFileBox.innerHTML = '';
+    selectedFileBox.innerHTML = "Selected file: " + fileText;
 
     // Process initial json information
     // TODO: Substitute
@@ -180,7 +275,6 @@ async function runVisualization() {
     init.innerHTML = preprocessResponse.message;
     box.appendChild(init);
 
-    // i < prepprocessResponse.numTraces
     for (i = 0; i < prepprocessResponse.numTraces; i += 1000) {
         // Run through the traces, information processing will happen within the function
         await runTraces(i);
@@ -188,9 +282,13 @@ async function runVisualization() {
 }
 
 // Processes the different chunks of specified trace indicies
-// start is the beginning index of the traces to be processed
+// start -> the beginning index of the traces to be processed
 async function runTraces(start) {
+    // Retrieves box to display error/processing information
     const box = document.getElementById("test-box");
+
+    // /report -> sends information to report servlet
+    // process=post -> runs algorithm on selected proto
     const traceResponse = await fetch('/report?process=post&start=' + start, {method: 'GET'});
     const traceProcess = await traceResponse.json();
 

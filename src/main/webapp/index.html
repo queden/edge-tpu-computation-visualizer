@@ -16,14 +16,16 @@
     </style>
   </head>
 
-  <body onload="uploadFile(false)">
+  <body onload="uploadFile()">
+    <div id = "nav-bar"> 
+        </div>
     <div id="heading-content"> 
         <h1 id="heading">Computation Visualizer</h1>
         <!-- <div id="inputs"> -->
         <div id="time-zone-container">
             <p id="time-zone-display"> Time Zone: </p>
 
-            <form action="#" onsubmit="submitTimeZone()">
+            <form action="#" onsubmit="submitTimeZoneIndex()">
                 <label for="time-zone"> Choose a time-zone: </label>
                 <select id="time-zone" name="time-zone">
                     <option value="-05:00"> EST - -05:00 </option>
@@ -100,7 +102,7 @@
             <p> *Click if file previously uploaded </p>
 
             <form action="/report.html">
-                <input type="submit" value="Go to Visualizer" />
+                <input id="go-visualizer" type="submit" value="Go to Visualizer" />
             </form>
         </div>
     </div>

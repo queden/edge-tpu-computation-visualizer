@@ -21,7 +21,7 @@
 
             <div id="time-zone-container">
                 <p id="time-zone-display"></p>
-                <form action="#" onsubmit="submitTimeZone()">
+                <form action="#" onsubmit="submitTimeZoneReport()">
                     <label for="time-zone"> Choose a time-zone: </label>
                     <select id="time-zone" name="time-zone">
                         <option value="-05:00"> EST - -05:00 </option>
@@ -61,7 +61,7 @@
             </div>
 
             <div id="user-container">
-              <p id="user-name"> User: All </p>
+              <p id="user-name" title="All"> User: All </p>
               <form action="#" onsubmit="selectUserReport()">
                 <label for="users"> Choose a user: </label>
                 <select id="users" name="users">
@@ -69,11 +69,14 @@
                 </select>
                 <input id="user-submit" type="submit" value="Submit"/>
               </form>
+              <div id="user-files">
+                <p> *Displaying files for all users, current user has not uploaded files under their name </p>
+              </div>
             </div>
 
-                <form action="/index.html">
-                    <input id="back-upload-file" type="submit" value="Upload File"/>
-                </form>
+            <form action="/index.html">
+              <input id="back-upload-file" type="submit" value="Upload File"/>
+            </form>
         </div>   
 
         <p id="chart"></p>
@@ -81,10 +84,12 @@
         <!-- <div id="container">
             <div id="element"></div>
         </div> -->
+        <p id="display-user-files"> Displaying files for: All </p>
         <form action="#">
             <label for="uploaded-files">Choose a file: </label>
-            <select id="uploaded-files" name="uploaded-files"></select>
+            <select id="uploaded-files" name="uploaded-files" onchange="displayFile()"></select>
         </form>
+        <p id="selected-file"> Selected file: </p>
         <form action='#' onsubmit="runVisualization()">
             <input type="submit" value="Run!" />
         </form>

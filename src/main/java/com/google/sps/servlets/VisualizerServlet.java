@@ -9,8 +9,7 @@ import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.SortDirection;
 import com.google.gson.Gson;
 import com.google.protobuf.TextFormat;
-import com.google.sps.data.FileJson;
-import com.google.sps.data.User;
+import com.google.sps.data.*;
 import com.google.sps.proto.SimulationTraceProto.*;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,68 +31,49 @@ import javax.servlet.http.Part;
 @WebServlet("/visualizer")
 @MultipartConfig()
 public class VisualizerServlet extends HttpServlet {
-  // Variable to hold the information about the last uploaded file
-  private static FileJson fileJson = new FileJson();
+  // Variables to hold the information about the last uploaded file, time zone, and current user
+  private static String timeZone = ZoneOffset.UTC.getId();
   private static String user = "All";
+  private static FileJson fileJson = new FileJson();
+  private static Entity fileEntity = new Entity("File");
 
   @Override 
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     if (request.getParameter("time").equals("false")) {
+      // Does NOT update the time zone
+
       if (request.getParameter("user").equals("false")) {
-        Query queryZone = new Query("Zone").addSort("time", SortDirection.DESCENDING);
+        // purgeAll(); /* Uncomment to purge datasore (BE CAREFUL)
+
+        // Does NOT update the current user
+
         Query queryFile = new Query("File").addSort("time", SortDirection.DESCENDING);
         Query queryUser = new Query("User").addSort("time", SortDirection.DESCENDING);
 
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
-        // Uncomment to purge datastore of all entities
-        // Query queryZone = new Query("Zone");
-        // Query queryFile = new Query("File");
-        // Query queryUser = new Query("User");
-        // for (Entity entity : ((PreparedQuery) datastore.prepare(queryFile)).asIterable()) {
-        //     datastore.delete(entity.getKey());
-        // }
-        // for (Entity entity : ((PreparedQuery) datastore.prepare(queryZone)).asIterable()) {
-        //     datastore.delete(entity.getKey());
-        // }
-        // for (Entity entity : ((PreparedQuery) datastore.prepare(queryUser)).asIterable()) {
-        //     datastore.delete(entity.getKey());
-        // }
-
-        System.out.println(((PreparedQuery) datastore.prepare(queryZone)).countEntities());
-        System.out.println(((PreparedQuery) datastore.prepare(queryFile)).countEntities());
-        System.out.println(((PreparedQuery) datastore.prepare(queryUser)).countEntities());
-
-        // Pulls the last submitted file and time zone
-        Entity zoneEntity = ((PreparedQuery) datastore.prepare(queryZone)).asIterator().next();
-        Entity fileEntity = ((PreparedQuery) datastore.prepare(queryFile)).asIterator().next();
-
-        String zone = zoneEntity.getProperty("time-zone").toString();
-
-        PreparedQuery results = datastore.prepare(queryUser);
+        PreparedQuery userResults = datastore.prepare(queryUser);
         ArrayList<User> users = new ArrayList<>();
 
-        for (Entity entity : results.asIterable()) {
-          users.add(
-              new User(
-                  entity.getKey().getId(),
-                  (String) entity.getProperty("user-name")
-              ));
+        // Assembles a list of all known users
+        for (Entity entity : userResults.asIterable()) {
+          users.add(new User(entity.getKey().getId(), (String) entity.getProperty("user-name")));
         }
               
         // Appends the correct time zone to the date and time string and retrieves the JSON string 
         // containing the file upload information
 
-        // System.out.println(user);
-        String json = getJson(zone, fileEntity, users);
+        String json = getJson(timeZone, fileEntity, users);
         response.setContentType("application/json;");
         response.getWriter().println(json);
+        //*/
       } else {
+        // Updates the current user
+
         String name = request.getParameter("user-name");
-        user = name;
+        user = name;    
 
-        // fileJson.setCurrentUser(user);     
-
+        // Adds the new user into datastore
         if (request.getParameter("new").equals("true")) {
           DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
@@ -107,14 +87,10 @@ public class VisualizerServlet extends HttpServlet {
 
       
     } else {
-      DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-
-      // Puts the selected time zone into datastore
+      // Updates the selected time zone
       String zone = request.getParameter("zone");
-      Entity timeEntity = new Entity("Zone");
-      timeEntity.setProperty("time-zone", zone);
-      timeEntity.setProperty("time", new Date());
-      datastore.put(timeEntity);
+
+      timeZone = zone; 
     }
   }
 
@@ -129,15 +105,14 @@ public class VisualizerServlet extends HttpServlet {
           
       // Will not execute if the user failed to select a file after clicking "upload"
       if (filePart.getSubmittedFileName().length() > 0) {
-        // String user = request.getParameter("")
         InputStream fileInputStream = filePart.getInputStream();
               
         // Create a simulation trace out of the uploaded file
         InputStreamReader reader = new InputStreamReader(fileInputStream, "ASCII");
-        SimulationTrace.Builder builder = SimulationTrace.newBuilder();
+        MemaccessCheckerData.Builder builder = MemaccessCheckerData.newBuilder();
         TextFormat.merge(reader, builder);
 
-        SimulationTrace simulationTrace = builder.build();
+        MemaccessCheckerData simulationTrace = builder.build();
 
         // Put the simulation trace proto into datastore
         ZonedDateTime dateTime = ZonedDateTime.now(ZoneId.of(ZoneOffset.UTC.getId()));
@@ -153,27 +128,32 @@ public class VisualizerServlet extends HttpServlet {
 
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
         datastore.put(simulationTraceUpload);
+        
+        // Updates the last submitted file
+        fileEntity = simulationTraceUpload;
 
-        // Updates the last uploaded file information
+        // Holds the last uploaded file information
         String fileName = filePart.getSubmittedFileName();
         String fileSize = getBytes(filePart.getSize());
         String fileTrace = simulationTrace.getName();
         int fileTiles = simulationTrace.getNumTiles();
         int narrowBytes = simulationTrace.getNarrowMemorySizeBytes();
         int wideBytes = simulationTrace.getWideMemorySizeBytes();
-        System.out.println(user);
 
-        fileJson = new FileJson(fileName, fileSize, fileTrace, fileTiles, narrowBytes, wideBytes, user);
+        fileJson =
+            new FileJson(fileName, fileSize, fileTrace, fileTiles, narrowBytes, wideBytes, user);
       } else {
         // Resets the last uploaded file to "null" to help provide feedback to the user
+
         fileJson = new FileJson();
+        fileEntity = new Entity("File");
       }
     }        
 
     response.sendRedirect("/index.html");
   }
 
-    // Function to retrieve the file size information in terms of Bytes/KB/MB/GB
+  // Function to retrieve the file size information in terms of Bytes/KB/MB/GB
   private static String getBytes(long size) {
     double bytes = (double) size;
     String result = "";
@@ -197,11 +177,48 @@ public class VisualizerServlet extends HttpServlet {
   // Determines the appropriate file information to be displayed on the page in the form of a JSON 
   // string
   private static String getJson(String zone, Entity fileEntity, ArrayList<User> users) {
-    String dateTimeString = fileEntity.getProperty("date").toString();
+    String dateTimeString = (String) fileEntity.getProperty("date");
 
-    fileJson = new FileJson(fileJson, dateTimeString, zone, users, user);
+    if (dateTimeString == null) {
+      // Sends the time zone information only
+
+      ZonedDateTime dateTime = ZonedDateTime.now(ZoneId.of(zone));
+      DateTimeFormatter formatter = DateTimeFormatter.ofPattern("z");
+
+      fileJson = new FileJson(dateTime.format(formatter), zone, users, user);
+    } else {
+      // Sends both file and time information
+
+      fileJson = new FileJson(fileJson, dateTimeString, zone, users, user);
+    }
+
     String json = new Gson().toJson(fileJson);
 
     return json;
+  }
+
+  // Clear datastore
+  private static void purgeAll() {
+    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+
+    Query queryZone = new Query("Zone");
+    Query queryFile = new Query("File");
+    Query queryUser = new Query("User");
+
+    for (Entity entity : ((PreparedQuery) datastore.prepare(queryFile)).asIterable()) {
+        datastore.delete(entity.getKey());
+    }
+    for (Entity entity : ((PreparedQuery) datastore.prepare(queryZone)).asIterable()) {
+        datastore.delete(entity.getKey());
+    }
+    for (Entity entity : ((PreparedQuery) datastore.prepare(queryUser)).asIterable()) {
+        datastore.delete(entity.getKey());
+    }
+    
+
+    // Check if purge/submit actually happened
+    
+    System.out.println(((PreparedQuery) datastore.prepare(queryFile)).countEntities());
+    System.out.println(((PreparedQuery) datastore.prepare(queryUser)).countEntities());
   }
 }

@@ -15,8 +15,16 @@ public class LoadFile {
   private String zone;
   private List<User> users;
   private String user;
+  private boolean userFilesExist;
 
-  public LoadFile(long id, String name, String dateTimeString, String zone, List<User> users, String user) {
+  public LoadFile(
+      long id, 
+      String name, 
+      String dateTimeString, 
+      String zone, 
+      List<User> users, 
+      String user, 
+      boolean userFilesExist) {
     this.id = id;
     this.name = name;
     this.time = "";
@@ -24,11 +32,12 @@ public class LoadFile {
     this.zone = zone;
     this.users = users;
     this.user = user;
+    this.userFilesExist = userFilesExist;
 
     this.getTimeZone();
   }
 
-    // Generates the appropriate time information of the file according to the time zone
+  // Generates the appropriate time information of the file according to the time zone
   private void getTimeZone() {
     DateTimeFormatter formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME;
     ZonedDateTime dateTime = ZonedDateTime.parse(dateTimeString, formatter);
@@ -45,6 +54,9 @@ public class LoadFile {
     } else if (zone.equals("-06:00")) {
       time += " MDT";
       zone = "Mountain Daylight Time (MDT)";
+    } else if (zone.equals("Z")) {
+      time += " UTC";
+      zone = "Coordinated Universal Time (UTC)";
     } else {          
       if (zone.equals("-05:00")) {
         time += " EST";
@@ -55,6 +67,9 @@ public class LoadFile {
       } else if (zone.equals("-07:00")) {
         time += " MST";
         zone = " Mountain Standard Time (MST)";
+      } else if (zone.equals("Z")) {
+        time += " UTC";
+        zone = "Coordinated Universal Time (UTC)"; 
       } else {
         formatter = DateTimeFormatter.ofPattern("z");
         time += " " + dateTime.format(formatter);
