@@ -1,10 +1,8 @@
 syntax = "proto3";
 
-option java_package = "com.google.sps.proto";
-option java_outer_classname = "SimulationTraceProto";
-// option cc_api_version = 2;
+option java_outer_classname = "MemaccessCheckerDataProto";
 
-package platforms.darwinn.code_generator.debug;
+package com.google.sps.proto;
 
 // Allocation data for one tensor.  This is for the part of the tensor that lives
 // on one tile, which is called a "buffer" in the compiler.

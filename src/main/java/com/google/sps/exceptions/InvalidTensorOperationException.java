@@ -1,6 +1,6 @@
 package com.google.sps.exceptions;
 
-import com.google.sps.proto.SimulationTraceProto.*;
+import com.google.sps.proto.MemaccessCheckerDataProto.*;
 
 
 public class InvalidTensorOperationException extends Exception {

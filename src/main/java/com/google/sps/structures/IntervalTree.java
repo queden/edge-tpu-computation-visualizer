@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
+import java.util.List;
 
 /**
  * A balanced binary-search tree keyed by Interval objects.
@@ -61,6 +62,13 @@ public class IntervalTree<T extends Interval> implements Iterable<T> {
         root = new Node(t);
         root.blacken();
         size = 1;
+    }
+
+    public IntervalTree(List<T> list) {
+        this();
+        for(T t : list) {
+            this.insert(t);
+        }
     }
 
     ///////////////////////////////////
@@ -103,7 +111,12 @@ public class IntervalTree<T extends Interval> implements Iterable<T> {
      * Whether or not this IntervalTree contains the given point
      */
     public T containsAddress(T t) {
-        return root.searchOverlaps(t).interval();
+        Node n = root.searchOverlaps(t);
+        if (n.isNil()) {
+            return null;
+        } else {
+            return n.interval();
+        }
     }
     
     /**
