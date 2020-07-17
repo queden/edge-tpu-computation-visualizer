@@ -121,7 +121,11 @@ public class VisualizerServlet extends HttpServlet {
         Entity simulationTraceUpload = new Entity("File");
         simulationTraceUpload.setProperty("date", dateTime.format(formatter));
         simulationTraceUpload.setProperty("time", new Date());
-        simulationTraceUpload.setProperty("name", simulationTrace.getName());
+        simulationTraceUpload.setProperty(
+            "name", 
+            (simulationTrace.getName().equals("")) 
+                ? filePart.getSubmittedFileName() 
+                : simulationTrace.getName());
         simulationTraceUpload.setProperty("user", user);
         simulationTraceUpload.setProperty(
             "simulation-trace", new Blob(simulationTrace.toByteArray()));        

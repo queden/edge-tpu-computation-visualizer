@@ -87,9 +87,11 @@
         <p id="display-user-files"> Displaying files for: All </p>
         <form action="#">
             <label for="uploaded-files">Choose a file: </label>
-            <select id="uploaded-files" name="uploaded-files" onchange="displayFile()"></select>
+            <select id="uploaded-files" name="uploaded-files" onchange="displayFile()">
+              <option> No file chosen </option>
+            </select>
         </form>
-        <p id="selected-file"> Selected file: </p>
+        <p id="selected-file"> Selected file: No file chosen </p>
         <form action='#' onsubmit="runVisualization()">
             <input type="submit" value="Run!" />
         </form>

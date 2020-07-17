@@ -227,6 +227,10 @@ async function loadFiles() {
     const select = document.getElementById("uploaded-files");
     select.innerHTML = ''; 
 
+    const option = document.createElement("option");
+    option.text = "No file chosen";
+    select.appendChild(option);
+
     // Appends each file into the file drop down menu
     files.forEach((file) => {
         select.appendChild(createFile(file));
@@ -253,31 +257,35 @@ function createUser(user) {
 async function runVisualization() {
     // Retrieves the selected file
     const select = document.getElementById("uploaded-files");
-    const fileId = select.options[select.selectedIndex].value;
+    const file = select.options[select.selectedIndex];
+    const fileText = file.text;
 
-    // /report -> sends to report servlet
-    // process=pre -> performs preprocessing of the proto information
-    const preprocess = await fetch('/report?process=pre&time=false&fileId=' + fileId, {method: 'GET'});
-    const preprocessResponse = await preprocess.json();
+    if (file.text == "No file chosen") {
+      alert("You must choose a file");
+    } else {
+      // /report -> sends to report servlet
+      // process=pre -> performs preprocessing of the proto information
+      const preprocess = await fetch('/report?process=pre&time=false&fileId=' + file.value, {method: 'GET'});
+      const preprocessResponse = await preprocess.json();
 
-    // Shows the user which file they are viewing the visualization of
-    const fileText = select.options[select.selectedIndex].text;
+      // Shows the user which file they are viewing the visualization of  
 
-    const selectedFileBox = document.getElementById("selected-file");
-    selectedFileBox.innerHTML = '';
-    selectedFileBox.innerHTML = "Selected file: " + fileText;
+      const selectedFileBox = document.getElementById("selected-file");
+      selectedFileBox.innerHTML = '';
+      selectedFileBox.innerHTML = "Selected file: " + fileText;
 
-    // Process initial json information
-    // TODO: Substitute
-    const box = document.getElementById("test-box");
-    box.innerHTML = '';
-    const init = document.createElement("p");
-    init.innerHTML = preprocessResponse.message;
-    box.appendChild(init);
+      // Process initial json information
+      // TODO: Substitute
+      const box = document.getElementById("test-box");
+      box.innerHTML = '';
+      const init = document.createElement("p");
+      init.innerHTML = preprocessResponse.message;
+      box.appendChild(init);
 
-    for (i = 0; i < prepprocessResponse.numTraces; i += 1000) {
-        // Run through the traces, information processing will happen within the function
-        await runTraces(i);
+      for (i = 0; i < prepprocessResponse.numTraces; i += 1000) {
+          // Run through the traces, information processing will happen within the function
+          await runTraces(i);
+      }
     }
 }
 
