@@ -142,7 +142,7 @@ public class ReportServlet extends HttpServlet {
 
         // PreProcessResults preProcessResults = validation.preProcess();
         PreProcessResults preProcessResults = 
-            new PreProcessResults(false, "Processed successfully.", 10000);
+            new PreProcessResults(false, "Preprocessed successfully.", 10000);
 
         json = new Gson().toJson(preProcessResults);
       } else {
