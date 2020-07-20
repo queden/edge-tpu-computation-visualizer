@@ -139,11 +139,11 @@ public class VisualizerServlet extends HttpServlet {
         // Holds the last uploaded file information
         String fileName = filePart.getSubmittedFileName();
         String fileSize = getBytes(filePart.getSize());
-        String fileTrace = simulationTrace.getName();
-        int fileTiles = 
-            simulationTrace.getNumTiles().equals("") 
-                ? "No name provided" 
-                : simulationTrace.getNumTiles();
+        String fileTrace = 
+            simulationTrace.getName().equals("") 
+            ? "No name provided" 
+            : simulationTrace.getName();
+        int fileTiles = simulationTrace.getNumTiles();
         int narrowBytes = simulationTrace.getNarrowMemorySizeBytes();
         int wideBytes = simulationTrace.getWideMemorySizeBytes();
 
