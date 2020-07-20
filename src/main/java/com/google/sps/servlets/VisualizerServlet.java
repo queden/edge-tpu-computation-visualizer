@@ -140,7 +140,10 @@ public class VisualizerServlet extends HttpServlet {
         String fileName = filePart.getSubmittedFileName();
         String fileSize = getBytes(filePart.getSize());
         String fileTrace = simulationTrace.getName();
-        int fileTiles = simulationTrace.getNumTiles();
+        int fileTiles = 
+            simulationTrace.getNumTiles().equals("") 
+                ? "No name provided" 
+                : simulationTrace.getNumTiles();
         int narrowBytes = simulationTrace.getNarrowMemorySizeBytes();
         int wideBytes = simulationTrace.getWideMemorySizeBytes();
 
