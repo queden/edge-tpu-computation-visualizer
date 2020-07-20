@@ -303,14 +303,14 @@ public class ValidationNew {
         hasAccessType = false;
       }
     } else if (traceAccessType == TraceEvent.AccessType.READ_WIDE) {
-      if (instruction.getWideRead() != 0) {
+      if (instruction.getWideReadCount() != 0) {
         AccessTypeTensorList = instruction.getWideReadList();
         tensor = getTensor(AccessTypeTensorList, traceAddress, tensorLabelToTensorAllocationWide);
       } else {
         hasAccessType = false;
       }
     } else if (traceAccessType == TraceEvent.AccessType.WRITE_WIDE) {
-      if (instruction.getWideWrite() != 0) {
+      if (instruction.getWideWriteCount() != 0) {
         AccessTypeTensorList = instruction.getWideWriteList();
         tensor = getTensor(AccessTypeTensorList, traceAddress, tensorLabelToTensorAllocationWide);
       } else {
