@@ -16,6 +16,9 @@ public class Validation_caden {
   private static List<TensorLayerAllocationTable> tensorLayerAllocationNarrow;
   private static List<TensorLayerAllocationTable> tensorLayerAllocationWide;
 
+  private static Map<Integer, TensorAllocation> tensorLabelToTensorAllocationNarrow;
+  private static Map<Integer, TensorAllocation> tensorLabelToTensorAllocationWide;
+
   private static ArrayList<Instruction> instructions;
   private static Map<Integer, Instruction> instructionTagtoInstruction;
   private static List<TraceEvent> traceEvents;
@@ -40,6 +43,9 @@ public class Validation_caden {
     tensorLayerAllocationNarrow = memaccessCheckerData.getTensorLayerAllocationNarrowList();
     tensorLayerAllocationWide = memaccessCheckerData.getTensorLayerAllocationWideList();
 
+    tensorLabelToTensorAllocationNarrow = new Hashtable<Integer, TensorAllocation>();
+    tensorLabelToTensorAllocationWide = new Hashtable<Integer, TensorAllocation>();
+
     traceEvents = memaccessCheckerData.getTraceEventsList();
     instructions = new ArrayList<Instruction>();
 
@@ -59,7 +65,7 @@ public class Validation_caden {
 
     instructions.addAll(memaccessCheckerData.getInstructionsList());
 
-    relateIntructionTagtoInstructionTable();
+    relateInstructionTagtoInstructionTable();
 
     try {
       relateTensorsToInstructions(tensorLayerAllocationNarrow, true);
@@ -88,6 +94,9 @@ public class Validation_caden {
         isError = true;
       }    
     }
+
+    tensorLabelToTensorAllocationNarrow = relateTensorLabelToTensorAllocation(tensorLayerAllocationNarrow);
+    tensorLabelToTensorAllocationWide = relateTensorLabelToTensorAllocation(tensorLayerAllocationWide);
 
     return new PreProcessResults(isError, message, traceEvents.size());
   }
@@ -215,11 +224,9 @@ public class Validation_caden {
   }
 
   /** Given a list of instructions, maps each instruction tag to its corresponding instruction. */
-  private static void relateIntructionTagtoInstructionTable() {
+  public static void relateInstructionTagtoInstructionTable() {
     for (Instruction instruction : instructions) {
-      int instructionTag = instruction.getTag();
-      System.out.println("instruction tag is " + instructionTag);
-      instructionTagtoInstruction.put(instructionTag, instruction);
+      instructionTagtoInstruction.put(instruction.getTag(), instruction);
     }
   }
 
@@ -227,199 +234,226 @@ public class Validation_caden {
    * Given a list of trace entries, validates that trace entries proceeded in the right order and
    * operated on the correct traces.
    */
-//   private static void validateTraceEvents(long start, long end)
-//       throws MemoryAccessException, InvalidTensorOperationException, InvalidMaskException, InvalidTensorReadException, Exception {
-//     // Arrays to simulate the narrow and wide memories for each tile.
-//     if (traceEvents.isEmpty()) {
-//         throw new Exception(
-//             "No trace entry to be validated "); 
-//     }
-//     // Iterates over each trace entry, ensures that it is operating on the correct tensor and
-//     // validates based on if it is a write or a read.
+  public static void validateTraceEvents(long start, long end)
+      throws Exception, InvalidTensorOperationException {
+    if (traceEvents.isEmpty()) {
+        throw new Exception(
+            "No trace entry to be validated "); 
+      }
+    // Iterates over each trace entry, ensures that it is operating on the correct tensor and
+    // validates based on if it is a write or a read.
+    for (long i = start; i < end; i++) {
+      TraceEvent traceEvent = traceEvents.get((int) i);
+      // Gets the trace event's corresponding instruction and ensures it exists.
+      Instruction instruction = instructionTagtoInstruction.get(traceEvent.getInstructionTag());
+      if (instruction == null) {
+        throw new Exception(
+            "Instruction with key "
+                + traceEvent.getInstructionTag()
+                + " does not exist."); // TODO: May need to write custom exception
+      }
 
-//     long bound = (end <= traceEvents.size()) ? end : traceEvents.size();
+      TraceEvent.AccessType accessType = traceEvent.getAccessType();
+      int address = traceEvent.getAddress();
+    
+      int traceTensor = -1;
+      // try catch would not be necessary because a default value of 0 will be set -- catch the unexpected tensor 
+      try {
+        traceTensor = getTraceTensor(address, accessType, instruction);
+      } catch(Exception e) {
+        System.out.println(e.getMessage());
+      }
 
-//     for (long i = start; i < bound; i++) {
-//       TraceEvent traceEvent = traceEvents.get((int) i);
-//       // Gets the trace entries corresponding instruction and ensures it exists.
-//       Instruction instruction = instructionTagtoInstruction.get(traceEvent.getInstructionTag());
-//       if (instruction == null) {
-//         throw new Exception(
-//             "Instruction with key "
-//                 + traceEvent.getInstructionTag()
-//                 + " does not exist."); // TODO: May need to write custom exception
-//       }
-
-//       TraceEvent.AccessType accessType = traceEvent.getAccessType();
-//       if (!traceEvent.hasAddress()) {
-//         throw new Exception(
-//           "Trace with access type " 
-//             + traceEvent.getAccessType() 
-//             + " and instruction " 
-//             + traceEvent.getInstructionTag()
-//             + " has no memory address associated with it.");
-//        }
-//       int address = traceEvent.getAddress();
-//       int traceTensor = -1;
-
-//       traceTensor = getTraceTensor(address, accessType, instruction);
-
-//       int expectedTensor;
-
-//       // Gets the expected tensor that the trace entry should be operating on based on which memory
-//       // it accesses.
-//       if (accessType == TraceEvent.AccessType.NARROW_READ
-//           || accessType == TraceEvent.AccessType.NARROW_WRITE) {
-//         expectedTensor = narrowAllocation[address];
-//       } else {
-//         expectedTensor = wideAllocation[address];
-//       }
-
-//       // If the trace is operating on the wrong tensor, throws an exception.
-//       if (expectedTensor != traceTensor) {
-//         throw new InvalidTensorOperationException(
-//             address, expectedTensor, traceTensor, traceEvent.getInstructionTag(), accessType);
-//       }
-
-//       List<Boolean> masks = instruction.getMaskList();
-//       if (masks.isEmpty()){
-//           throw new InvalidMaskException(traceEvent.getInstructionTag(), traceEvent.getAccessType());
-//       }
+      List<Boolean> masks = instruction.getMaskList();
+      if (masks.isEmpty()){
+          throw new InvalidMaskException(traceEvent.getInstructionTag(), traceEvent.getAccessType());
+      }
       
-//       // If the trace entry is a write, performs a write validation. If it a read, performs a read
-//       // validation.
-//       if (accessType == TraceEvent.AccessType.NARROW_WRITE
-//           || accessType == TraceEvent.AccessType.WIDE_WRITE) {
-//         writeValidation(narrow, wide, masks, traceTensor, traceEvent);
-//       } else if (accessType == TraceEvent.AccessType.NARROW_READ
-//           || accessType == TraceEvent.AccessType.WIDE_READ) {
-//         readValidation(narrow, wide, masks, traceTensor, traceEvent);
-//       }
-//     }
-//   }
+      // If the trace entry is a write, performs a write validation. If it a read, performs a read
+      // validation.
+      if (accessType == TraceEvent.AccessType.NARROW_WRITE
+          || accessType == TraceEvent.AccessType.WIDE_WRITE) {
+          writeValidation(narrow, wide, masks, traceTensor, traceEvent);
+      } else if (accessType == TraceEvent.AccessType.NARROW_READ
+          || accessType == TraceEvent.AccessType.WIDE_READ) {
+        try {
+          readValidation(narrow, wide, masks, traceTensor, traceEvent);
+        } catch (InvalidTensorReadException e) {
+          System.out.println(e.getMessage());
+        }
+      }
+    }
+  }
+  
+  public static Map<Integer, TensorAllocation> relateTensorLabelToTensorAllocation(List <TensorLayerAllocationTable> tensorLayAllocs) {
+    Hashtable<Integer, TensorAllocation> tensorLabelToTensorAllocation = new Hashtable<Integer, TensorAllocation>();
+
+    for (TensorLayerAllocationTable tensorLayAlloc : tensorLayAllocs) {
+      List <TensorTileAllocationTable> tensorTileAllocs = tensorLayAlloc.getTensorTileAllocationList();
+      for (TensorTileAllocationTable tensorTileAlloc : tensorTileAllocs){
+          List <TensorAllocation> tensorAllocs = tensorTileAlloc.getTensorAllocationList();
+          for (TensorAllocation tensorAlloc : tensorAllocs){
+              tensorLabelToTensorAllocation.put(tensorAlloc.getTensorLabel(), tensorAlloc);
+          }
+      }  
+    }
+
+    return tensorLabelToTensorAllocation;
+  }
 
   /**
    * Returns the tensor that the trace entry is operating on based on its corresponding instruction.
+   */  
+  public static int getTraceTensor(
+      int traceAddress, TraceEvent.AccessType traceAccessType, Instruction instruction)
+      throws Exception, MemoryAccessException {
+    List<Integer> AccessTypeTensorList;
+    int tensor = -1;
+    // Tracks if the corresponding instruction has the trace entry's access type.
+    Boolean hasAccessType = true;
+
+    if (traceAccessType == TraceEvent.AccessType.NARROW_READ) {
+      if (instruction.getNarrowReadCount() != 0) {
+        AccessTypeTensorList = instruction.getNarrowReadList();
+        tensor = getTensor(AccessTypeTensorList, traceAddress, tensorLabelToTensorAllocationNarrow);
+      } else {
+        hasAccessType = false;
+      }
+    } else if (traceAccessType == TraceEvent.AccessType.NARROW_WRITE) {
+      if (instruction.getNarrowWriteCount() != 0) { 
+        AccessTypeTensorList = instruction.getNarrowWriteList();
+        tensor = getTensor(AccessTypeTensorList, traceAddress, tensorLabelToTensorAllocationNarrow);
+      } else {
+        hasAccessType = false;
+      }
+    } else if (traceAccessType == TraceEvent.AccessType.WIDE_READ) {
+      if (instruction.getWideReadCount() != 0) {
+        AccessTypeTensorList = instruction.getWideReadList();
+        tensor = getTensor(AccessTypeTensorList, traceAddress, tensorLabelToTensorAllocationWide);
+      } else {
+        hasAccessType = false;
+      }
+    } else if (traceAccessType == TraceEvent.AccessType.WIDE_WRITE) {
+      if (instruction.getWideWriteCount() != 0) {
+        AccessTypeTensorList = instruction.getWideWriteList();
+        tensor = getTensor(AccessTypeTensorList, traceAddress, tensorLabelToTensorAllocationWide);
+      } else {
+        hasAccessType = false;
+      }
+    } else {
+      throw new Exception(
+          "Trace event at address " 
+            + traceAddress 
+            + " has invalid access type of " 
+            + traceAccessType 
+            + ".");
+    }
+
+    // Throws MemoryAccessException if instruction does not have the expected
+    // access type.
+    if (!hasAccessType) {
+      throw new MemoryAccessException(traceAccessType, instruction.getTag());
+    }
+
+    // Throws an exception if there is no tensor
+    // associated with the correct instruction access type.
+    
+    if (tensor == -1) {
+      throw new Exception(
+          "Instruction  " 
+            + instruction.getName() 
+            + " does not have the appropriate tensor associated with it."
+            + "This may be due to invalid tensor or incorrect tensor event address. ") ; // notifying incorrect address error 
+    }
+
+    return tensor;
+  }
+
+  /**
+   * Retrieves the correct tensor depending on the specific access type instruction list. 
+   * 
    */
-//   private static int getTraceTensor(
-//       int traceAddress, TraceEvent.AccessType traceAccessType, Instruction instruction)
-//       throws Exception, MemoryAccessException {
-//     TensorAccess tensorAccess = null;
+  public static int getTensor (List<Integer> accessTypeTensorList, int traceAddress, 
+            Map<Integer, TensorAllocation> tensorLabelToTensorAllocationTable) {
+      int tensor = -1;
+      for (int i = 0; i < accessTypeTensorList.size(); i++) {
+            TensorAllocation tensorAlloc = tensorLabelToTensorAllocationTable.get(accessTypeTensorList.get(i));
+            int start = tensorAlloc.getBaseAddress();
+            int end = start + tensorAlloc.getSize();
+            if (traceAddress >= start && traceAddress < end) {
+                tensor = accessTypeTensorList.get(i);
+                break;
+            }
+        }
+       return tensor; 
+  }
 
-//     // Tracks if the corresponding instruction has the trace entry's access type.
-//     Boolean hasAccessType = true;
+  /**
+   * Validates that the write validation has a corresponding tensor and writes it to the correct
+   * address in the memory arrays.
+   */
+  public static void writeValidation(
+      int[][] narrow, int[][] wide, List<Boolean> masks, int tensor, TraceEvent traceEvent) {  
+    int address = traceEvent.getAddress();
+    if (traceEvent.getAccessType() == TraceEvent.AccessType.NARROW_WRITE) {
+      // Iterate through the tiles.
+      for (int tile = 0; tile < numTiles; tile++) {
+        if (masks.get(tile)) {
+          // Write the tensor name in our replicated memory.
+          int endAddress = traceEvent.getBytes()  + address;
+          for (int currentByte = address; currentByte < endAddress; currentByte ++) {
+            narrow[tile][currentByte] = tensor;
+          } 
+        }
+          }
+        }
+    if (traceEvent.getAccessType() == TraceEvent.AccessType.WIDE_WRITE) {
+      for (int tile = 0; tile < numTiles; tile++) {
+        if (masks.get(tile)) {
+          int endAddress = traceEvent.getBytes()  + address;
+          for (int currentByte = address; currentByte < endAddress; currentByte ++) {
+            wide[tile][currentByte] = tensor;
+          }  
+        }
+      }
+    }
+  }
 
-//     if (traceAccessType == TraceEvent.AccessType.NARROW_READ) {
-//       if (instruction.hasNarrowRead()) {
-//         tensorAccess = instruction.getNarrowRead();
-//       } else {
-//         hasAccessType = false;
-//       }
-//     } else if (traceAccessType == TraceEvent.AccessType.NARROW_WRITE) {
-//       if (instruction.hasNarrowWrite()) { 
-//         tensorAccess = instruction.getNarrowWrite();
-//       } else {
-//         hasAccessType = false;
-//       }
-//     } else if (traceAccessType == TraceEvent.AccessType.WIDE_READ) {
-//       if (instruction.hasWideRead()) {
-//         tensorAccess = instruction.getWideRead();
-//       } else {
-//         hasAccessType = false;
-//       }
-//     } else if (traceAccessType == TraceEvent.AccessType.WIDE_WRITE) {
-//       if (instruction.hasWideWrite()) {
-//         tensorAccess = instruction.getWideWrite();
-//       } else {
-//         hasAccessType = false;
-//       }
-//     } else {
-//       throw new Exception(
-//           "Trace entry at address " 
-//             + traceAddress 
-//             + " has invalid access type of " 
-//             + traceAccessType 
-//             + ".");
-//     }
+  /**
+   * Validates that the tensor that the read trace entry is reading has been written before the read
+   * occurs.
+   */
+  public static void readValidation(
+      int[][] narrow, int[][] wide, List<Boolean> masks, int tensor, TraceEvent traceEvent)
+      throws InvalidTensorReadException {
+    int address = traceEvent.getAddress();
 
-//     // Throws MemoryAccessException if instruction does not have the expected
-//     // access type.
-//     if (!hasAccessType) {
-//       throw new MemoryAccessException(traceAccessType, instruction.getTag());
-//     }
-
-//     // Gets the corresponding tensor. Throws an exception if there is no tensor
-//     // associated with the correct access type.
-//     int tensor = -1;
-//     if (tensorAccess.hasTensor()){
-//       tensor = tensorAccess.getTensor();  
-//     } 
-//     else {
-//       throw new Exception(
-//           "Memory Access " 
-//             + tensorAccess.getDescriptorForType().getName() 
-//             + " for instruction " 
-//             + instruction.getTag() 
-//             + " has no tensor associated with it.");
-//     }
-
-//     return tensor;
-//   }
-
-//   /**
-//    * Validates that the write validation has a corresponding tensor and writes it to the correct
-//    * address in the memory arrays.
-//    */
-//   private static void writeValidation(
-//       int[][] narrow, int[][] wide, List<Boolean> masks, int tensor, TraceEvent traceEvent) {  
-//     int address = traceEvent.getAddress();
-//     if (traceEvent.getAccessType() == TraceEvent.AccessType.NARROW_WRITE) {
-//       // Iterate through the tiles.
-//       for (int tile = 0; tile < numTiles; tile++) {
-//         if (masks.get(tile)) {
-//           // Write the tensor name in our replicated memory.
-//           narrow[tile][address] = tensor;
-//         }
-//           }
-//         }
-//     if (traceEvent.getAccessType() == TraceEvent.AccessType.WIDE_WRITE) {
-//       for (int tile = 0; tile < numTiles; tile++) {
-//         if (masks.get(tile)) {
-//           wide[tile][address] = tensor;
-//         }
-//       }
-//     }
-//   }
-
-//   /**
-//    * Validates that the tensor that the read trace entry is reading has been written before the read
-//    * occurs.
-//    */
-//   private static void readValidation(
-//       int[][] narrow, int[][] wide, List<Boolean> masks, int tensor, TraceEvent traceEvent)
-//       throws InvalidTensorReadException {
-//     int address = traceEvent.getAddress();
-
-//     if (traceEvent.getAccessType() == TraceEvent.AccessType.NARROW_READ) {
-//       for (int tile = 0; tile < numTiles; tile++) {
-//         if (masks.get(tile)) {
-//           if (narrow[tile][address] != tensor) {
-//             throw new InvalidTensorReadException(
-//                 tensor, tile, address, narrow[tile][address], "narrow");
-//           }
-//         }
-//       }
-//     } else if (traceEvent.getAccessType() == TraceEvent.AccessType.WIDE_READ) {
-//       for (int tile = 0; tile < numTiles; tile++) {
-//         if (masks.get(tile)) {
-//           if (wide[tile][address] != tensor) {
-//             throw new InvalidTensorReadException(
-//                 tensor, tile, address, wide[tile][address], "wide");
-//           }
-//         }
-//       }
-//     }
-//   }
+    if (traceEvent.getAccessType() == TraceEvent.AccessType.NARROW_READ) {
+      for (int tile = 0; tile < numTiles; tile++) {
+        if (masks.get(tile)) {
+          int endAddress = traceEvent.getBytes()  + address;  
+          for (int currentByte = address; currentByte < endAddress; currentByte ++) {
+            if (narrow[tile][currentByte] != tensor) {
+                throw new InvalidTensorReadException(
+                    tensor, tile, address, narrow[tile][address], "narrow");
+            }
+          }
+        }
+      }
+    } else if (traceEvent.getAccessType() == TraceEvent.AccessType.WIDE_READ) {
+      for (int tile = 0; tile < numTiles; tile++) {
+        if (masks.get(tile)) {
+          int endAddress = traceEvent.getBytes()  + address;  
+          for (int currentByte = address; currentByte < endAddress; currentByte ++) {  
+            if (wide[tile][address] != tensor) {
+                throw new InvalidTensorReadException(
+                    tensor, tile, address, wide[tile][address], "wide");
+            }
+          }
+        }
+      }
+    }
+  }
 
 
     private static class AddressInterval implements Interval {
