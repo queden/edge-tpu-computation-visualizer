@@ -92,9 +92,9 @@ public class FileJson {
   // Constructor to be used when a file has not been uploaded but the time zone information is 
   // necessary
   public FileJson(String dateTimeString, String zone, List<User> users, String currentUser) {
-    this("null", "null", "null", 0 , 0, 0, dateTimeString, zone, users, "", currentUser);
+    this("null", "null", "null", 0 , 0, 0, "", zone, users, "", currentUser);
     
-    this.getZone();
+    this.getZone(dateTimeString);
   }
 
   // Constructor to be used when resetting the file information
@@ -139,12 +139,13 @@ public class FileJson {
         formatter = DateTimeFormatter.ofPattern("z");
         time += " " + dateTime.format(formatter);
         zone += " (" + dateTime.format(formatter) + ")";
+        zone = zone.replace('_', ' ');
       }         
     }
   }
 
   // Gets the time zone information only
-  private void getZone() {
+  private void getZone(String dateTimeString) {
     if (zone.equals("-04:00")) {
       zone = "Eastern Daylight Time (EDT)";
     } else if (zone.equals("-09:00")) {
@@ -162,7 +163,10 @@ public class FileJson {
         zone = " Mountain Standard Time (MST)";
       } else if (zone.equals("Z")) {
         zone = "Coordinated Universal Time (UTC)"; 
-      }        
+      } else {
+        zone += " (" + dateTimeString + ")";
+        zone = zone.replace('_', ' ');
+      }
     }
   }
 }

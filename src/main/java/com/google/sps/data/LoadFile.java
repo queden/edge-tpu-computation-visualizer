@@ -74,6 +74,7 @@ public class LoadFile {
         formatter = DateTimeFormatter.ofPattern("z");
         time += " " + dateTime.format(formatter);
         zone += " (" + dateTime.format(formatter) + ")";
+        zone = zone.replace('_', ' ');
       }         
     }
   }
