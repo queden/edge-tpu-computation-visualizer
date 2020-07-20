@@ -118,8 +118,6 @@ public class VisualizerServlet extends HttpServlet {
         ZonedDateTime dateTime = ZonedDateTime.now(ZoneId.of(ZoneOffset.UTC.getId()));
         DateTimeFormatter formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME;
 
-        String dateTime = request.getParameter("zone");
-
         Entity simulationTraceUpload = new Entity("File");
         simulationTraceUpload.setProperty("date", dateTime.format(formatter));
         simulationTraceUpload.setProperty("time", new Date());

@@ -1,15 +1,34 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
+<head>
+  <style>
+    body {
+      background-color: black;
+    }
+
+    button {
+      font-size: 20px;
+      padding: 7px 20px;
+      cursor: pointer;
+    }
+
+    #back-buttons {
+      padding-left: 40%;
+    }
+
+  </style>
+</head>
 <body onload="funkyRectangle()">
   <div id="content">
     <div id="back-buttons">
       <button id="upload-button" onclick="goUpload()"> Upload File </button>
-      <button id="back-button" onclick="goVisualize()"> Go to Visualizer </button>
+      <button id="back-button" onclick="goVisualizer()"> Go to Visualizer </button>
     </div>
     
     <div id="rec"></div>
   </div>
 </body>
+<script type="text/javascript" src="script.js"></script>
 <script src="//d3js.org/d3.v3.min.js"></script>
 <script>
 
@@ -18,7 +37,7 @@ function funkyRectangle() {
     count = 0;
 
   var svg = d3.select("#rec").append("svg")
-      .attr("width", 960)
+      .attr("width", 2500)
       .attr("height", 1500);
 
   var g = svg.selectAll("g")
@@ -53,14 +72,6 @@ function funkyRectangle() {
       return "translate(" + d.center + ")rotate(" + d.angle + ")";
     });
   });
-}
-
-function goUpload() {
-  location.replace("/index.html");
-}
-
-function goVisualize() {
-  location.replace("/report.html");
 }
 
 </script>
