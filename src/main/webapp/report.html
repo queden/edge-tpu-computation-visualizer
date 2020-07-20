@@ -20,8 +20,8 @@
             <h1 id="heading">Computation Visualizer</h1>
 
             <div id="time-zone-container">
-                <p id="time-zone-box"></p>
-                <form action="#" onsubmit="submitTimeZone()">
+                <p id="time-zone-display"></p>
+                <form action="#" onsubmit="submitTimeZoneReport()">
                     <label for="time-zone"> Choose a time-zone: </label>
                     <select id="time-zone" name="time-zone">
                         <option value="-05:00"> EST - -05:00 </option>
@@ -32,16 +32,16 @@
                         <option value="-06:00"> MDT - -06:00 </option>
                         <option value="Australia/Darwin"> ACT - Australia/Darwin </option>
                         <option value="Australia/Sydney"> AET - Australia/Sydney </option>
-                        <option value="America/Argentina/Buenos_Aires"> AGT - America/Argentina/Buenos_Aires </option>
+                        <option value="America/Argentina/Buenos_Aires"> AGT - America/Argentina/Buenos Aires </option>
                         <option value="Africa/Cairo"> ART - Africa/Cairo </option>
                         <option value="America/Anchorage"> AST - America/Anchorage </option>
-                        <option value="America/Sao_Paulo"> BET - America/Sao_Paulo </option>
+                        <option value="America/Sao_Paulo"> BET - America/Sao Paulo </option>
                         <option value="Asia/Dhaka"> BST - Asia/Dhaka </option>
                         <option value="Africa/Harare"> CAT - Africa/Harare </option>
-                        <option value="America/St_Johns"> CNT - America/St_Johns </option>
+                        <option value="America/St_Johns"> CNT - America/St. Johns </option>
                         <option value="America/Chicago"> CST - America/Chicago </option>
                         <option value="Asia/Shanghai"> CTT - Asia/Shanghai </option>
-                        <option value="Africa/Addis_Ababa"> EAT - Africa/Addis_Ababa </option>
+                        <option value="Africa/Addis_Ababa"> EAT - Africa/Addis Ababa </option>
                         <option value="Europe/Paris"> ECT - Europe/Paris </option>
                         <option value="America/Indiana/Indianapolis"> IET - America/Indiana/Indianapolis </option>
                         <option value="Asia/Kolkata"> IST - Asia/Kolkata </option>
@@ -51,35 +51,50 @@
                         <option value="Pacific/Auckland"> NST - Pacific/Auckland </option>
                         <option value="Asia/Karachi"> PLT - Asia/Karachi </option>
                         <option value="America/Phoenix"> PNT - America/Phoenix </option>
-                        <option value="America/Puerto_Rico"> PRT - America/Puerto_Rico </option>
-                        <option value="America/Los_Angeles"> PST - America/Los_Angeles </option>
+                        <option value="America/Puerto_Rico"> PRT - America/Puerto Rico </option>
+                        <option value="America/Los_Angeles"> PST - America/Los Angeles </option>
                         <option value="Pacific/Guadalcanal"> SST - Pacific/Guadalcanal </option>
-                        <option value="Asia/Ho_Chi_Minh"> VST - Asia/Ho_Chi_Minh </option>
+                        <option value="Asia/Ho_Chi_Minh"> VST - Asia/Ho Chi Minh </option>
                     </select>
                     <input id="time-zone-submit" type="submit" value="Submit"/>
                 </form>
             </div>
 
-                <form action="/index.html">
-                    <input id="back-upload-file" type="submit" value="Upload File"/>
-                </form>
+            <div id="user-container">
+              <p id="user-name" title="All"> User: All </p>
+              <form action="#" onsubmit="selectUserReport()">
+                <label for="users"> Choose a user: </label>
+                <select id="users" name="users">
+                  <option value="All"></option>
+                </select>
+                <input id="user-submit" type="submit" value="Submit"/>
+              </form>
+              <div id="user-files">
+                <p> *Displaying files for all users, current user has not uploaded files under their name </p>
+              </div>
+            </div>
+
+            <form action="/index.html">
+              <input id="back-upload-file" type="submit" value="Upload File"/>
+            </form>
         </div>   
 
+        <!-- TODO: Substitute with chart name -->
         <p id="chart"></p>
 
-        <!-- <div id="container">
-            <div id="element"></div>
-        </div> -->
+        <p id="display-user-files"> Displaying files for: All </p>
         <form action="#">
             <label for="uploaded-files">Choose a file: </label>
-            <select id="uploaded-files" name="uploaded-files"></select>
+            <select id="uploaded-files" name="uploaded-files" onchange="displayFile()">
+              <option> No file chosen </option>
+            </select>
         </form>
+        <p id="selected-file"> Selected file: No file chosen </p>
         <form action='#' onsubmit="runVisualization()">
             <input type="submit" value="Run!" />
         </form>
         <div id="test-box">
         </div>
-    <!-- <p id="chart"></p> -->
 
     <script src="//d3js.org/d3.v4.min.js"></script>
     <script type="text/javascript" src="script.js" onload="loadMemory()"></script>

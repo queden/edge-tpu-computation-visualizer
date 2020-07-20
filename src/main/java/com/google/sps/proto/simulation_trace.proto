@@ -1,77 +1,70 @@
-syntax = "proto2";
+syntax = "proto3";
 
 option java_package = "com.google.sps.proto";
 option java_outer_classname = "SimulationTraceProto";
+// option cc_api_version = 2;
 
-message SimulationTrace {
-  optional string name = 1;
-  optional int32 num_tiles = 2;
-  optional int32 narrow_memory_size_bytes = 3;
-  optional int32 wide_memory_size_bytes = 4;
-  repeated DependenceNode dependence_node = 5;
-  repeated TensorAllocationTable tensor_allocation_narrow = 6;
-  repeated TensorAllocationTable tensor_allocation_wide = 7;
-  repeated Instruction instruction = 8;
-  repeated TraceEvent trace_event = 9;
+package platforms.darwinn.code_generator.debug;
+
+// Allocation data for one tensor.  This is for the part of the tensor that lives
+// on one tile, which is called a "buffer" in the compiler.
+message TensorAllocation {
+  string name = 1;  // For debugging.
+  int32 tensor_label = 2;
+  int32 base_address = 3;
+  int32 size = 4;
 }
 
-message DependenceNode {
-  optional string name = 1;
-  optional int32 label = 2;
-  repeated int32 operands = 3;
-}
-
-message TensorInfo {
-  optional string name = 1;
-  optional int32 tensor_label = 2;
-  optional int32 base_address = 3;
-  optional int32 size = 4;  // in allocation units
-}
-
-message TensorAllocationTable {
+// One table per tile.
+message TensorTileAllocationTable {
   repeated TensorAllocation tensor_allocation = 1;
 }
 
-message TensorAllocation {
-  optional TensorInfo tensor_info = 1;
-  repeated int32 read_instructions = 3;
-  repeated int32 write_instructions = 4;
+// One table per layer.
+message TensorLayerAllocationTable {
+  string layer = 1;
+  repeated TensorTileAllocationTable tensor_tile_allocation = 2;
 }
 
-message Counter {
-   optional string name = 1;
-   // Counter end value (inclusive)
-   optional int32 end = 2;
-   optional int32 step = 3;
-   // Mask indicating if counter is used to compute address. When false, step
-   // is expected to be 1 unless a TTU is disabled.
-   optional bool mask = 5;
-}
-
-message TensorAccess {
-  optional TensorInfo tensor_info = 1;
-  repeated Counter counter = 2;
-}
-
+// The read and write fields list the unique labels for the buffers that an
+// instruction reads or writes.
 message Instruction {
-  optional string name = 1;
-  optional int32 tag = 2;
-  repeated bool mask = 3;  // One entry for each tile.
-  repeated TensorAccess narrow_read = 4;
-  repeated TensorAccess narrow_write = 5;
-  repeated TensorAccess wide_read = 6;
-  repeated TensorAccess wide_write = 7;
+  string name = 1;
+  string layer = 2;
+  int32 tag = 3;
+  repeated bool mask = 4;  // One entry for each tile.
+  // The following read and write fields are interpreted as either the base
+  // address of the corresponding read / write or the tensor label, depending on
+  // whether or the not the instructions have been processed to match the tensor
+  // information.
+  repeated int32 narrow_read = 5;
+  repeated int32 narrow_write = 6;
+  repeated int32 wide_read = 7;
+  repeated int32 wide_write = 8;
 }
 
 message TraceEvent {
   enum AccessType {
-    READ_NARROW = 0;
-    WRITE_NARROW = 1;
-    READ_WIDE = 2;
-    WRITE_WIDE = 3;
+    NARROW_READ = 0;
+    NARROW_WRITE = 1;
+    WIDE_READ = 2;
+    WIDE_WRITE = 3;
   }
-  optional AccessType access_type = 1;
-  optional int32 instruction_tag = 2;
-  optional int32 address = 4;
-  optional int64 cycle = 5;
+  AccessType access_type = 1;
+  int32 instruction_tag = 2;
+  int32 address = 3;
+  int32 bytes = 4;
+  int64 cycle = 5;
+}
+
+message MemaccessCheckerData {
+  string name = 1;
+  int32 num_tiles = 2;
+  int32 narrow_memory_size_bytes = 3;
+  int32 wide_memory_size_bytes = 4;
+  bool instructions_contain_tensor_labels = 5;
+  repeated TensorLayerAllocationTable tensor_layer_allocation_narrow = 6;
+  repeated TensorLayerAllocationTable tensor_layer_allocation_wide = 7;
+  repeated Instruction instructions = 8;
+  repeated TraceEvent trace_events = 9;
 }
