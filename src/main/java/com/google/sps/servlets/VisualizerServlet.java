@@ -9,6 +9,7 @@ import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.SortDirection;
 import com.google.gson.Gson;
 import com.google.protobuf.TextFormat;
+import com.google.sps.data.*;
 import com.google.sps.proto.MemaccessCheckerDataProto.*;
 import java.io.IOException;
 import java.io.InputStream;
@@ -106,33 +107,42 @@ public class VisualizerServlet extends HttpServlet {
       if (filePart.getSubmittedFileName().length() > 0) {
         InputStream fileInputStream = filePart.getInputStream();
               
-        // Create a memaccess checker data out of the uploaded file
+        // Create a simulation trace out of the uploaded file
         InputStreamReader reader = new InputStreamReader(fileInputStream, "ASCII");
         MemaccessCheckerData.Builder builder = MemaccessCheckerData.newBuilder();
         TextFormat.merge(reader, builder);
-        MemaccessCheckerData memaccessCheckerData = builder.build();
 
-        // Put the memaccess checker data proto into datastore
+        MemaccessCheckerData simulationTrace = builder.build();
+
+        // Put the simulation trace proto into datastore
         ZonedDateTime dateTime = ZonedDateTime.now(ZoneId.of(ZoneOffset.UTC.getId()));
         DateTimeFormatter formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME;
 
-        Entity memaccessCheckerDataUpload = new Entity("File");
-        memaccessCheckerDataUpload.setProperty("date", dateTime.format(formatter));
-        memaccessCheckerDataUpload.setProperty("time", new Date());
-        memaccessCheckerDataUpload.setProperty("name", memaccessCheckerData.getName());
-        memaccessCheckerDataUpload.setProperty(
-            "memaccess-checker-data", new Blob(memaccessCheckerData.toByteArray()));
+        Entity simulationTraceUpload = new Entity("File");
+        simulationTraceUpload.setProperty("date", dateTime.format(formatter));
+        simulationTraceUpload.setProperty("time", new Date());
+        simulationTraceUpload.setProperty(
+            "name", 
+            (simulationTrace.getName().equals("")) 
+                ? filePart.getSubmittedFileName() 
+                : simulationTrace.getName());
+        simulationTraceUpload.setProperty("user", user);
+        simulationTraceUpload.setProperty(
+            "simulation-trace", new Blob(simulationTrace.toByteArray()));        
 
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-        datastore.put(memaccessCheckerDataUpload);
+        datastore.put(simulationTraceUpload);
+        
+        // Updates the last submitted file
+        fileEntity = simulationTraceUpload;
 
         // Holds the last uploaded file information
         String fileName = filePart.getSubmittedFileName();
         String fileSize = getBytes(filePart.getSize());
-        String fileTrace = memaccessCheckerData.getName();
-        int fileTiles = memaccessCheckerData.getNumTiles();
-        int narrowBytes = memaccessCheckerData.getNarrowMemorySizeBytes();
-        int wideBytes = memaccessCheckerData.getWideMemorySizeBytes();
+        String fileTrace = simulationTrace.getName();
+        int fileTiles = simulationTrace.getNumTiles();
+        int narrowBytes = simulationTrace.getNarrowMemorySizeBytes();
+        int wideBytes = simulationTrace.getWideMemorySizeBytes();
 
         fileJson =
             new FileJson(fileName, fileSize, fileTrace, fileTiles, narrowBytes, wideBytes, user);

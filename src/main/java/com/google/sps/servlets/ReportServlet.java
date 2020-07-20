@@ -15,7 +15,7 @@ import com.google.appengine.api.datastore.Query.FilterPredicate;
 import com.google.appengine.api.datastore.Query.SortDirection;
 import com.google.gson.Gson;
 import com.google.sps.data.*;
-// import com.google.sps.Validation;
+import com.google.sps.Validation;
 import com.google.sps.proto.MemaccessCheckerDataProto.*;
 import com.google.sps.results.*;
 import java.io.IOException;
@@ -28,7 +28,7 @@ import javax.servlet.http.HttpServletResponse;
 
 @WebServlet("/report")
 public class ReportServlet extends HttpServlet {
-  private static MemaccessCheckerData memaccessCheckerData;
+  private static MemaccessCheckerData simulationTrace;
   // private static Validation validation;
   private static String user = "All";
   private static String timeZone = ZoneOffset.UTC.getId();
@@ -37,6 +37,7 @@ public class ReportServlet extends HttpServlet {
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     if (request.getParameter("time").equals("true")) {
       // Updates the time zone
+
       String zone = request.getParameter("zone");
       timeZone = zone;
     } else {

@@ -9,7 +9,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
-public class Validation_caden {
+public class Validation {
   private static MemaccessCheckerData memaccessCheckerData;
 
   private static List<TensorLayerAllocationTable> tensorLayerAllocationNarrow;
@@ -36,7 +36,7 @@ public class Validation_caden {
   public static final String WIDE_READ = "Wide Read";
   public static final String WIDE_WRITE = "Wide Write";
 
-  public Validation_caden(MemaccessCheckerData memaccessCheckerData) {
+  public Validation(MemaccessCheckerData memaccessCheckerData) {
     this.memaccessCheckerData = memaccessCheckerData;
 
     tensorLayerAllocationNarrow = memaccessCheckerData.getTensorLayerAllocationNarrowList();
