@@ -211,13 +211,16 @@ public class Validation_caden {
       // Loops over the instructions, finds the instruction's layer corresponding instruction list
       // and adds the instruciton to that list
       for (Instruction instruction : instructions) {
-          List<Integer> layerInstructions = layerToInstructionTable.get(instruction.getLayer());
+          String instructionLayer = instruction.getLayer();
+          List<Integer> layerInstructions = layerToInstructionTable.get(instructionLayer);
 
           if (layerInstructions == null) {
               layerInstructions = new ArrayList<Integer>();
           }
 
           layerInstructions.add(instruction.getTag());
+
+          layerToInstructionTable.put(instructionLayer, layerInstructions);
       }
 
       return layerToInstructionTable;
@@ -285,6 +288,7 @@ public class Validation_caden {
     }
   }
   
+  /** Creates a map from tensor label to the corresponding tensor allocation information */
   public static Map<Integer, TensorAllocation> relateTensorLabelToTensorAllocation(List <TensorLayerAllocationTable> tensorLayAllocs) {
     Hashtable<Integer, TensorAllocation> tensorLabelToTensorAllocation = new Hashtable<Integer, TensorAllocation>();
 
@@ -357,7 +361,6 @@ public class Validation_caden {
 
     // Throws an exception if there is no tensor
     // associated with the correct instruction access type.
-    
     if (tensor == -1) {
       throw new Exception(
           "Instruction  " 
@@ -455,13 +458,14 @@ public class Validation_caden {
     }
   }
 
-
+    /** The individual node for the interval tree, holds the interval and the corresponding tensor label */
     private static class AddressInterval implements Interval {
 
-        private final int label;
-        private final int start;
-        private final int end;
+        private final int label; // The label of the tensor with the corresponding address interval
+        private final int start; // The start address of the address interval
+        private final int end; // The end address of the address interval
 
+        /** Creates a AddressInterval from a TensorAllocation object */
         public AddressInterval(TensorAllocation tensorAllocation) {
             this.label = tensorAllocation.getTensorLabel();
             this.start = tensorAllocation.getBaseAddress();
@@ -474,21 +478,25 @@ public class Validation_caden {
             this.end = end;
         }
         
+        /** Creates a size one address interval, used in the algorithm to represent the base address of an instruction */
         public AddressInterval(int start) {
             this.label = -1; // If it is solely one address corresponding to an instruction, it will not a have a label.
             this.start = start;
             this.end = start;
         }
 
+        /** Returns the label of the tensor with the corresponding address interval, -1 if its the base address of an instruction */
         public int label() {
             return label;
         }
         
+        /** Returns the start address of the address interval */
         @Override
         public int start() {
             return start;
         }
 
+        /** Returns the end address of the address interval */
         @Override
         public int end() {
             return end;
