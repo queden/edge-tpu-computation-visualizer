@@ -16,7 +16,6 @@
   background-color: #FFFFFF;
   justify-content: center;
   align-items: center; 
-  margin-bottom: 2%;
 }
 
 #heading {
@@ -30,23 +29,25 @@
 }
 
 #body-content {
+  display: flex;
+  flex-direction: row;
   width: 100vw;
-  /* height: 75vh; */
   max-width:100%;
   max-height:100%;
-  position: absolute;
 }
 
-#body-text {
+#body-text-upload, #body-text-visualizer {
   font-family: 'Montserrat';
   font-style: normal;
   font-weight: normal;
   font-size: 30px;
   margin: 0;
-  position: absolute;
   top: 50%;
   -ms-transform: translateY(-50%);
-  /* transform: translateY(-50%);  */
+}
+
+#body-text-upload {
+  margin-right: 10%;
 }
 
 body {
@@ -60,11 +61,6 @@ option {
     font-size: 15px;
 }
 
-/* #inputs {
-  display: flex;
-  flex-direction: row;
-} */
-
 p {
     font-size: 16px;
 }
@@ -74,9 +70,9 @@ p {
 }
 
 #uploaded-file {
-  height: 130px;
-  overflow: auto;
-    color: green;
+  color: limegreen;
+  font-size: 20px;
+  font-weight: bold;
 }
 
 #input-upload-box {
@@ -91,26 +87,24 @@ p {
 #time-zone-display, #user-name {
     font-family: 'Montserrat';
     font-style: normal;
-    font-weight: normal;
+    font-weight: bold;
     font-size: 25px;
     color: blue;
 }
 
-/* #time-zone-container {
-  margin-right: 20px;
-} */
-
 #user-name, #display-user-files {
-  color: green;
+  color: darkorange;
 }
 
 #display-user-files {
-  font-size: 20px;
+  font-size: 23px;
+  font-weight: bold;
 }
 
 #selected-file {
+  font-weight: bold;
   font-size: 20px;
-  color: red;
+  color: limegreen;
 }
 
 #user-files {
@@ -124,10 +118,16 @@ p {
     padding: 1px 6px;
 }
 
-#go-visualizer, #back-buttons {
+#open-visualization, #run-button {
   font-size: 20px;
   padding: 7px 20px;
   cursor: pointer;
+}
+
+#file-info {
+  color: dodgerblue;
+  font-weight: bold;
+  font-size: 23px;
 }
 
 #chart {

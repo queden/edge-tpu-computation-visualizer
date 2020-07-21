@@ -6,6 +6,9 @@ import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
+import com.google.appengine.api.datastore.Query.Filter;
+import com.google.appengine.api.datastore.Query.FilterOperator;
+import com.google.appengine.api.datastore.Query.FilterPredicate;
 import com.google.appengine.api.datastore.Query.SortDirection;
 import com.google.gson.Gson;
 import com.google.protobuf.TextFormat;
@@ -19,6 +22,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Date;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
@@ -43,30 +47,32 @@ public class VisualizerServlet extends HttpServlet {
       // Does NOT update the time zone
 
       if (request.getParameter("user").equals("false")) {
-        // purgeAll(); /* Uncomment to purge datasore (BE CAREFUL)
+          // Does NOT update the current user
 
-        // Does NOT update the current user
+          // purgeAll(); /* Uncomment to purge datasore (BE CAREFUL)
 
-        Query queryFile = new Query("File").addSort("time", SortDirection.DESCENDING);
-        Query queryUser = new Query("User").addSort("time", SortDirection.DESCENDING);
+          Query queryFile = new Query("File").addSort("time", SortDirection.DESCENDING);
+          Query queryUser = new Query("User").addSort("time", SortDirection.DESCENDING);
 
-        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+          DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
-        PreparedQuery userResults = datastore.prepare(queryUser);
-        ArrayList<User> users = new ArrayList<>();
+          PreparedQuery userResults = datastore.prepare(queryUser);
+          ArrayList<User> users = new ArrayList<>();
 
-        // Assembles a list of all known users
-        for (Entity entity : userResults.asIterable()) {
-          users.add(new User(entity.getKey().getId(), (String) entity.getProperty("user-name")));
-        }
-              
-        // Appends the correct time zone to the date and time string and retrieves the JSON string 
-        // containing the file upload information
+          // Assembles a list of all known users
+          for (Entity entity : userResults.asIterable()) {
+            users.add(new User(entity.getKey().getId(), (String) entity.getProperty("user-name")));
+          }
+                
+          // Appends the correct time zone to the date and time string and retrieves the JSON string 
+          // containing the file upload information and the total collection of files
 
-        String json = getJson(timeZone, fileEntity, users);
-        response.setContentType("application/json;");
-        response.getWriter().println(json);
-        //*/
+          Gson gson = new Gson();
+          ReturnJson returnJson = new ReturnJson(getFileJson(timeZone, fileEntity, users), getFiles());
+
+          response.setContentType("application/json;");
+          response.getWriter().println(gson.toJson(returnJson));
+          //*/
       } else {
         // Updates the current user
 
@@ -83,9 +89,7 @@ public class VisualizerServlet extends HttpServlet {
           userEntity.setProperty("time", new Date());
           datastore.put(userEntity);
         }
-      }
-
-      
+      }     
     } else {
       // Updates the selected time zone
       String zone = request.getParameter("zone");
@@ -122,10 +126,11 @@ public class VisualizerServlet extends HttpServlet {
         simulationTraceUpload.setProperty("date", dateTime.format(formatter));
         simulationTraceUpload.setProperty("time", new Date());
         simulationTraceUpload.setProperty(
-            "name", 
+            "name",
             (simulationTrace.getName().equals("")) 
                 ? filePart.getSubmittedFileName() 
                 : simulationTrace.getName());
+
         simulationTraceUpload.setProperty("user", user);
         simulationTraceUpload.setProperty(
             "simulation-trace", new Blob(simulationTrace.toByteArray()));        
@@ -143,6 +148,7 @@ public class VisualizerServlet extends HttpServlet {
             simulationTrace.getName().equals("") 
             ? "No name provided" 
             : simulationTrace.getName();
+            
         int fileTiles = simulationTrace.getNumTiles();
         int narrowBytes = simulationTrace.getNarrowMemorySizeBytes();
         int wideBytes = simulationTrace.getWideMemorySizeBytes();
@@ -181,9 +187,8 @@ public class VisualizerServlet extends HttpServlet {
     return result;
   }
 
-  // Determines the appropriate file information to be displayed on the page in the form of a JSON 
-  // string
-  private static String getJson(String zone, Entity fileEntity, ArrayList<User> users) {
+  // Determines the appropriate file information to be displayed on the page
+  private static FileJson getFileJson(String zone, Entity fileEntity, ArrayList<User> users) {
     String dateTimeString = (String) fileEntity.getProperty("date");
 
     if (dateTimeString == null) {
@@ -199,12 +204,77 @@ public class VisualizerServlet extends HttpServlet {
       fileJson = new FileJson(fileJson, dateTimeString, zone, users, user);
     }
 
-    String json = new Gson().toJson(fileJson);
-
-    return json;
+    return fileJson;
   }
 
-  // Clear datastore
+  // Retrieves the information of all of the uploaded files
+  private static List<LoadFile> getFiles() {
+    boolean userFilesExist = true;
+
+    Query queryUser = new Query("User").addSort("time", SortDirection.DESCENDING);
+    Query queryFile;
+
+    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+
+    // Filters files to display based on current user
+    if (user.equals("All")) {
+      queryFile = new Query("File").addSort("time", SortDirection.DESCENDING);
+    } else {
+      // Filters files according to current user
+
+      Filter propertyFilter = new FilterPredicate("user", FilterOperator.EQUAL, user);
+
+      queryFile = 
+          new Query("File")
+              .setFilter(propertyFilter)
+              .addSort("time", SortDirection.DESCENDING);
+
+      if (((PreparedQuery) datastore.prepare(queryFile)).countEntities() == 0) {
+        // Uses default "All" users option if current user has not uploaded files under their
+        // name
+
+        queryFile = new Query("File").addSort("time", SortDirection.DESCENDING);
+        userFilesExist = false;
+        }
+      }        
+
+      PreparedQuery fileResults = datastore.prepare(queryFile);
+      PreparedQuery userResults = datastore.prepare(queryUser);
+
+      // Assembles a collection of all known users
+          
+      ArrayList<User> users = new ArrayList<>();
+
+      for (Entity entity : userResults.asIterable()) {
+          users.add(
+              new User(
+                  entity.getKey().getId(),
+                  (String) entity.getProperty("user-name")
+              ));
+      }
+
+      ArrayList<LoadFile> files = new ArrayList<>();
+      String dateTimeString;
+
+      // Creates a collection of LoadFile objects with the proper information about their storage
+      for (Entity fileEntity : fileResults.asIterable()) {
+        dateTimeString = fileEntity.getProperty("date").toString();
+
+        files.add(
+            new LoadFile(
+                fileEntity.getKey().getId(),
+                (String) fileEntity.getProperty("name"),
+                dateTimeString,
+                timeZone,
+                users,
+                user,
+                userFilesExist));
+      }
+
+      return files;
+  }
+
+  // Clears datastore
   private static void purgeAll() {
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 

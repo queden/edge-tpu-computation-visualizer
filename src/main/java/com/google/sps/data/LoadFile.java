@@ -5,8 +5,8 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-// Objects to hold the file information to be displayed in the drop down menu of the report.html 
-// page
+// Objects to hold the file information to be displayed in the drop down menu of the
+// all uploaded files
 public class LoadFile {
   private long id;
   private String name;
