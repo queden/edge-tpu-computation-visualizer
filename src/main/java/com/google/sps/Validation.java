@@ -45,7 +45,7 @@ public class Validation {
     tensorLabelToTensorAllocationNarrow = new Hashtable<Integer, TensorAllocation>();
     tensorLabelToTensorAllocationWide = new Hashtable<Integer, TensorAllocation>();
 
-    traceEvents = memaccessCheckerData.getTraceEventsList();
+    traceEvents = memaccessCheckerData.getTraceEventList();
     instructions = new ArrayList<Instruction>();
 
     narrowSize = memaccessCheckerData.getNarrowMemorySizeBytes();
@@ -62,7 +62,7 @@ public class Validation {
     boolean isError = false;
     String message = "Preprocessing completed successfully.";
 
-    instructions.addAll(memaccessCheckerData.getInstructionsList());
+    instructions.addAll(memaccessCheckerData.getInstructionList());
 
     relateInstructionTagtoInstructionTable();
 
@@ -104,7 +104,7 @@ public class Validation {
 
   public static ProcessResults process(long start, long end) {
     try {
-      //   validateTraceEvents(start, end);
+      validateTraceEvents(start, end);
     } catch (Exception e) {
       return new ProcessResults(e, narrow, wide);
     }

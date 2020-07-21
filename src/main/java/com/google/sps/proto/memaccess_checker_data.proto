@@ -63,6 +63,6 @@ message MemaccessCheckerData {
   bool instructions_contain_tensor_labels = 5;
   repeated TensorLayerAllocationTable tensor_layer_allocation_narrow = 6;
   repeated TensorLayerAllocationTable tensor_layer_allocation_wide = 7;
-  repeated Instruction instructions = 8;
-  repeated TraceEvent trace_events = 9;
+  repeated Instruction instruction = 8;
+  repeated TraceEvent trace_event = 9;
 }
