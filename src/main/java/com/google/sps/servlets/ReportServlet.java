@@ -15,8 +15,8 @@ import com.google.appengine.api.datastore.Query.FilterPredicate;
 import com.google.appengine.api.datastore.Query.SortDirection;
 import com.google.gson.Gson;
 import com.google.sps.data.*;
-// import com.google.sps.Validation;
-import com.google.sps.proto.SimulationTraceProto.*;
+import com.google.sps.Validation;
+import com.google.sps.proto.MemaccessCheckerDataProto.*;
 import com.google.sps.results.*;
 import java.io.IOException;
 import java.time.ZoneOffset;
@@ -29,7 +29,7 @@ import javax.servlet.http.HttpServletResponse;
 @WebServlet("/report")
 public class ReportServlet extends HttpServlet {
   private static MemaccessCheckerData simulationTrace;
-  // private static Validation validation;
+  private static Validation validation;
   private static String user = "All";
   private static String timeZone = ZoneOffset.UTC.getId();
 
@@ -138,11 +138,9 @@ public class ReportServlet extends HttpServlet {
             MemaccessCheckerData.parseFrom(
                 ((Blob) retrievedSimulationTrace.getProperty("simulation-trace")).getBytes());
 
-        // validation = new Validation(simulationTrace);
+        validation = new Validation(simulationTrace);
 
-        // PreProcessResults preProcessResults = validation.preProcess();
-        PreProcessResults preProcessResults = 
-            new PreProcessResults(false, "Processed successfully.", 10000);
+        PreProcessResults preProcessResults = validation.preProcess();
 
         json = new Gson().toJson(preProcessResults);
       } else {
@@ -151,10 +149,8 @@ public class ReportServlet extends HttpServlet {
 
         System.out.println("Start is " + start);
 
-        // ProcessResults processResults = validation.process(start, start + 1000);
-        // Placeholder
-        ProcessResults processResults = new ProcessResults(null, new int[1][2], new int[2][3]);
-
+        ProcessResults processResults = validation.process(start, start + 1000);
+        
         json = new Gson().toJson(processResults);
       }
 

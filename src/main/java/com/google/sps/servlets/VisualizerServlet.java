@@ -10,7 +10,7 @@ import com.google.appengine.api.datastore.Query.SortDirection;
 import com.google.gson.Gson;
 import com.google.protobuf.TextFormat;
 import com.google.sps.data.*;
-import com.google.sps.proto.SimulationTraceProto.*;
+import com.google.sps.proto.MemaccessCheckerDataProto.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;

@@ -306,7 +306,7 @@ async function runVisualization() {
     init.innerHTML = preprocessResponse.message;
     box.appendChild(init);
 
-    for (i = 0; i < prepprocessResponse.numTraces; i += 1000) {
+    for (i = 0; i < preprocessResponse.numTraces; i += 1000) {
       // Run through the traces, information processing will happen within the function
       await runTraces(i);
     }
@@ -325,10 +325,8 @@ async function runTraces(start) {
     /report -> sends information to report servlet
     process=post -> runs algorithm on selected proto
   */
-  const traceResponse = await fetch('/report?process=post&start=' + start, {method: 'GET'});
+  const traceResponse = await fetch('/report?time=false&process=post&start=' + start, {method: 'GET'});
   const traceProcess = await traceResponse.json();
-
-  box.appendChild(responseMessage);
 
   // Process json trace information
   // TODO: Substitute
