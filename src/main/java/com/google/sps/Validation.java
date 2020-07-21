@@ -285,8 +285,10 @@ public class Validation {
     for (TensorLayerAllocationTable tensorLayAlloc : tensorLayAllocs) {
       List<TensorTileAllocationTable> tensorTileAllocs =
           tensorLayAlloc.getTensorTileAllocationList();
+
       for (TensorTileAllocationTable tensorTileAlloc : tensorTileAllocs) {
         List<TensorAllocation> tensorAllocs = tensorTileAlloc.getTensorAllocationList();
+        
         for (TensorAllocation tensorAlloc : tensorAllocs) {
           tensorLabelToTensorAllocation.put(tensorAlloc.getTensorLabel(), tensorAlloc);
         }
