@@ -196,7 +196,7 @@ async function submitTimeZone() {
   const zone = select.options[select.selectedIndex].value;
 
   /*
-    /report -> sends information to the report servlet
+    /visualizer-> sends information to the visualizer servlet
     time=true -> DOES update the time zone
     zone=zone -> sends the selected time zone information
   */
@@ -242,6 +242,7 @@ function openVisualization() {
   } else {
     // Creates and opens the pop-up window
     const visualizerWindow = window.open("report.html", "Visualizer", "_blank", "toolbar=yes,scrollbars=yes,resizable=yes,width=400,height=400", "true");
+    visualizerWindow.title = "Visualizer";
     visualizerWindow.focus();
 
     // Listener to retrieve information from the main page
@@ -250,7 +251,7 @@ function openVisualization() {
       if (!(isNaN(parseInt(message.data)))) {
         // Stores the selected file id
 
-        const fileIdBox = visualizerWindow.document.getElementById("test-box");
+        const fileIdBox = visualizerWindow.document.getElementById("trace-info-box");
         fileIdBox.title = message.data;
       } else {
         // Displays the selected file information
@@ -276,18 +277,19 @@ function openVisualization() {
 
 // Runs the visualization of the chosen simulation trace
 async function runVisualization() {
-  const fileIdBox = document.getElementById("test-box");
-  console.log(fileIdBox.title);
+  const fileIdBox = document.getElementById("trace-info-box");
+
     /*
       /report -> sends to report servlet
       process=pre -> performs preprocessing of the proto information
+      fileId=fileIdBox.title -> the id of the file to retrieve from datastore
     */
-    const preprocess = await fetch('/report?process=pre&click=false&fileId=' + fileIdBox.title, {method: 'GET'});
+    const preprocess = await fetch('/report?process=pre&fileId=' + fileIdBox.title, {method: 'GET'});
     const preprocessResponse = await preprocess.json();
 
     // Process initial json information
     // TODO: Substitute
-    const box = document.getElementById("test-box");
+    const box = document.getElementById("trace-info-box");
     box.innerHTML = '';
     const init = document.createElement("p");
     init.innerHTML = preprocessResponse.message;
@@ -297,6 +299,8 @@ async function runVisualization() {
       // Run through the traces, information processing will happen within the function
       await runTraces(i);
     }
+
+    alert("Visualization completed");
 }
 
 /*
@@ -305,11 +309,12 @@ async function runVisualization() {
 */
 async function runTraces(start) {
   // Retrieves box to display error/processing information
-  const box = document.getElementById("test-box");
+  const box = document.getElementById("trace-info-box");
 
   /*
     /report -> sends information to report servlet
-    process=post -> runs algorithm on selected proto
+    process=post -> runs trace validation algorithm on selected proto
+    start=start -> the index of the traces to start processing
   */
   const traceResponse = await fetch('/report?process=post&start=' + start, {method: 'GET'});
   const traceProcess = await traceResponse.json();

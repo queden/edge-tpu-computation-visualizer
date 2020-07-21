@@ -17,13 +17,20 @@
       <div id = "nav-bar"> 
         </div>
         <h1 id="heading">Computation Visualizer</h1>
+        <p id="note"> NOTE: </p>
+
+        <ul>
+          <li> Please close this window before selecting another file to run </li>
+          <li> You can run the visualization as many times as you want by clicking the "Run" button </li>
+        </ul>
+
         <p id="file-info"> Viewing file: </p>
         <button id="run-button" onclick="runVisualization()"> Run! </button>
 
-        <!-- TODO: Substitute with chart name -->
+        <!-- TODO: Substitute with chart info -->
         <p id="chart" style="color: blue; font-size: 48px;"> Viz go here </p>
 
-        <div title="test" id="test-box">
+        <div id="trace-info-box">
         </div>
     </body>
     <script src="//d3js.org/d3.v4.min.js"></script>

@@ -1,6 +1,3 @@
-
-/* This is a style sheet for the components of the html pages. */
-
 #nav-bar {
     background-color: #000100;
     width: 100vw;
@@ -10,7 +7,6 @@
  
 #heading-content {
   width: 100vw;
-  /* height: 15vh; */
   max-width:100%;
   max-height:100%;
   background-color: #FFFFFF;
@@ -61,8 +57,14 @@ option {
     font-size: 15px;
 }
 
-p {
+p, li {
     font-size: 16px;
+}
+
+#note {
+  font-weight: bold;
+  text-decoration: underline;
+  color: red;
 }
 
 #upload-box {
@@ -133,145 +135,4 @@ p {
 #chart {
 	  max-width: 100%;
 	  overflow:auto;
-}
-
-text {
-    pointer-events: none;
-}
-
-.grandparent text {
-    font-weight: bold;
-}
-
-rect {
-    stroke:#0096c7;;
-    stroke-width: 1px;
-    fill : #023e8a;
-}
-
-rect.parent,
-.grandparent rect {
-    stroke-width: 3px;
-}
-
-.grandparent:hover rect {
-    fill: #023e8a;
-}
-
-.children rect.parent,
-.grandparent rect {
-    cursor: pointer;
-    fill: #023e8a;
-}
-
-.children rect.child {
-    opacity: 0.5;
-    fill : orange;
-}
-.children rect.parent {
-    fill: #023e8a;
-}
-
-.children:hover rect.child {
-    opacity: 1;
-    stroke-width: 1px;
-}
-
-.children:hover rect.parent {
-    opacity: 0;
-}
-
-.legend {
-    margin-bottom:8px !important;
-}
-
-.legend rect {
-    stroke-width: 0px;
-}
-
-.legend text {
-    text-anchor: middle;
-    pointer-events: auto;
-    font-size: 13px;
-    font-family: sans-serif;
-    fill: #023e8a;
-}
-
-.form-group {
-    text-align:left;
-}
-
-.textdiv {
-    font-family: "Open Sans",Helvetica,Arial,sans-serif;
-    font-size: 14px;
-    padding: 7px;
-    cursor: pointer;
-    overflow:none;
-    color : white;
-}
-
-.textdiv .title {
-    font-size: 102%;
-    font-weight: bold;
-    margin-top: 8px;
-    font-size:11px !important;
-    color : white;
-}
-
-.textdiv p{
-    line-height: 13px;
-    margin:0 0 4px !important;
-    padding:0px;
-    font-size:10px !important;
-    color : white;
-}
-
-rect.bordered {
-        stroke: #E6E6E6;
-        stroke-width:2px;   
-      }
-
-      text.mono {
-        font-size: 9pt;
-        font-family: Consolas, courier;
-        fill: #aaa;
-      }
-
-      text.axis-workweek {
-        fill: #000;
-      }
-
-      text.axis-worktime {
-        fill: #000;
-      }
-
-#rec-box {
-  display: none;
-  position: fixed;
-  z-index: 1;
-  top: 0;
-  left: 0;
-  padding-top: 350px;
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-  background-color: rgb(0,0,0);
-  background-color: rgba(0,0,0,0.9);
-}
-
-#rec-content {
-  margin: auto;
-  display: block;
-  width: 80%;
-  max-width: 700px;
-}
-
-#close-button {
-  position: absolute;
-  top: 15px;
-  right: 35px;
-  color: #f1f1f1;
-  font-size: 40px;
-  font-weight: bold;
-  transition: 0.3s;
 }

@@ -62,6 +62,15 @@
 
         <div id="user-container">
           <p id="user-name"> User: </p>
+          <div>
+            <p id="note"> NOTE: </p>
+            
+            <ul>
+              <li> User name to be used for filtering the number of displayed files </li>
+              <li> If a user name is not selected, 
+                the file will not be attached to a specific user and would only be able to be accessed by displaying the files submitted by "All" </li>
+            </ul>
+          </div>
           <form action="#" onsubmit="selectUser()">
             <label for="users"> Choose a user: </label>
             <select id="users" name="users">
@@ -102,7 +111,7 @@
             <p id="display-user-files"> Displaying files for: All </p>
 
             <form action="#">
-                <label for="uploaded-files">Choose a file: </label>
+                <label for="uploaded-files">Choose a file to visualize: </label>
                 <select id="uploaded-files" name="uploaded-files" onchange="displayFile()">
                   <option> No file chosen </option>
                 </select>
