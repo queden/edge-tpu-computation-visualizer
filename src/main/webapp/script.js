@@ -311,7 +311,7 @@ async function runTraces(start) {
     process=post -> runs trace validation algorithm on selected proto
     start=start -> the index of the traces to start processing
   */
-  const traceResponse = await fetch('/report?process=post&start=' + start, {method: 'GET'});
+  const traceResponse = await fetch('/report?time=false&process=post&start=' + start, {method: 'GET'});
   const traceProcess = await traceResponse.json();
 
   // Process json trace information
