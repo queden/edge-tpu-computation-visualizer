@@ -2,7 +2,8 @@ package com.google.sps.data;
 
 import java.util.List;
 
-// Object to send a JSON string of the uploaded files and all uploaded files
+// Object to send a JSON string of the uploaded files, all uploaded files,
+// the current user, and the current time zone
 public class ReturnJson {
   private FileJson uploadFile;
   private List<LoadFile> files;
@@ -10,7 +11,14 @@ public class ReturnJson {
   private String currentUser;
   private String zone;
 
-  public ReturnJson(FileJson uploadFile, List<LoadFile> files, List<User> users, String currentUser, String zone, String dateTimeString) {
+  public ReturnJson(
+      FileJson uploadFile, 
+      List<LoadFile> files, 
+      List<User> users, 
+      String currentUser, 
+      String zone, 
+      String dateTimeString) {
+        
     this.uploadFile = uploadFile;
     this.files = files;
     this.users = users;

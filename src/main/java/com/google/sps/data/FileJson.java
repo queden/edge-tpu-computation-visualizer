@@ -3,7 +3,6 @@ package com.google.sps.data;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 
 // Object to hold the user feedback information about a file after upload
 public class FileJson {
@@ -29,6 +28,7 @@ public class FileJson {
       String dateTimeString, 
       String zone,
       String uploadUser) {
+
     this.fileName = fileName;
     this.fileSize = fileSize;
     this.fileTrace = fileTrace;
@@ -50,21 +50,12 @@ public class FileJson {
       int narrowBytes, 
       int wideBytes,
       String uploadUser) {
-    this(
-        fileName, 
-        fileSize, 
-        fileTrace, 
-        fileTiles, 
-        narrowBytes, 
-        wideBytes, 
-        "", 
-        "", 
-        uploadUser);
+
+  this(fileName, fileSize, fileTrace, fileTiles, narrowBytes, wideBytes, "", "", uploadUser);
   }
 
   // Final constructor to be used combining file and time information
-  public FileJson(
-      FileJson fileJson, String dateTimeString, String zone) {
+  public FileJson(FileJson fileJson, String dateTimeString, String zone) {
     this(
         fileJson.fileName, 
         fileJson.fileSize, 

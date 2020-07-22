@@ -47,33 +47,33 @@ public class VisualizerServlet extends HttpServlet {
       // Does NOT update the time zone
 
       if (request.getParameter("user").equals("false")) {
-          // Does NOT update the current user
+        // Does NOT update the current user
 
-          Query queryFile = new Query("File").addSort("time", SortDirection.DESCENDING);
-          Query queryUser = new Query("User").addSort("time", SortDirection.DESCENDING);
+        Query queryFile = new Query("File").addSort("time", SortDirection.DESCENDING);
+        Query queryUser = new Query("User").addSort("time", SortDirection.DESCENDING);
 
-          DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
-          PreparedQuery userResults = datastore.prepare(queryUser);
+        PreparedQuery userResults = datastore.prepare(queryUser);
  
-          // Gets the current time zone string
-          ZonedDateTime dateTime = ZonedDateTime.now(ZoneId.of(timeZone));
-          DateTimeFormatter formatter = DateTimeFormatter.ofPattern("z");
+        // Gets the current time zone string
+        ZonedDateTime dateTime = ZonedDateTime.now(ZoneId.of(timeZone));
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("z");
 
-          // Appends the correct time zone to the date and time string and retrieves the JSON string 
-          // containing the file upload information and the total collection of files
-          ReturnJson returnJson = 
-              new ReturnJson(
-                  getFileJson(timeZone, fileEntity), 
-                  getFiles(), getUsers(), 
-                  user, 
-                  timeZone, 
-                  dateTime.format(formatter));
+        // Appends the correct time zone to the date and time string and retrieves the JSON string 
+        // containing the file upload information and the total collection of files
+        ReturnJson returnJson = 
+            new ReturnJson(
+                getFileJson(timeZone, fileEntity), 
+                getFiles(), getUsers(), 
+                user, 
+                timeZone, 
+                dateTime.format(formatter));
 
-          Gson gson = new Gson();
+        Gson gson = new Gson();
 
-          response.setContentType("application/json;");
-          response.getWriter().println(gson.toJson(returnJson));
+        response.setContentType("application/json;");
+        response.getWriter().println(gson.toJson(returnJson));
       } else {
         // Updates the current user
         String name = request.getParameter("user-name");
@@ -133,7 +133,7 @@ public class VisualizerServlet extends HttpServlet {
 
         memaccessCheckerUpload.setProperty("user", user);
         memaccessCheckerUpload.setProperty(
-            "simulation-trace", new Blob(memaccessChecker.toByteArray()));        
+            "memaccess-checker", new Blob(memaccessChecker.toByteArray()));        
 
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
         datastore.put(memaccessCheckerUpload);
@@ -145,9 +145,7 @@ public class VisualizerServlet extends HttpServlet {
         String fileName = filePart.getSubmittedFileName();
         String fileSize = getBytes(filePart.getSize());
         String fileTrace = 
-            memaccessChecker.getName().equals("") 
-            ? "No name provided" 
-            : memaccessChecker.getName();
+            memaccessChecker.getName().equals("") ? "No name provided" : memaccessChecker.getName();
             
         int fileTiles = memaccessChecker.getNumTiles();
         int narrowBytes = memaccessChecker.getNarrowMemorySizeBytes();

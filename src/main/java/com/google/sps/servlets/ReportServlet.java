@@ -44,7 +44,7 @@ public class ReportServlet extends HttpServlet {
         // Parses the simulation trace out of the respective entity's Blob in datastore
         MemaccessCheckerData memaccessChecker = 
             MemaccessCheckerData.parseFrom(
-                ((Blob) retrievedMemaccessChecker.getProperty("simulation-trace")).getBytes());
+                ((Blob) retrievedMemaccessChecker.getProperty("memaccess-checker")).getBytes());
 
         validation = new Validation(memaccessChecker);
 

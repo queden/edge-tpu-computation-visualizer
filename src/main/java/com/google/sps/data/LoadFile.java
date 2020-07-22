@@ -3,7 +3,6 @@ package com.google.sps.data;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 // Objects to hold the file information to be displayed in the drop down menu of the
 // all uploaded files
@@ -23,6 +22,7 @@ public class LoadFile {
       String zone, 
       String user, 
       boolean userFilesExist) {
+        
     this.id = id;
     this.name = name;
     this.time = "";
