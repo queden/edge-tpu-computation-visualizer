@@ -1,6 +1,6 @@
 package com.google.sps.exceptions;
 
-import com.google.sps.proto.SimulationTraceProto.*;
+import com.google.sps.proto.MemaccessCheckerDataProto.*;
 
 
 public class InvalidTensorOperationException extends Exception {
@@ -10,7 +10,7 @@ public class InvalidTensorOperationException extends Exception {
     private int instruction; // Tag of instruction performing the operation
     private String memoryAccess; // String representing the access type
   
-    public InvalidTensorOperationException(int traceAddress, int allocatedTensor, int traceTensor, int instruction, TraceEntry.AccessType memoryAccess) {
+    public InvalidTensorOperationException(int traceAddress, int allocatedTensor, int traceTensor, int instruction, TraceEvent.AccessType memoryAccess) {
       this.traceAddress = traceAddress;
       this.allocatedTensor = allocatedTensor;
       this.traceTensor = traceTensor;
