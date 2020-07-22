@@ -120,6 +120,7 @@ public class VisualizerServlet extends HttpServlet {
         InputStreamReader reader = new InputStreamReader(fileInputStream, "ASCII");
         MemaccessCheckerData.Builder builder = MemaccessCheckerData.newBuilder();
         TextFormat.merge(reader, builder);
+        MemaccessCheckerData memaccessChecker = builder.build();
 
         // Put the simulation trace proto into datastore
         ZonedDateTime dateTime = ZonedDateTime.now(ZoneId.of(ZoneOffset.UTC.getId()));
