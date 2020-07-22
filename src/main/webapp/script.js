@@ -293,10 +293,21 @@ async function runVisualization() {
   init.innerHTML = preprocessResponse.message;
   traceBox.appendChild(init);
 
-  for (i = 0; i < preprocessResponse.numTraces; i += 1000) {
-    // Run through the traces, information processing will happen within the function
-    await runTraces(i);
+  var numTraces = preprocessResponse.numTraces
+
+  if (!preprocessResponse.isError) {
+    for (i = 0; i < numTraces ; i += 1000) {
+      // Run through the traces, information processing will happen within the function
+
+      await runTraces(i, numTraces);
+    }
   }
+
+  const done = document.createElement("p");
+
+  done.innerHTML = "Validation finished.";
+
+  traceBox.appendChild(done);
 
   alert("Visualization completed");
 }
@@ -304,8 +315,9 @@ async function runVisualization() {
 /*
   Processes the different chunks of specified trace indicies
   start -> the beginning index of the traces to be processed
+  numTraces -> the total number of traces
 */
-async function runTraces(start) {
+async function runTraces(start, numTraces) {
   // Retrieves box to display error/processing information
   const traceBox = document.getElementById("trace-info-box");
 
@@ -314,17 +326,19 @@ async function runTraces(start) {
     process=post -> runs trace validation algorithm on selected proto
     start=start -> the index of the traces to start processing
   */
-  const traceResponse = await fetch('/report?time=false&process=post&start=' + start, {method: 'GET'});
+  const traceResponse = await fetch('/report?process=post&start=' + start, {method: 'GET'});
   const traceProcess = await traceResponse.json();
 
   // Process json trace information
   // TODO: Substitute
   var responseMessage = document.createElement("p");
 
-  if (traceProcess.error == null) {
-    responseMessage.innerHTML += "Traces validated";
+  var end = (start + 999 < numTraces) ? start + 999 : numTraces;
+
+  if (traceProcess.error.stackTrace.length == 0) {
+    responseMessage.innerHTML += `Traces ${start}-${end} validated.`;
   } else {
-    responseMessage.innerHTML = traceProcess.error.message;
+    responseMessage.innerHTML += `Trace Validation Error: ${traceProcess.message}`;
   }
 
   traceBox.appendChild(responseMessage);
