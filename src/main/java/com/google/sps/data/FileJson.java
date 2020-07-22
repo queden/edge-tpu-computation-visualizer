@@ -3,8 +3,6 @@ package com.google.sps.data;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
 
 // Object to hold the user feedback information about a file after upload
 public class FileJson {
@@ -17,9 +15,7 @@ public class FileJson {
   private String time;
   private String dateTimeString;
   private String zone;
-  private List<User> users;
   private String uploadUser;
-  private String currentUser;
 
   // Master constructor initializing all variables
   public FileJson(
@@ -31,9 +27,8 @@ public class FileJson {
       int wideBytes, 
       String dateTimeString, 
       String zone,
-      List<User> users,
-      String uploadUser,
-      String currentUser) {
+      String uploadUser) {
+
     this.fileName = fileName;
     this.fileSize = fileSize;
     this.fileTrace = fileTrace;
@@ -43,9 +38,7 @@ public class FileJson {
     this.time = "";
     this.dateTimeString = dateTimeString;
     this.zone = zone;
-    this.users = users;
     this.uploadUser = uploadUser;
-    this.currentUser = currentUser;
   }
 
   // Constructor to be used when time information is unknown
@@ -57,23 +50,12 @@ public class FileJson {
       int narrowBytes, 
       int wideBytes,
       String uploadUser) {
-    this(
-        fileName, 
-        fileSize, 
-        fileTrace, 
-        fileTiles, 
-        narrowBytes, 
-        wideBytes, 
-        "", 
-        "", 
-        new ArrayList<User>(), 
-        uploadUser, 
-        "");
+
+  this(fileName, fileSize, fileTrace, fileTiles, narrowBytes, wideBytes, "", "", uploadUser);
   }
 
   // Final constructor to be used combining file and time information
-  public FileJson(
-      FileJson fileJson, String dateTimeString, String zone, List<User> users, String currentUser) {
+  public FileJson(FileJson fileJson, String dateTimeString, String zone) {
     this(
         fileJson.fileName, 
         fileJson.fileSize, 
@@ -83,27 +65,24 @@ public class FileJson {
         fileJson.wideBytes, 
         dateTimeString, 
         zone,
-        users,
-        fileJson.uploadUser,
-        currentUser);
-    this.getTimeZone();
+        fileJson.uploadUser);
+
+    this.getTime();
   }
 
   // Constructor to be used when a file has not been uploaded but the time zone information is 
   // necessary
-  public FileJson(String dateTimeString, String zone, List<User> users, String currentUser) {
-    this("null", "null", "null", 0 , 0, 0, "", zone, users, "", currentUser);
-    
-    this.getZone(dateTimeString);
+  public FileJson(String dateTimeString, String zone) {
+    this("null", "null", "null", 0 , 0, 0, "", zone, "");
   }
 
   // Constructor to be used when resetting the file information
   public FileJson() {
-    this("null", "null", "null", 0 , 0 , 0, "", "", new ArrayList<User>(), "", "");
+    this("null", "null", "null", 0 , 0 , 0, "", "", "");
   }
 
   // Generates the appropriate time information of the file according to the time zone
-  private void getTimeZone() {
+  private void getTime() {
     DateTimeFormatter formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME;
     ZonedDateTime dateTime = ZonedDateTime.parse(dateTimeString, formatter);
     formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss");
@@ -112,61 +91,25 @@ public class FileJson {
 
     if (zone.equals("-04:00")) {
       time += " EDT";
-      zone = "Eastern Daylight Time (EDT)";
     } else if (zone.equals("-09:00")) {
       time += " HDT";
-      zone = "Hawaiian Daylight Time (HDT)";
     } else if (zone.equals("-06:00")) {
       time += " MDT";
-      zone = "Mountain Daylight Time (MDT)";
     } else if (zone.equals("Z")) {
       time += " UTC";
-      zone = "Coordinated Universal Time (UTC)";
     } else {          
       if (zone.equals("-05:00")) {
         time += " EST";
-        zone = " Eastern Standard Time (EST)";
       } else if (zone.equals("-10:00")) {
         time += " HST";
-        zone = " Hawaiian Standard Time (HST)";
       } else if (zone.equals("-07:00")) {
         time += " MST";
-        zone = " Mountain Standard Time (MST)";
       } else if (zone.equals("Z")) {
         time += " UTC";
-        zone = "Coordinated Universal Time (UTC)"; 
       } else {
         formatter = DateTimeFormatter.ofPattern("z");
         time += " " + dateTime.format(formatter);
-        zone += " (" + dateTime.format(formatter) + ")";
-        zone = zone.replace('_', ' ');
       }         
-    }
-  }
-
-  // Gets the time zone information only
-  private void getZone(String dateTimeString) {
-    if (zone.equals("-04:00")) {
-      zone = "Eastern Daylight Time (EDT)";
-    } else if (zone.equals("-09:00")) {
-      zone = "Hawaiian Daylight Time (HDT)";
-    } else if (zone.equals("-06:00")) {
-      zone = "Mountain Daylight Time (MDT)";
-    } else if (zone.equals("Z")) {
-      zone = "Coordinated Universal Time (UTC)";
-    } else {          
-      if (zone.equals("-05:00")) {
-        zone = " Eastern Standard Time (EST)";
-      } else if (zone.equals("-10:00")) {
-        zone = " Hawaiian Standard Time (HST)";
-      } else if (zone.equals("-07:00")) {
-        zone = " Mountain Standard Time (MST)";
-      } else if (zone.equals("Z")) {
-        zone = "Coordinated Universal Time (UTC)"; 
-      } else {
-        zone += " (" + dateTimeString + ")";
-        zone = zone.replace('_', ' ');
-      }
     }
   }
 }

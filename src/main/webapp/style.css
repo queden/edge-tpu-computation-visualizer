@@ -1,6 +1,3 @@
-
-/* This is a style sheet for the components of the html pages. */
-
 #nav-bar {
     background-color: #000100;
     width: 100vw;
@@ -10,13 +7,11 @@
  
 #heading-content {
   width: 100vw;
-  /* height: 15vh; */
   max-width:100%;
   max-height:100%;
   background-color: #FFFFFF;
   justify-content: center;
   align-items: center; 
-  margin-bottom: 2%;
 }
 
 #heading {
@@ -30,23 +25,23 @@
 }
 
 #body-content {
+  display: flex;
+  flex-direction: row;
   width: 100vw;
-  /* height: 75vh; */
   max-width:100%;
   max-height:100%;
-  position: absolute;
+  margin-bottom: 50px;
 }
 
-#body-text {
+#body-text-upload, #body-text-visualizer, #delete-buttons {
   font-family: 'Montserrat';
   font-style: normal;
   font-weight: normal;
   font-size: 30px;
   margin: 0;
-  position: absolute;
   top: 50%;
   -ms-transform: translateY(-50%);
-  /* transform: translateY(-50%);  */
+  margin-right: 12%;
 }
 
 body {
@@ -60,13 +55,14 @@ option {
     font-size: 15px;
 }
 
-/* #inputs {
-  display: flex;
-  flex-direction: row;
-} */
-
-p {
+p, li {
     font-size: 16px;
+}
+
+#note {
+  font-weight: bold;
+  text-decoration: underline;
+  color: red;
 }
 
 #upload-box {
@@ -74,9 +70,9 @@ p {
 }
 
 #uploaded-file {
-  height: 130px;
-  overflow: auto;
-    color: green;
+  color: limegreen;
+  font-size: 20px;
+  font-weight: bold;
 }
 
 #input-upload-box {
@@ -91,26 +87,24 @@ p {
 #time-zone-display, #user-name {
     font-family: 'Montserrat';
     font-style: normal;
-    font-weight: normal;
+    font-weight: bold;
     font-size: 25px;
     color: blue;
 }
 
-/* #time-zone-container {
-  margin-right: 20px;
-} */
-
 #user-name, #display-user-files {
-  color: green;
+  color: darkorange;
 }
 
 #display-user-files {
-  font-size: 20px;
+  font-size: 23px;
+  font-weight: bold;
 }
 
 #selected-file {
+  font-weight: bold;
   font-size: 20px;
-  color: red;
+  color: limegreen;
 }
 
 #user-files {
@@ -124,154 +118,50 @@ p {
     padding: 1px 6px;
 }
 
-#go-visualizer, #back-buttons {
+#open-visualization, #run-button {
   font-size: 20px;
-  padding: 7px 20px;
   cursor: pointer;
+  border-radius: 8px;
+  border-color: white;
+}
+
+#open-visualization {
+  padding: 20px 45px;
+  font-size: 24px;
+  background-color: blue;
+  color: white;
+}
+
+#run-button {
+  padding: 20px 45px;
+  font-size: 24px;
+  background-color: limegreen;
+  color: white;
+}
+
+#file-info {
+  color: dodgerblue;
+  font-weight: bold;
+  font-size: 23px;
 }
 
 #chart {
-	  max-width: 100%;
-	  overflow:auto;
+	max-width: 100%;
+	overflow:auto;
 }
 
-text {
-    pointer-events: none;
+#delete-buttons {
+  display: flex;
+  flex-direction: column;
 }
 
-.grandparent text {
-    font-weight: bold;
-}
-
-rect {
-    stroke:#0096c7;;
-    stroke-width: 1px;
-    fill : #023e8a;
-}
-
-rect.parent,
-.grandparent rect {
-    stroke-width: 3px;
-}
-
-.grandparent:hover rect {
-    fill: #023e8a;
-}
-
-.children rect.parent,
-.grandparent rect {
-    cursor: pointer;
-    fill: #023e8a;
-}
-
-.children rect.child {
-    opacity: 0.5;
-    fill : orange;
-}
-.children rect.parent {
-    fill: #023e8a;
-}
-
-.children:hover rect.child {
-    opacity: 1;
-    stroke-width: 1px;
-}
-
-.children:hover rect.parent {
-    opacity: 0;
-}
-
-.legend {
-    margin-bottom:8px !important;
-}
-
-.legend rect {
-    stroke-width: 0px;
-}
-
-.legend text {
-    text-anchor: middle;
-    pointer-events: auto;
-    font-size: 13px;
-    font-family: sans-serif;
-    fill: #023e8a;
-}
-
-.form-group {
-    text-align:left;
-}
-
-.textdiv {
-    font-family: "Open Sans",Helvetica,Arial,sans-serif;
-    font-size: 14px;
-    padding: 7px;
-    cursor: pointer;
-    overflow:none;
-    color : white;
-}
-
-.textdiv .title {
-    font-size: 102%;
-    font-weight: bold;
-    margin-top: 8px;
-    font-size:11px !important;
-    color : white;
-}
-
-.textdiv p{
-    line-height: 13px;
-    margin:0 0 4px !important;
-    padding:0px;
-    font-size:10px !important;
-    color : white;
-}
-
-rect.bordered {
-        stroke: #E6E6E6;
-        stroke-width:2px;   
-      }
-
-      text.mono {
-        font-size: 9pt;
-        font-family: Consolas, courier;
-        fill: #aaa;
-      }
-
-      text.axis-workweek {
-        fill: #000;
-      }
-
-      text.axis-worktime {
-        fill: #000;
-      }
-
-#rec-box {
-  display: none;
-  position: fixed;
-  z-index: 1;
-  top: 0;
-  left: 0;
-  padding-top: 350px;
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-  background-color: rgb(0,0,0);
-  background-color: rgba(0,0,0,0.9);
-}
-
-#rec-content {
-  margin: auto;
-  display: block;
-  width: 80%;
-  max-width: 700px;
-}
-
-#close-button {
-  position: absolute;
-  top: 15px;
-  right: 35px;
-  color: #f1f1f1;
-  font-size: 40px;
-  font-weight: bold;
-  transition: 0.3s;
+.purge {
+  font-size: 25px;
+  padding: 22px 55px;
+  background-color: red;
+  color: white;
+  margin-bottom: 20%;
+  cursor: pointer;
+  border-radius: 12px;
+  border-color: white;
 }

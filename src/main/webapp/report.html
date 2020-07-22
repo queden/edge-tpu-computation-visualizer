@@ -4,99 +4,29 @@
         <meta charset="UTF-8">
         <link rel="stylesheet" href="style.css">
         <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
-        <style>
-            input[type=submit], input[type=select], input[type=label] {
-                font-size: 20px;
-                padding: 7px 20px;
-                cursor: pointer;
-            }
-        </style>
         <script type="text/javascript" src="script.js"></script>
     </head>
-    <body onload="loadFiles()">
-        <div id = "nav-bar"> 
+    <body>
+      <div id = "nav-bar"> 
         </div>
-        <div id="heading-content"> 
-            <h1 id="heading">Computation Visualizer</h1>
+        <h1 id="heading">Computation Visualizer</h1>
+        <p id="note"> NOTE: </p>
 
-            <div id="time-zone-container">
-                <p id="time-zone-display"></p>
-                <form action="#" onsubmit="submitTimeZoneReport()">
-                    <label for="time-zone"> Choose a time-zone: </label>
-                    <select id="time-zone" name="time-zone">
-                        <option value="-05:00"> EST - -05:00 </option>
-                        <option value="-04:00"> EDT - -04:00 </option>
-                        <option value="-10:00"> HST - -10:00 </option>
-                        <option value="-09:00"> HDT - -09:00 </option>
-                        <option value="-07:00"> MST - -07:00 </option>
-                        <option value="-06:00"> MDT - -06:00 </option>
-                        <option value="Australia/Darwin"> ACT - Australia/Darwin </option>
-                        <option value="Australia/Sydney"> AET - Australia/Sydney </option>
-                        <option value="America/Argentina/Buenos_Aires"> AGT - America/Argentina/Buenos Aires </option>
-                        <option value="Africa/Cairo"> ART - Africa/Cairo </option>
-                        <option value="America/Anchorage"> AST - America/Anchorage </option>
-                        <option value="America/Sao_Paulo"> BET - America/Sao Paulo </option>
-                        <option value="Asia/Dhaka"> BST - Asia/Dhaka </option>
-                        <option value="Africa/Harare"> CAT - Africa/Harare </option>
-                        <option value="America/St_Johns"> CNT - America/St. Johns </option>
-                        <option value="America/Chicago"> CST - America/Chicago </option>
-                        <option value="Asia/Shanghai"> CTT - Asia/Shanghai </option>
-                        <option value="Africa/Addis_Ababa"> EAT - Africa/Addis Ababa </option>
-                        <option value="Europe/Paris"> ECT - Europe/Paris </option>
-                        <option value="America/Indiana/Indianapolis"> IET - America/Indiana/Indianapolis </option>
-                        <option value="Asia/Kolkata"> IST - Asia/Kolkata </option>
-                        <option value="Asia/Tokyo"> JST - Asia/Tokyo </option>
-                        <option value="Pacific/Apia"> MIT - Pacific/Apia </option>
-                        <option value="Asia/Yerevan"> NET - Asia/Yerevan </option>
-                        <option value="Pacific/Auckland"> NST - Pacific/Auckland </option>
-                        <option value="Asia/Karachi"> PLT - Asia/Karachi </option>
-                        <option value="America/Phoenix"> PNT - America/Phoenix </option>
-                        <option value="America/Puerto_Rico"> PRT - America/Puerto Rico </option>
-                        <option value="America/Los_Angeles"> PST - America/Los Angeles </option>
-                        <option value="Pacific/Guadalcanal"> SST - Pacific/Guadalcanal </option>
-                        <option value="Asia/Ho_Chi_Minh"> VST - Asia/Ho Chi Minh </option>
-                    </select>
-                    <input id="time-zone-submit" type="submit" value="Submit"/>
-                </form>
-            </div>
+        <ul>
+          <li> Please close this window before selecting another file to run </li>
+          <li> You can run the visualization as many times as you want by clicking the "Run" button </li>
+          <li style="color: orange;"> <b> You will get an alert once the visualization has completed </b> </li>
+        </ul>
 
-            <div id="user-container">
-              <p id="user-name" title="All"> User: All </p>
-              <form action="#" onsubmit="selectUserReport()">
-                <label for="users"> Choose a user: </label>
-                <select id="users" name="users">
-                  <option value="All"></option>
-                </select>
-                <input id="user-submit" type="submit" value="Submit"/>
-              </form>
-              <div id="user-files">
-                <p> *Displaying files for all users, current user has not uploaded files under their name </p>
-              </div>
-            </div>
+        <p id="file-info"> Viewing file: </p>
+        <button id="run-button" onclick="runVisualization()"> Run! </button>
 
-            <form action="/index.html">
-              <input id="back-upload-file" type="submit" value="Upload File"/>
-            </form>
-        </div>   
+        <!-- TODO: Substitute with chart info -->
+        <p id="chart" style="color: blue; font-size: 48px;"> Viz go here </p>
 
-        <!-- TODO: Substitute with chart name -->
-        <p id="chart"></p>
-
-        <p id="display-user-files"> Displaying files for: All </p>
-        <form action="#">
-            <label for="uploaded-files">Choose a file: </label>
-            <select id="uploaded-files" name="uploaded-files" onchange="displayFile()">
-              <option> No file chosen </option>
-            </select>
-        </form>
-        <p id="selected-file"> Selected file: No file chosen </p>
-        <form action='#' onsubmit="runVisualization()">
-            <input type="submit" value="Run!" />
-        </form>
-        <div id="test-box">
+        <div id="trace-info-box">
         </div>
-
+    </body>
     <script src="//d3js.org/d3.v4.min.js"></script>
     <script type="text/javascript" src="script.js" onload="loadMemory()"></script>
-    </body>
 </html>
