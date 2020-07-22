@@ -49,30 +49,30 @@ public class VisualizerServlet extends HttpServlet {
       if (request.getParameter("user").equals("false")) {
           // Does NOT update the current user
 
-          // purgeAll(); /* Uncomment to purge datasore (BE CAREFUL)
-
           Query queryFile = new Query("File").addSort("time", SortDirection.DESCENDING);
           Query queryUser = new Query("User").addSort("time", SortDirection.DESCENDING);
 
           DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
           PreparedQuery userResults = datastore.prepare(queryUser);
-          ArrayList<User> users = new ArrayList<>();
-
-          // Assembles a list of all known users
-          for (Entity entity : userResults.asIterable()) {
-            users.add(new User(entity.getKey().getId(), (String) entity.getProperty("user-name")));
-          }
                 
           // Appends the correct time zone to the date and time string and retrieves the JSON string 
           // containing the file upload information and the total collection of files
 
+          ZonedDateTime dateTime = ZonedDateTime.now(ZoneId.of(timeZone));
+          DateTimeFormatter formatter = DateTimeFormatter.ofPattern("z");
+
           Gson gson = new Gson();
-          ReturnJson returnJson = new ReturnJson(getFileJson(timeZone, fileEntity, users), getFiles());
+          ReturnJson returnJson = 
+              new ReturnJson(
+                  getFileJson(timeZone, fileEntity), 
+                  getFiles(), getUsers(), 
+                  user, 
+                  timeZone, 
+                  dateTime.format(formatter));
 
           response.setContentType("application/json;");
           response.getWriter().println(gson.toJson(returnJson));
-          //*/
       } else {
         // Updates the current user
 
@@ -161,7 +161,22 @@ public class VisualizerServlet extends HttpServlet {
         fileJson = new FileJson();
         fileEntity = new Entity("File");
       }
-    }        
+    } else {
+      // Purges datastore as specified
+
+      if (request.getParameter("purge").equals("true")) {
+        // Purge all users
+      
+        if (request.getParameter("users").equals("true")) {
+          purgeAll(true, false);
+        }
+
+        // Purge all files
+        if (request.getParameter("files").equals("true")) {
+          purgeAll(false, true);
+        }
+      }
+    }    
 
     response.sendRedirect("/index.html");
   }
@@ -188,7 +203,7 @@ public class VisualizerServlet extends HttpServlet {
   }
 
   // Determines the appropriate file information to be displayed on the page
-  private static FileJson getFileJson(String zone, Entity fileEntity, ArrayList<User> users) {
+  private static FileJson getFileJson(String zone, Entity fileEntity) {
     String dateTimeString = (String) fileEntity.getProperty("date");
 
     if (dateTimeString == null) {
@@ -197,11 +212,11 @@ public class VisualizerServlet extends HttpServlet {
       ZonedDateTime dateTime = ZonedDateTime.now(ZoneId.of(zone));
       DateTimeFormatter formatter = DateTimeFormatter.ofPattern("z");
 
-      fileJson = new FileJson(dateTime.format(formatter), zone, users, user);
+      fileJson = new FileJson(dateTime.format(formatter), zone);
     } else {
       // Sends both file and time information
 
-      fileJson = new FileJson(fileJson, dateTimeString, zone, users, user);
+      fileJson = new FileJson(fileJson, dateTimeString, zone);
     }
 
     return fileJson;
@@ -211,7 +226,6 @@ public class VisualizerServlet extends HttpServlet {
   private static List<LoadFile> getFiles() {
     boolean userFilesExist = true;
 
-    Query queryUser = new Query("User").addSort("time", SortDirection.DESCENDING);
     Query queryFile;
 
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
@@ -239,19 +253,6 @@ public class VisualizerServlet extends HttpServlet {
       }        
 
       PreparedQuery fileResults = datastore.prepare(queryFile);
-      PreparedQuery userResults = datastore.prepare(queryUser);
-
-      // Assembles a collection of all known users
-          
-      ArrayList<User> users = new ArrayList<>();
-
-      for (Entity entity : userResults.asIterable()) {
-          users.add(
-              new User(
-                  entity.getKey().getId(),
-                  (String) entity.getProperty("user-name")
-              ));
-      }
 
       ArrayList<LoadFile> files = new ArrayList<>();
       String dateTimeString;
@@ -266,7 +267,6 @@ public class VisualizerServlet extends HttpServlet {
                 (String) fileEntity.getProperty("name"),
                 dateTimeString,
                 timeZone,
-                users,
                 user,
                 userFilesExist));
       }
@@ -274,24 +274,46 @@ public class VisualizerServlet extends HttpServlet {
       return files;
   }
 
-  // Clears datastore
-  private static void purgeAll() {
+  // Assembles a collection of all known users
+  private static List<User> getUsers() {
+    Query queryUser = new Query("User").addSort("time", SortDirection.DESCENDING);
+
+    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+    PreparedQuery userResults = datastore.prepare(queryUser);
+          
+    ArrayList<User> users = new ArrayList<>();
+
+    for (Entity entity : userResults.asIterable()) {
+      users.add(
+          new User(
+              entity.getKey().getId(),
+              (String) entity.getProperty("user-name")));
+    }
+
+    return users;
+  }
+
+  // Clears datastore of users and/or files as specified
+  private static void purgeAll(boolean users, boolean files) {
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
-    Query queryZone = new Query("Zone");
     Query queryFile = new Query("File");
     Query queryUser = new Query("User");
 
-    for (Entity entity : ((PreparedQuery) datastore.prepare(queryFile)).asIterable()) {
+    if (files) {
+      for (Entity entity : ((PreparedQuery) datastore.prepare(queryFile)).asIterable()) {
         datastore.delete(entity.getKey());
-    }
-    for (Entity entity : ((PreparedQuery) datastore.prepare(queryZone)).asIterable()) {
+      }
+
+      fileJson = new FileJson();
+      fileEntity = new Entity("File");
+    } else {
+      for (Entity entity : ((PreparedQuery) datastore.prepare(queryUser)).asIterable()) {
         datastore.delete(entity.getKey());
+      }
+
+      user = "All";
     }
-    for (Entity entity : ((PreparedQuery) datastore.prepare(queryUser)).asIterable()) {
-        datastore.delete(entity.getKey());
-    }
-    
 
     // Check if purge/submit actually happened
     

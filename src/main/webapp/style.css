@@ -30,9 +30,10 @@
   width: 100vw;
   max-width:100%;
   max-height:100%;
+  margin-bottom: 50px;
 }
 
-#body-text-upload, #body-text-visualizer {
+#body-text-upload, #body-text-visualizer, #delete-buttons {
   font-family: 'Montserrat';
   font-style: normal;
   font-weight: normal;
@@ -40,10 +41,7 @@
   margin: 0;
   top: 50%;
   -ms-transform: translateY(-50%);
-}
-
-#body-text-upload {
-  margin-right: 10%;
+  margin-right: 12%;
 }
 
 body {
@@ -122,8 +120,23 @@ p, li {
 
 #open-visualization, #run-button {
   font-size: 20px;
-  padding: 7px 20px;
   cursor: pointer;
+  border-radius: 8px;
+  border-color: white;
+}
+
+#open-visualization {
+  padding: 20px 45px;
+  font-size: 24px;
+  background-color: blue;
+  color: white;
+}
+
+#run-button {
+  padding: 20px 45px;
+  font-size: 24px;
+  background-color: limegreen;
+  color: white;
 }
 
 #file-info {
@@ -133,6 +146,22 @@ p, li {
 }
 
 #chart {
-	  max-width: 100%;
-	  overflow:auto;
+	max-width: 100%;
+	overflow:auto;
+}
+
+#delete-buttons {
+  display: flex;
+  flex-direction: column;
+}
+
+.purge {
+  font-size: 27px;
+  padding: 22px 55px;
+  background-color: red;
+  color: white;
+  margin-bottom: 20%;
+  cursor: pointer;
+  border-radius: 12px;
+  border-color: white;
 }

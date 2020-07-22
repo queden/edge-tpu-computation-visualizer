@@ -23,6 +23,7 @@
             <form action="#" onsubmit="submitTimeZone()">
                 <label for="time-zone"> Choose a time-zone: </label>
                 <select id="time-zone" name="time-zone">
+                    <option value="Z"> UTC - Coordinated Universal Time </option>
                     <option value="-05:00"> EST - -05:00 </option>
                     <option value="-04:00"> EDT - -04:00 </option>
                     <option value="-10:00"> HST - -10:00 </option>
@@ -89,7 +90,7 @@
 
             <div id="upload-box">
                 <div id="input-upload-box">
-                    <form action="/visualizer?upload=true" method="POST" enctype="multipart/form-data">
+                    <form action="/visualizer?upload=true&purge=false" method="POST" enctype="multipart/form-data">
                         <input name="file-input" type="file"/>
                         <input type="submit" value="Upload"/>
                     </form>
@@ -120,6 +121,13 @@
             <p id="selected-file"> Selected file: No file chosen </p>
 
             <button id="open-visualization" onclick="openVisualization()"> Open Visualizer </button>
+            <p> <b> *If you do not get an alert upon the visualizer window opening, close the window and click this button again </b> </p>
+        </div>
+
+        <div id="delete-buttons">
+          <button class="purge" onclick="purgeAll(true, false)"> Delete All Users </button>
+          <button class="purge" onclick="purgeAll(false, true)"> Delete All Files </button>
+          <button class="purge" onclick="purgeAll(true, true)"> Delete Everything </button>
         </div>
     </div>
   </body>

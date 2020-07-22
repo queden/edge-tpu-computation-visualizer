@@ -53,6 +53,9 @@ async function uploadFile() {
 
   const uploadFile = response.uploadFile;
   const files = response.files;
+  const users = response.users;
+  const currentUser = response.currentUser;
+  const zone = response.zone;
 
   const box = document.getElementById("uploaded-file");
   box.innerHTML = '';
@@ -74,37 +77,36 @@ async function uploadFile() {
     box.appendChild(p);
   }
 
-  // Populates the drop down menu of all known users
-  addUsers(uploadFile.users);
-
   // Adds the correct time zone information to the page
   const timeZoneBox = document.getElementById("time-zone-display");
-  timeZoneBox.innerHTML = "Time Zone: " + uploadFile.zone;
+  timeZoneBox.innerHTML = "Time Zone: " + zone;
 
   // Adds the current user information to the page
   const userNameBox = document.getElementById("user-name");
-  userNameBox.innerHTML = "User: " + uploadFile.currentUser;
-  userNameBox.title = uploadFile.currentUser;
+  userNameBox.innerHTML = "User: " + currentUser;
+  userNameBox.title = currentUser;
 
   // Shows the user who's files they are currently viewing
   const displayUserFilesBox = document.getElementById("display-user-files");
   displayUserFilesBox.innerHTML = '';
-  displayUserFilesBox.innerHTML = "Displaying files for: " + files[0].user;
+  displayUserFilesBox.innerHTML = "Displaying files for: " + currentUser;
 
-  // Checks if the current user has uploaded files under their name
-  const userFiles = files[0].userFilesExist;
-  const userContainer = document.getElementById("user-files");
+  if (files.length > 0) {
+    // Checks if the current user has uploaded files under their name
+    const userFiles = files[0].userFilesExist;
+    const userContainer = document.getElementById("user-files");
 
-  if (userFiles == false) {
-    // Displays "error" message if the user has not uploaded files under their name
-    userContainer.style.display = "block";
-  } else {
-    // Hides "error" message
-    userContainer.style.display = "none";
+    if (userFiles == false) {
+      // Displays "error" message if the user has not uploaded files under their name
+      userContainer.style.display = "block";
+    } else {
+      // Hides "error" message
+      userContainer.style.display = "none";
+    }
   }
 
   // Populates the drop down menu of all known users
-  addUsers(files[0].users);
+  addUsers(users);
 
   const select = document.getElementById("uploaded-files");
   select.innerHTML = ''; 
@@ -260,7 +262,7 @@ function openVisualization() {
     // Checks and executes the specified functions after the pop-up has finished loading
     visualizerWindow.onload = function() {
       // Lets the user know the window has completed its loading
-      visualizerWindow.alert("loaded");
+      visualizerWindow.alert("Visualizer loaded.");
 
       // Passes the file id and the file information to the pop-up window
 
@@ -272,30 +274,31 @@ function openVisualization() {
 
 // Runs the visualization of the chosen simulation trace
 async function runVisualization() {
-  const fileIdBox = document.getElementById("trace-info-box");
+  alert("Visualization begun");
 
-    /*
-      /report -> sends to report servlet
-      process=pre -> performs preprocessing of the proto information
-      fileId=fileIdBox.title -> the id of the file to retrieve from datastore
-    */
-    const preprocess = await fetch('/report?process=pre&fileId=' + fileIdBox.title, {method: 'GET'});
-    const preprocessResponse = await preprocess.json();
+  const traceBox = document.getElementById("trace-info-box");
+  traceBox.innerHTML = '';
 
-    // Process initial json information
-    // TODO: Substitute
-    const box = document.getElementById("trace-info-box");
-    box.innerHTML = '';
-    const init = document.createElement("p");
-    init.innerHTML = preprocessResponse.message;
-    box.appendChild(init);
+  /*
+    /report -> sends to report servlet
+    process=pre -> performs preprocessing of the proto information
+    fileId=fileIdBox.title -> the id of the file to retrieve from datastore
+  */
+  const preprocess = await fetch('/report?process=pre&fileId=' + traceBox.title, {method: 'GET'});
+  const preprocessResponse = await preprocess.json();
 
-    for (i = 0; i < preprocessResponse.numTraces; i += 1000) {
-      // Run through the traces, information processing will happen within the function
-      await runTraces(i);
-    }
+  // Process initial json information
+  // TODO: Substitute
+  const init = document.createElement("p");
+  init.innerHTML = preprocessResponse.message;
+  traceBox.appendChild(init);
 
-    alert("Visualization completed");
+  for (i = 0; i < preprocessResponse.numTraces; i += 1000) {
+    // Run through the traces, information processing will happen within the function
+    await runTraces(i);
+  }
+
+  alert("Visualization completed");
 }
 
 /*
@@ -304,7 +307,7 @@ async function runVisualization() {
 */
 async function runTraces(start) {
   // Retrieves box to display error/processing information
-  const box = document.getElementById("trace-info-box");
+  const traceBox = document.getElementById("trace-info-box");
 
   /*
     /report -> sends information to report servlet
@@ -324,7 +327,29 @@ async function runTraces(start) {
     responseMessage.innerHTML = traceProcess.error.message;
   }
 
-  box.appendChild(responseMessage);
+  traceBox.appendChild(responseMessage);
+}
+
+// Deletes the specified elements from datastore
+async function purgeAll(users, files) {
+  var message = "";
+
+  if (users == true && files == false) {
+    message = "all users";
+  } else if (users == false && files == true) {
+    message = "all files";
+  } else {
+    message = "all users and files";
+  }
+
+  var purge = confirm("You are about to delete " + message + ". Do you wish to continue?");
+
+  if (purge == true) {
+    await fetch('/visualizer?upload=false&purge=true&users=' + users + '&files=' + files, {method: 'POST'});
+    await uploadFile();
+  } else {
+    alert("Purge aborted");
+  }
 }
 
 function loadMemory() { 
