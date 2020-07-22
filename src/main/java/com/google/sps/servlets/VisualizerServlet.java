@@ -10,6 +10,7 @@ import com.google.appengine.api.datastore.Query.Filter;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
 import com.google.appengine.api.datastore.Query.SortDirection;
+import com.google.common.io.ByteStreams;
 import com.google.gson.Gson;
 import com.google.protobuf.TextFormat;
 import com.google.sps.data.*;
@@ -110,13 +111,15 @@ public class VisualizerServlet extends HttpServlet {
       // Will not execute if the user failed to select a file after clicking "upload"
       if (filePart.getSubmittedFileName().length() > 0) {
         InputStream fileInputStream = filePart.getInputStream();
-              
-        // Create a simulation trace out of the uploaded file
+
+        // IF BINARY FILE
+        // byte[] byteArray = ByteStreams.toByteArray(fileInputStream);
+        // MemaccessCheckerData memaccessChecker = MemaccessCheckerData.parseFrom(byteArray);
+
+        // IF TEXT FILE
         InputStreamReader reader = new InputStreamReader(fileInputStream, "ASCII");
         MemaccessCheckerData.Builder builder = MemaccessCheckerData.newBuilder();
         TextFormat.merge(reader, builder);
-
-        MemaccessCheckerData memaccessChecker = builder.build();
 
         // Put the simulation trace proto into datastore
         ZonedDateTime dateTime = ZonedDateTime.now(ZoneId.of(ZoneOffset.UTC.getId()));
