@@ -275,6 +275,8 @@ function createUser(user) {
   return selectOption;
 }
 
+var numTraces;
+
 // Runs the visualization of the chosen simulation trace
 async function runVisualization() {
   // Retrieves the selected file
@@ -306,10 +308,20 @@ async function runVisualization() {
     init.innerHTML = preprocessResponse.message;
     box.appendChild(init);
 
-    for (i = 0; i < preprocessResponse.numTraces; i += 1000) {
-      // Run through the traces, information processing will happen within the function
-      await runTraces(i);
+    numTraces = preprocessResponse.numTraces
+
+    if (!preprocessResponse.isError) {
+        for (i = 0; i < preprocessResponse.numTraces; i += 1000) {
+            // Run through the traces, information processing will happen within the function
+            await runTraces(i);
+        }
     }
+
+    const done = document.createElement("p")
+
+    done.innerHTML = "Validation finished."
+
+    box.appendChild(done)
   }
 }
 
@@ -332,10 +344,12 @@ async function runTraces(start) {
   // TODO: Substitute
   var responseMessage = document.createElement("p");
 
-  if (traceProcess.error == null) {
-    responseMessage.innerHTML += "Traces validated";
+  var end = (start + 999 < numTraces) ? start + 999 : numTraces
+
+  if (traceProcess.error.stackTrace.length == 0) {
+    responseMessage.innerHTML += `Traces ${start}-${end} validated.`;
   } else {
-    responseMessage.innerHTML = traceProcess.error.message;
+    responseMessage.innerHTML += `Trace Validation Error: ${traceProcess.message}`;
   }
 
   box.appendChild(responseMessage);

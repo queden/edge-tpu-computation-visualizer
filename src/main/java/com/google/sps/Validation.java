@@ -226,7 +226,7 @@ public class Validation {
    * operated on the correct traces.
    */
   public static void validateTraceEvents(long start, long end)
-      throws Exception, InvalidTensorOperationException {
+      throws Exception, InvalidTensorOperationException, InvalidTensorReadException, MemoryAccessException {
     if (traceEvents.isEmpty()) {
       throw new Exception("No trace entry to be validated ");
     }
@@ -246,14 +246,7 @@ public class Validation {
       TraceEvent.AccessType accessType = traceEvent.getAccessType();
       int address = traceEvent.getAddress();
 
-      int traceTensor = -1;
-      // try catch would not be necessary because a default value of 0 will be set -- catch the
-      // unexpected tensor
-      try {
-        traceTensor = getTraceTensor(address, accessType, instruction);
-      } catch (Exception e) {
-        System.out.println(e.getMessage());
-      }
+      int traceTensor = getTraceTensor(address, accessType, instruction);
 
       List<Boolean> masks = instruction.getMaskList();
       if (masks.isEmpty()) {
@@ -267,11 +260,7 @@ public class Validation {
         writeValidation(narrow, wide, masks, traceTensor, traceEvent);
       } else if (accessType == TraceEvent.AccessType.NARROW_READ
           || accessType == TraceEvent.AccessType.WIDE_READ) {
-        try {
-          readValidation(narrow, wide, masks, traceTensor, traceEvent);
-        } catch (InvalidTensorReadException e) {
-          System.out.println(e.getMessage());
-        }
+        readValidation(narrow, wide, masks, traceTensor, traceEvent);
       }
     }
   }
