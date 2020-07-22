@@ -1,8 +1,3 @@
-// Sends the user back to the main page
-async function goVisualizer() {
-  location.replace("/index.html");
-}
-
 // Updates the time zone to be used throughout the website
 async function submitTimeZone() {
   // Retrieves the selected time zone
