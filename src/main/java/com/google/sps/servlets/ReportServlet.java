@@ -52,7 +52,8 @@ public class ReportServlet extends HttpServlet {
 
         json = new Gson().toJson(preProcessResults);
     } else {
-        // Executes the trace processing of the simulation trace
+        // Executes the trace processing of the memaccess checker
+
         long start = Long.parseLong(request.getParameter("start"));
 
         // System.out.println("Start is " + start);
