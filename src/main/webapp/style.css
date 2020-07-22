@@ -1,6 +1,5 @@
-
 /* This is a style sheet for the components of the html pages. */
- 
+
 #nav-bar {
     background-color: #000100;
     width: 100vw;
@@ -10,14 +9,15 @@
  
 #heading-content {
   width: 100vw;
-  height: 15vh;
+  /* height: 15vh; */
   max-width:100%;
   max-height:100%;
   background-color: #FFFFFF;
   justify-content: center;
   align-items: center; 
+  margin-bottom: 2%;
 }
- 
+
 #heading {
   font-family: Poppins;
   font-style: normal;
@@ -30,9 +30,10 @@
 
 #body-content {
   width: 100vw;
-  height: 75vh;
+  /* height: 75vh; */
   max-width:100%;
   max-height:100%;
+  position: absolute;
 }
 
 #body-text {
@@ -44,36 +45,124 @@
   position: absolute;
   top: 50%;
   -ms-transform: translateY(-50%);
-  transform: translateY(-50%); 
+  /* transform: translateY(-50%);  */
+}
+
+body {
+    font-family: 'Montserrat';
+    font-style: normal;
+    font-weight: normal;
+    font-size: 20px;
+}
+
+option {
+    font-size: 15px;
+}
+
+/* #inputs {
+  display: flex;
+  flex-direction: row;
+} */
+
+p {
+    font-size: 16px;
+}
+
+#upload-box {
+    margin-bottom: 30px;
+}
+
+#uploaded-file {
+  height: 130px;
+  overflow: auto;
+    color: green;
+}
+
+#input-upload-box {
+    margin-bottom: 30px;
+}
+
+#last-uploaded {
+    font-weight: bold;
+    font-size: 20px;
+}
+
+#time-zone-display, #user-name {
+    font-family: 'Montserrat';
+    font-style: normal;
+    font-weight: normal;
+    font-size: 25px;
+    color: blue;
+}
+
+/* #time-zone-container {
+  margin-right: 20px;
+} */
+
+#user-name, #display-user-files {
+  color: green;
+}
+
+#display-user-files {
+  font-size: 20px;
+}
+
+#selected-file {
+  font-size: 20px;
+  color: red;
+}
+
+#user-files {
+  display: none;
+  color: red;
+}
+
+#time-zone-submit, #user-submit {
+    font-size: 18px;
+    cursor: pointer;
+    padding: 1px 6px;
+}
+
+#go-visualizer, #back-buttons {
+  font-size: 20px;
+  padding: 7px 20px;
+  cursor: pointer;
 }
 
 #chart {
 	  max-width: 100%;
 	  overflow:auto;
 }
+
 text {
     pointer-events: none;
 }
+
 .grandparent text {
     font-weight: bold;
 }
+
 rect {
     stroke:#0096c7;;
     stroke-width: 1px;
     fill : #023e8a;
 }
+
 rect.parent,
 .grandparent rect {
     stroke-width: 3px;
 }
+
 .grandparent:hover rect {
     fill: #023e8a;
 }
+
 .children rect.parent,
 .grandparent rect {
     cursor: pointer;
     fill: #023e8a;
 }
+
 .children rect.child {
     opacity: 0.5;
     fill : orange;
@@ -81,19 +170,24 @@ rect.parent,
 .children rect.parent {
     fill: #023e8a;
 }
+
 .children:hover rect.child {
     opacity: 1;
     stroke-width: 1px;
 }
+
 .children:hover rect.parent {
     opacity: 0;
 }
+
 .legend {
     margin-bottom:8px !important;
 }
+
 .legend rect {
     stroke-width: 0px;
 }
+
 .legend text {
     text-anchor: middle;
     pointer-events: auto;
@@ -101,9 +195,11 @@ rect.parent,
     font-family: sans-serif;
     fill: #023e8a;
 }
+
 .form-group {
     text-align:left;
 }
+
 .textdiv {
     font-family: "Open Sans",Helvetica,Arial,sans-serif;
     font-size: 14px;
@@ -112,6 +208,7 @@ rect.parent,
     overflow:none;
     color : white;
 }
+
 .textdiv .title {
     font-size: 102%;
     font-weight: bold;
@@ -119,6 +216,7 @@ rect.parent,
     font-size:11px !important;
     color : white;
 }
+
 .textdiv p{
     line-height: 13px;
     margin:0 0 4px !important;
@@ -127,6 +225,52 @@ rect.parent,
     color : white;
 }
 
-p {
-    font-size: 17px;
+rect.bordered {
+        stroke: #E6E6E6;
+        stroke-width:2px;   
+      }
+
+      text.mono {
+        font-size: 9pt;
+        font-family: Consolas, courier;
+        fill: #aaa;
+      }
+
+      text.axis-workweek {
+        fill: #000;
+      }
+
+      text.axis-worktime {
+        fill: #000;
+      }
+
+#rec-box {
+  display: none;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  padding-top: 350px;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgb(0,0,0);
+  background-color: rgba(0,0,0,0.9);
+}
+
+#rec-content {
+  margin: auto;
+  display: block;
+  width: 80%;
+  max-width: 700px;
+}
+
+#close-button {
+  position: absolute;
+  top: 15px;
+  right: 35px;
+  color: #f1f1f1;
+  font-size: 40px;
+  font-weight: bold;
+  transition: 0.3s;
 }
