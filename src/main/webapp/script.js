@@ -186,31 +186,6 @@ function addUsers(users) {
   });
 }
 
-// Updates the time zone
-async function submitTimeZone() {
-  // Retrieves the selected time zone
-  const select = document.getElementById("time-zone");
-  const zone = select.options[select.selectedIndex].value;
-
-  /*
-    /visualizer-> sends information to the visualizer servlet
-    time=true -> DOES update the time zone
-    zone=zone -> sends the selected time zone information
-  */
-  await fetch('/visualizer?time=true&zone=' + zone, {method: 'GET'});
-}
-
-// Shows the user which file they have currently selected
-function displayFile() {
-  // Retrieves the selected file
-  const select = document.getElementById("uploaded-files");
-  const file = select.options[select.selectedIndex].text;
-
-  const selectedFileBox = document.getElementById("selected-file");
-  selectedFileBox.innerHTML = '';
-  selectedFileBox.innerHTML = "Selected file: " + file;
-}
-
 // Creates file options out of previously uploaded files to append to the select list
 function createFile(file) {
   const selectOption = document.createElement("option");
@@ -225,6 +200,17 @@ function createUser(user) {
   selectOption.value = user.id;
   selectOption.text = user.userName;
   return selectOption;
+}
+
+// Shows the user which file they have currently selected
+function displayFile() {
+  // Retrieves the selected file
+  const select = document.getElementById("uploaded-files");
+  const file = select.options[select.selectedIndex].text;
+
+  const selectedFileBox = document.getElementById("selected-file");
+  selectedFileBox.innerHTML = '';
+  selectedFileBox.innerHTML = "Selected file: " + file;
 }
 
 // Opens a pop-up window containing the visualization page
@@ -246,15 +232,14 @@ function openVisualization() {
     visualizerWindow.addEventListener("message", function(message) {
       // Determines if the sent data is the file's id or information
       if (!(isNaN(parseInt(message.data)))) {
-        // Stores the selected file id
+        // Stores the selected file's id
 
         const fileIdBox = visualizerWindow.document.getElementById("trace-info-box");
         fileIdBox.title = message.data;
       } else {
-        // Displays the selected file information
+        // Displays the selected file's information
 
         const fileInfoBox = visualizerWindow.document.getElementById("file-info");
-        visualizerWindow.console.log(message.data);
         fileInfoBox.innerHTML += message.data;
       }
     });
@@ -282,7 +267,7 @@ async function runVisualization() {
   /*
     /report -> sends to report servlet
     process=pre -> performs preprocessing of the proto information
-    fileId=fileIdBox.title -> the id of the file to retrieve from datastore
+    fileId=traceBox.title -> the id of the file to retrieve from datastore
   */
   const preprocess = await fetch('/report?process=pre&fileId=' + traceBox.title, {method: 'GET'});
   const preprocessResponse = await preprocess.json();
@@ -314,6 +299,7 @@ async function runVisualization() {
 
 /*
   Processes the different chunks of specified trace indicies
+
   start -> the beginning index of the traces to be processed
   numTraces -> the total number of traces
 */
@@ -356,9 +342,17 @@ async function purgeAll(users, files) {
     message = "all users and files";
   }
 
+  // Double checks if the user actually wants to delete elements from datastore
   var purge = confirm("You are about to delete " + message + ". Do you wish to continue?");
 
   if (purge == true) {
+    /*
+      /visualizer -> sends information to visualizer servlet
+      upload=false -> does NOT change the last uploaded file information
+      purge=true -> DOES delete the specified type of elements from datastore
+      users=users -> does/does not delete all users
+      files=files -> does/does not delete all files
+    */
     await fetch('/visualizer?upload=false&purge=true&users=' + users + '&files=' + files, {method: 'POST'});
     await uploadFile();
   } else {
@@ -366,6 +360,7 @@ async function purgeAll(users, files) {
   }
 }
 
+// Updates the visualizer state
 function loadMemory() { 
  // TODO: Substitute with visualizer function
 }
