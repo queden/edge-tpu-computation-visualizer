@@ -55,14 +55,13 @@ public class VisualizerServlet extends HttpServlet {
           DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
           PreparedQuery userResults = datastore.prepare(queryUser);
-                
-          // Appends the correct time zone to the date and time string and retrieves the JSON string 
-          // containing the file upload information and the total collection of files
-
+ 
+          // Gets the current time zone string
           ZonedDateTime dateTime = ZonedDateTime.now(ZoneId.of(timeZone));
           DateTimeFormatter formatter = DateTimeFormatter.ofPattern("z");
 
-          Gson gson = new Gson();
+          // Appends the correct time zone to the date and time string and retrieves the JSON string 
+          // containing the file upload information and the total collection of files
           ReturnJson returnJson = 
               new ReturnJson(
                   getFileJson(timeZone, fileEntity), 
@@ -71,11 +70,12 @@ public class VisualizerServlet extends HttpServlet {
                   timeZone, 
                   dateTime.format(formatter));
 
+          Gson gson = new Gson();
+
           response.setContentType("application/json;");
           response.getWriter().println(gson.toJson(returnJson));
       } else {
         // Updates the current user
-
         String name = request.getParameter("user-name");
         user = name;    
 
@@ -116,42 +116,42 @@ public class VisualizerServlet extends HttpServlet {
         MemaccessCheckerData.Builder builder = MemaccessCheckerData.newBuilder();
         TextFormat.merge(reader, builder);
 
-        MemaccessCheckerData simulationTrace = builder.build();
+        MemaccessCheckerData memaccessChecker = builder.build();
 
         // Put the simulation trace proto into datastore
         ZonedDateTime dateTime = ZonedDateTime.now(ZoneId.of(ZoneOffset.UTC.getId()));
         DateTimeFormatter formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME;
 
-        Entity simulationTraceUpload = new Entity("File");
-        simulationTraceUpload.setProperty("date", dateTime.format(formatter));
-        simulationTraceUpload.setProperty("time", new Date());
-        simulationTraceUpload.setProperty(
+        Entity memaccessCheckerUpload = new Entity("File");
+        memaccessCheckerUpload.setProperty("date", dateTime.format(formatter));
+        memaccessCheckerUpload.setProperty("time", new Date());
+        memaccessCheckerUpload.setProperty(
             "name",
-            (simulationTrace.getName().equals("")) 
+            (memaccessChecker.getName().equals("")) 
                 ? filePart.getSubmittedFileName() 
-                : simulationTrace.getName());
+                : memaccessChecker.getName());
 
-        simulationTraceUpload.setProperty("user", user);
-        simulationTraceUpload.setProperty(
-            "simulation-trace", new Blob(simulationTrace.toByteArray()));        
+        memaccessCheckerUpload.setProperty("user", user);
+        memaccessCheckerUpload.setProperty(
+            "simulation-trace", new Blob(memaccessChecker.toByteArray()));        
 
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-        datastore.put(simulationTraceUpload);
+        datastore.put(memaccessCheckerUpload);
         
         // Updates the last submitted file
-        fileEntity = simulationTraceUpload;
+        fileEntity = memaccessCheckerUpload;
 
         // Holds the last uploaded file information
         String fileName = filePart.getSubmittedFileName();
         String fileSize = getBytes(filePart.getSize());
         String fileTrace = 
-            simulationTrace.getName().equals("") 
+            memaccessChecker.getName().equals("") 
             ? "No name provided" 
-            : simulationTrace.getName();
+            : memaccessChecker.getName();
             
-        int fileTiles = simulationTrace.getNumTiles();
-        int narrowBytes = simulationTrace.getNarrowMemorySizeBytes();
-        int wideBytes = simulationTrace.getWideMemorySizeBytes();
+        int fileTiles = memaccessChecker.getNumTiles();
+        int narrowBytes = memaccessChecker.getNarrowMemorySizeBytes();
+        int wideBytes = memaccessChecker.getWideMemorySizeBytes();
 
         fileJson =
             new FileJson(fileName, fileSize, fileTrace, fileTiles, narrowBytes, wideBytes, user);

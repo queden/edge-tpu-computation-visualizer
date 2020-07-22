@@ -20,7 +20,7 @@ import javax.servlet.http.HttpServletResponse;
 
 @WebServlet("/report")
 public class ReportServlet extends HttpServlet {
-  private static MemaccessCheckerData simulationTrace;
+  private static MemaccessCheckerData memaccessChecker;
   private static Validation validation;
 
   @Override
@@ -31,22 +31,22 @@ public class ReportServlet extends HttpServlet {
         // Executes the preprocessing of the simulation trace
 
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-        Entity retrievedSimulationTrace = null;
+        Entity retrievedMemaccessChecker = null;
 
         // Retrieves the file based on its entity's key, throws an error if the key doesn't exist
         try {
           Key key = new Builder("File", Long.parseLong(request.getParameter("fileId"))).getKey();
-          retrievedSimulationTrace = datastore.get(key);
+          retrievedMemaccessChecker = datastore.get(key);
         } catch (EntityNotFoundException e) {
           System.out.println("file not found.");
         }
 
         // Parses the simulation trace out of the respective entity's Blob in datastore
-        MemaccessCheckerData simulationTrace = 
+        MemaccessCheckerData memaccessChecker = 
             MemaccessCheckerData.parseFrom(
-                ((Blob) retrievedSimulationTrace.getProperty("simulation-trace")).getBytes());
+                ((Blob) retrievedMemaccessChecker.getProperty("simulation-trace")).getBytes());
 
-        validation = new Validation(simulationTrace);
+        validation = new Validation(memaccessChecker);
 
         PreProcessResults preProcessResults = validation.preProcess();
 
