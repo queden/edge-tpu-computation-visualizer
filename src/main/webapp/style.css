@@ -142,7 +142,7 @@ text {
     font-weight: bold;
 }
 
-rect {
+/* rect {
     stroke:#0096c7;;
     stroke-width: 1px;
     fill : #023e8a;
@@ -194,7 +194,7 @@ rect.parent,
     font-size: 13px;
     font-family: sans-serif;
     fill: #023e8a;
-}
+} */
 
 .form-group {
     text-align:left;
@@ -273,4 +273,27 @@ rect.bordered {
   font-size: 40px;
   font-weight: bold;
   transition: 0.3s;
+}
+
+svg {
+  font: 10px sans-serif;
+}
+
+.subBar { 
+  fill: gray;
+  opacity: 0.5;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.brush .extent {
+  stroke: #fff;
+  fill: steelblue;
+  fill-opacity: .25;
+  shape-rendering: crispEdges;
 }
