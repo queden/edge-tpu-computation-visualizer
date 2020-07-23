@@ -25,10 +25,10 @@ public class Validation {
   private static int[][] narrow;
   private static int[][] wide;
 
-  public static int narrowSize;
-  public static int wideSize;
+  private static int narrowSize;
+  private static int wideSize;
 
-  public static int numTiles;
+  private static int numTiles;
 
   // Memory access types.
   public static final String NARROW_READ = "Narrow Read";
@@ -215,17 +215,19 @@ public class Validation {
     }
     return layerToInstructionTable;
   }
+
   /** Given a list of instructions, maps each instruction tag to its corresponding instruction. */
-  public static void relateInstructionTagtoInstructionTable() {
+  private static void relateInstructionTagtoInstructionTable() {
     for (Instruction instruction : instructions) {
       instructionTagtoInstruction.put(instruction.getTag(), instruction);
     }
   }
+
   /**
    * Given a list of trace entries, validates that trace entries proceeded in the right order and
    * operated on the correct traces.
    */
-  public static void validateTraceEvents(long start, long end)
+  private static void validateTraceEvents(long start, long end)
       throws Exception, InvalidTensorOperationException, InvalidTensorReadException, MemoryAccessException {
     if (traceEvents.isEmpty()) {
       throw new Exception("No trace entry to be validated ");
@@ -266,7 +268,7 @@ public class Validation {
   }
 
   /** Creates a map from tensor label to the corresponding tensor allocation information */
-  public static Map<Integer, TensorAllocation> relateTensorLabelToTensorAllocation(
+  private static Map<Integer, TensorAllocation> relateTensorLabelToTensorAllocation(
       List<TensorLayerAllocationTable> tensorLayAllocs) {
     Hashtable<Integer, TensorAllocation> tensorLabelToTensorAllocation =
         new Hashtable<Integer, TensorAllocation>();
@@ -290,7 +292,7 @@ public class Validation {
   /**
    * Returns the tensor that the trace entry is operating on based on its corresponding instruction.
    */
-  public static int getTraceTensor(
+  private static int getTraceTensor(
       int traceAddress, TraceEvent.AccessType traceAccessType, Instruction instruction)
       throws Exception, MemoryAccessException {
     List<Integer> AccessTypeTensorList;
@@ -353,16 +355,19 @@ public class Validation {
     return tensor;
   }
   /** Retrieves the correct tensor depending on the specific access type instruction list. */
-  public static int getTensor(
+  private static int getTensor(
       List<Integer> accessTypeTensorList,
       int traceAddress,
       Map<Integer, TensorAllocation> tensorLabelToTensorAllocationTable) {
     int tensor = -1;
+
     for (int i = 0; i < accessTypeTensorList.size(); i++) {
       TensorAllocation tensorAlloc =
           tensorLabelToTensorAllocationTable.get(accessTypeTensorList.get(i));
+
       int start = tensorAlloc.getBaseAddress();
       int end = start + tensorAlloc.getSize();
+
       if (traceAddress >= start && traceAddress < end) {
         tensor = accessTypeTensorList.get(i);
         break;
@@ -375,7 +380,7 @@ public class Validation {
    * Validates that the write validation has a corresponding tensor and writes it to the correct
    * address in the memory arrays.
    */
-  public static void writeValidation(
+  private static void writeValidation(
       int[][] narrow, int[][] wide, List<Boolean> masks, int tensor, TraceEvent traceEvent) {
     int address = traceEvent.getAddress();
     if (traceEvent.getAccessType() == TraceEvent.AccessType.NARROW_WRITE) {
@@ -405,7 +410,7 @@ public class Validation {
    * Validates that the tensor that the read trace entry is reading has been written before the read
    * occurs.
    */
-  public static void readValidation(
+  private static void readValidation(
       int[][] narrow, int[][] wide, List<Boolean> masks, int tensor, TraceEvent traceEvent)
       throws InvalidTensorReadException {
     int address = traceEvent.getAddress();
