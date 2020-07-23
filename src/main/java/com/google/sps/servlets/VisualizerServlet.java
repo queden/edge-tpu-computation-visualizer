@@ -4,6 +4,9 @@ import com.google.appengine.api.datastore.Blob;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.EntityNotFoundException;
+import com.google.appengine.api.datastore.Key;
+import com.google.appengine.api.datastore.KeyFactory.Builder;
 import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.Filter;
@@ -66,7 +69,8 @@ public class VisualizerServlet extends HttpServlet {
         ReturnJson returnJson = 
             new ReturnJson(
                 getFileJson(timeZone, fileEntity), 
-                getFiles(), getUsers(), 
+                getFiles(), 
+                getUsers(), 
                 user, 
                 timeZone, 
                 dateTime.format(formatter));
@@ -78,19 +82,28 @@ public class VisualizerServlet extends HttpServlet {
       } else {
         // Updates the current user
         String name = request.getParameter("user-name");
-        user = name;    
+        user = name;  
 
         // Adds the new user into datastore
         if (request.getParameter("new").equals("true")) {
           DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
-          // Puts the entered user into datastore
-          Entity userEntity = new Entity("User");
-          userEntity.setProperty("user-name", user);
-          userEntity.setProperty("time", new Date());
-          datastore.put(userEntity);
-        }
-      }     
+          // Checks if the user already exists
+
+          Filter propertyFilter = new FilterPredicate("user-name", FilterOperator.EQUAL, user);
+          Query userCheck = 
+              new Query("User")
+                  .setFilter(propertyFilter);
+
+          if (((PreparedQuery) datastore.prepare(userCheck)).countEntities() == 0) {
+            // Puts the entered user into datastore
+            Entity userEntity = new Entity("User");
+            userEntity.setProperty("user-name", user);
+            userEntity.setProperty("time", new Date());
+            datastore.put(userEntity);
+          }
+        }     
+      } 
     } else {
       // Updates the selected time zone
       String zone = request.getParameter("zone");
@@ -141,6 +154,12 @@ public class VisualizerServlet extends HttpServlet {
 
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
         datastore.put(memaccessCheckerUpload);
+
+        //
+        Query queryFile = new Query("File").addSort("time", SortDirection.DESCENDING);
+
+        System.out.println(((PreparedQuery) datastore.prepare(queryFile)).countEntities());
+        //
         
         // Updates the last submitted file
         fileEntity = memaccessCheckerUpload;
@@ -165,20 +184,46 @@ public class VisualizerServlet extends HttpServlet {
       }
     } else {
       // Purges datastore as specified
-
       if (request.getParameter("purge").equals("true")) {
-        // Purge all users
+      // Purge all users
       
         if (request.getParameter("users").equals("true")) {
           purgeAll(true, false);
+          user = "All";
         }
 
         // Purge all files
         if (request.getParameter("files").equals("true")) {
           purgeAll(false, true);
+          fileJson = new FileJson();
+          fileEntity = new Entity("File");
         }
-      }
-    }    
+      } else {
+        // Deletes a single user
+        if (request.getParameter("user").equals("true")) {
+          purgeEntity(true, false, Long.parseLong(request.getParameter("user-id")), request.getParameter("user-name"));
+          user = "All";
+        } else {
+          // Deletes a single file
+
+          Long id = Long.parseLong(request.getParameter("file-id"));
+          
+          DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+          Query queryFile = new Query("File").addSort("time", SortDirection.DESCENDING);
+
+          Entity lastUploadedFile = ((PreparedQuery) datastore.prepare(queryFile)).asIterator().next();
+          Long lastId = lastUploadedFile.getKey().getId();
+
+          // Resets last uploaded file if the deleted file is the most recent file upload
+          if (lastId.equals(id)) {
+            fileJson = new FileJson();
+            fileEntity = new Entity("File");
+          }
+
+          purgeEntity(false, true, id, null);
+        }
+      } 
+    }  
 
     response.sendRedirect("/index.html");
   }
@@ -306,20 +351,45 @@ public class VisualizerServlet extends HttpServlet {
       for (Entity entity : ((PreparedQuery) datastore.prepare(queryFile)).asIterable()) {
         datastore.delete(entity.getKey());
       }
-
-      fileJson = new FileJson();
-      fileEntity = new Entity("File");
     } else {
       for (Entity entity : ((PreparedQuery) datastore.prepare(queryUser)).asIterable()) {
         datastore.delete(entity.getKey());
       }
-
-      user = "All";
     }
 
     // Check if purge/submit actually happened
     
     System.out.println(((PreparedQuery) datastore.prepare(queryFile)).countEntities());
     System.out.println(((PreparedQuery) datastore.prepare(queryUser)).countEntities());
+  }
+
+  // Deletes a single user or file
+  private static void purgeEntity(boolean user, boolean file, Long id, String name) {
+    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+    Key key = null;
+
+    if (user) {
+      // Retrieves the user based on its key
+      key = new Builder("User", id).getKey();  
+
+      Query queryFile;
+      Filter propertyFilter = new FilterPredicate("user", FilterOperator.EQUAL, name);
+
+      queryFile = 
+          new Query("File")
+              .setFilter(propertyFilter)
+              .addSort("time", SortDirection.DESCENDING);
+
+      PreparedQuery fileResults = datastore.prepare(queryFile);
+
+      // Resets each file's user that previously had the deleted user to the default "All"
+      for (Entity entity : fileResults.asIterable()) {
+        entity.setProperty("user", "All");
+      }
+    } else {
+      key = new Builder("File", id).getKey();
+    }
+
+    datastore.delete(key); 
   }
 }

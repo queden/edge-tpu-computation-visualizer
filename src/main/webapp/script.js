@@ -41,6 +41,47 @@ async function selectUser() {
   }
 }
 
+async function deleteUser() {
+  const select = document.getElementById("users");
+  const user = select.options[select.selectedIndex];
+
+  if (user.text == "All") {
+    alert("Cannot delete user \"All\"");
+  } else {
+    var purge = confirm("You are about to delete user \"" + user.text + "\". Do you wish to continue?");
+
+    if (purge == true) {
+      await fetch('/visualizer?upload=false&purge=false&user=true&user-id=' + user.value + "&user-name=" + user.text, {method: 'POST'});
+      await uploadFile();
+
+      alert("User deleted");
+    } else {
+      alert("Delete aborted");
+    }
+  }
+}
+
+async function deleteFile() {
+  const select = document.getElementById("uploaded-files");
+  const file = select.options[select.selectedIndex];
+  console.log(file.text);
+
+  if (file.text == "No file chosen") {
+    alert("You must choose a file to delete.");
+  } else {
+    var purge = confirm("You are about to delete file: " + file.text + ". Do you wish to continue?");
+
+    if (purge == true) {
+      await fetch('/visualizer?upload=false&purge=false&user=false&file-id=' + file.value, {method: 'POST'});
+      await uploadFile();
+
+      alert("File deleted");
+    } else {
+      alert("Delete aborted");
+    }
+  }
+}
+
 // Handles the upload of the selected file
 async function uploadFile() {
   /*

@@ -150,6 +150,15 @@ p, li {
 	overflow:auto;
 }
 
+#delete-user, #delete-file {
+  font-size: 18px;
+  cursor: pointer;
+  background-color: red;
+  color: white;
+  border-radius: 12px;
+  border-color: white;
+}
+
 #delete-buttons {
   display: flex;
   flex-direction: column;
