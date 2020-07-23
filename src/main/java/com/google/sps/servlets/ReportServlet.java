@@ -4,76 +4,66 @@ import com.google.appengine.api.datastore.Blob;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
-import com.google.appengine.api.datastore.Query.SortDirection;
-import com.google.appengine.api.datastore.PreparedQuery;
-import com.google.appengine.api.datastore.Query;
+import com.google.appengine.api.datastore.EntityNotFoundException;
+import com.google.appengine.api.datastore.Key;
+import com.google.appengine.api.datastore.KeyFactory.Builder;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.protobuf.TextFormat;
+import com.google.sps.data.*;
 import com.google.sps.Validation;
-import com.google.sps.proto.SimulationTraceProto.*;
-import java.io.File;
+import com.google.sps.proto.MemaccessCheckerDataProto.*;
+import com.google.sps.results.*;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.FileInputStream;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.List;
-import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.Part;
-import javax.servlet.ServletException;
 
 @WebServlet("/report")
-@MultipartConfig()
 public class ReportServlet extends HttpServlet {
-    private static SimulationTrace simulationTrace;
-    private static Validation validation;
+  private static MemaccessCheckerData memaccessChecker;
+  private static Validation validation;
 
-    // @Override
-    // public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    //     // GsonBuilder gsonBuilder = new GsonBuilder();
-    //     // Gson gson = gsonBuilder.registerTypeAdapter(CommentObject.class, new CommentAdapter()).create();
+  @Override
+  public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    String json = "";
+    
+    if (request.getParameter("process").equals("pre")) {
+        // Executes the preprocessing of the simulation trace
 
-    //     // response.setContentType("application/json;");
-    //     // response.getWriter().println(gson.toJson(comments));
+        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+        Entity retrievedMemaccessChecker = null;
 
-    //     Gson gson = new Gson();
-
-    //     String json = gson.toJson(validation.getNarrowArray()) + gson.toJson(validation.getWideArray()) + gson.toJson(validation.getErrors());
-    //     response.setContentType("application/json;");
-    //     response.getWriter().println(json);
-    //     // response.sendRedirect("/report.html");
-    // }
-
-    @Override
-    public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {        
-        String process = request.getParameter("process").toString();
-
-        if (process.equals("pre")) {
-            Query query = new Query("Files").addSort("timestamp", SortDirection.DESCENDING);
-
-            DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-            PreparedQuery results = datastore.prepare(query);
-
-            Entity retrievedSimulationTrace = results.asIterable().iterator().next();
-
-            simulationTrace = 
-                SimulationTrace.parseFrom(((Blob) retrievedSimulationTrace.getProperty("simulation-trace")).getBytes());
-
-            validation = new Validation(simulationTrace);
-
-            validation.preProcess();
-        } else {
-            long start = Long.parseLong(request.getParameter("start"));
-            validation.process(start, start + 1000);
+        // Retrieves the file based on its entity's key, throws an error if the key doesn't exist
+        try {
+          Key key = new Builder("File", Long.parseLong(request.getParameter("fileId"))).getKey();
+          retrievedMemaccessChecker = datastore.get(key);
+        } catch (EntityNotFoundException e) {
+          System.out.println("file not found.");
         }
 
-        response.sendRedirect("/report.html");
+        // Parses the simulation trace out of the respective entity's Blob in datastore
+        MemaccessCheckerData memaccessChecker = 
+            MemaccessCheckerData.parseFrom(
+                ((Blob) retrievedMemaccessChecker.getProperty("memaccess-checker")).getBytes());
+
+        validation = new Validation(memaccessChecker);
+
+        PreProcessResults preProcessResults = validation.preProcess();
+
+        json = new Gson().toJson(preProcessResults);
+    } else {
+        // Executes the trace processing of the memaccess checker
+
+        long start = Long.parseLong(request.getParameter("start"));
+
+        // System.out.println("Start is " + start);
+
+        ProcessResults processResults = validation.process(start, start + 1000);
+        
+        json = new Gson().toJson(processResults);
     }
+
+    response.setContentType("application/json;");
+    response.getWriter().println(json);
+  }
 }

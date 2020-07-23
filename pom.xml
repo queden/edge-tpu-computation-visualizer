@@ -50,14 +50,11 @@
         <version>3.11.0</version>
     </dependency>
 
-    <!-- <dependency>
-        <groupId>com.oracle</groupId>
-        <artifactId>javaFX</artifactId>
-        <version>11.0.2</version>
-        <scope>system</scope>
-        <systemPath>PATH_TO_FX/lib</systemPath>
-    </dependency> -->
-
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>11.0.2</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -67,20 +64,10 @@
         <artifactId>appengine-maven-plugin</artifactId>
         <version>2.2.0</version>
         <configuration>
-          <deploy.projectId>YOUR_PROJECT_ID_HERE</deploy.projectId>
+          <deploy.projectId>memaccess-checker-step-2020</deploy.projectId>
           <deploy.version>1</deploy.version>
         </configuration>
       </plugin>
-
-      <!-- <plugin>
-        <groupId>org.openjfx</groupId>
-        <artifactId>javafx-maven-plugin</artifactId>
-        <version>0.0.4</version>
-        <configuration>
-            <mainClass>HelloFX</mainClass>
-        </configuration>
-      </plugin> -->
-
     </plugins>
   </build>
 </project>

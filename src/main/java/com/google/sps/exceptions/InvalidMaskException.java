@@ -1,13 +1,13 @@
 package com.google.sps.exceptions;
 
-import com.google.sps.proto.SimulationTraceProto.*;
+import com.google.sps.proto.MemaccessCheckerDataProto.*;
 
 public class InvalidMaskException extends Exception {
     private int instructionTag;
     private String accessType;
 
 
-    public InvalidMaskException(int instructionTag, TraceEntry.AccessType accessType) {
+    public InvalidMaskException(int instructionTag, TraceEvent.AccessType accessType) {
         super();
         this.instructionTag = instructionTag;
         this.accessType = accessType.getDescriptorForType().getName();

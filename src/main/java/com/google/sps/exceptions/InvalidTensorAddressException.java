@@ -8,12 +8,17 @@ public class InvalidTensorAddressException extends Exception {
 
   private int baseAddress; // Address operarted on by instruction
   private int instruction; // Tag of instruction performing the operation
-  private String memoryAccess; // String representing the access type
+  private String memoryType;
 
-  public InvalidTensorAddressException(int baseAddress, int instruction, String memoryAccess) {
+  public InvalidTensorAddressException(int baseAddress, int instruction, boolean isNarrow) {
     this.baseAddress = baseAddress;
     this.instruction = instruction;
-    this.memoryAccess = memoryAccess;
+    
+    if (isNarrow) {
+        memoryType = "narrow";
+    } else {
+        memoryType = "wide";
+    }
   }
 
   /** Outputs information related to the exception. */
@@ -21,9 +26,9 @@ public class InvalidTensorAddressException extends Exception {
   public String getMessage() {
     return "No tensor allocation found at address "
         + baseAddress
-        + " while validating a "
-        + memoryAccess
-        + "for instruction "
+        + " in "
+        + memoryType
+        + " memory for instruction "
         + instruction
         + ".";
   }

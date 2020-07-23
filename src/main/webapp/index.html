@@ -1,46 +1,134 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="UTF-8">
-
-    <!--Stylesheets from bootstrap and materialize. Used to incorporate the pre-made templates offered by the
-    two sites. -->
-
     <link rel="stylesheet" href="style.css">
     <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
     <script src="script.js"></script>
+    <style>
+        input[type=file], input[type=submit], input[type=select], input[type=label] {
+            font-size: 18px;
+            cursor: pointer;
+        }
+    </style>
   </head>
 
-  <body onload="getViz()">
-
-      <!--The navigation bar. -->
-
+  <body onload="uploadFile()">
     <div id = "nav-bar"> 
-
-    </div>
-
-<!--Div components dedicated to give a snippet of the about page. -->
-
+        </div>
     <div id="heading-content"> 
-      <h1 id="heading">Computation Visualizer</h1>
-    </div>
+        <h1 id="heading">Computation Visualizer</h1>
+        <div id="time-zone-container">
+            <p id="time-zone-display"> Time Zone: </p>
 
-<!--Div components dedicated to give a snippet of the Project page. -->
-
-    <div id="body-content">
-        <div id="body-text">
-            <h2> Upload File </h2>
-
-            <!-- TJ Code -->
-            <form action="/visualizer" method="POST" enctype="multipart/form-data">
-                <input name="file-input" type="file"/>
-                <input type="submit" value="Upload"/>
+            <form action="#" onsubmit="submitTimeZone()">
+                <label for="time-zone"> Choose a time-zone: </label>
+                <select id="time-zone" name="time-zone">
+                    <option value="Z"> UTC - Coordinated Universal Time </option>
+                    <option value="-05:00"> EST - -05:00 </option>
+                    <option value="-04:00"> EDT - -04:00 </option>
+                    <option value="-10:00"> HST - -10:00 </option>
+                    <option value="-09:00"> HDT - -09:00 </option>
+                    <option value="-07:00"> MST - -07:00 </option>
+                    <option value="-06:00"> MDT - -06:00 </option>
+                    <option value="Australia/Darwin"> ACT - Australia/Darwin </option>
+                    <option value="Australia/Sydney"> AET - Australia/Sydney </option>
+                    <option value="America/Argentina/Buenos_Aires"> AGT - America/Argentina/Buenos Aires </option>
+                    <option value="Africa/Cairo"> ART - Africa/Cairo </option>
+                    <option value="America/Anchorage"> AST - America/Anchorage </option>
+                    <option value="America/Sao_Paulo"> BET - America/Sao Paulo </option>
+                    <option value="Asia/Dhaka"> BST - Asia/Dhaka </option>
+                    <option value="Africa/Harare"> CAT - Africa/Harare </option>
+                    <option value="America/St_Johns"> CNT - America/St. Johns </option>
+                    <option value="America/Chicago"> CST - America/Chicago </option>
+                    <option value="Asia/Shanghai"> CTT - Asia/Shanghai </option>
+                    <option value="Africa/Addis_Ababa"> EAT - Africa/Addis Ababa </option>
+                    <option value="Europe/Paris"> ECT - Europe/Paris </option>
+                    <option value="America/Indiana/Indianapolis"> IET - America/Indiana/Indianapolis </option>
+                    <option value="Asia/Kolkata"> IST - Asia/Kolkata </option>
+                    <option value="Asia/Tokyo"> JST - Asia/Tokyo </option>
+                    <option value="Pacific/Apia"> MIT - Pacific/Apia </option>
+                    <option value="Asia/Yerevan"> NET - Asia/Yerevan </option>
+                    <option value="Pacific/Auckland"> NST - Pacific/Auckland </option>
+                    <option value="Asia/Karachi"> PLT - Asia/Karachi </option>
+                    <option value="America/Phoenix"> PNT - America/Phoenix </option>
+                    <option value="America/Puerto_Rico"> PRT - America/Puerto Rico </option>
+                    <option value="America/Los_Angeles"> PST - America/Los Angeles </option>
+                    <option value="Pacific/Guadalcanal"> SST - Pacific/Guadalcanal </option>
+                    <option value="Asia/Ho_Chi_Minh"> VST - Asia/Ho Chi Minh </option>
+                </select>
+                
+                <input type="submit" value="Submit"/>
             </form>
+        </div>
 
-            <h2> Run Simulation </h2>
-            <button onclick="runSimulation()">Report!</button>
+        <div id="user-container">
+          <p id="user-name"> User: </p>
+          <div>
+            <p id="note"> NOTE: </p>
+            
+            <ul>
+              <li> User name to be used for filtering the number of displayed files </li>
+              <li> If a user name is not selected, 
+                the file will not be attached to a specific user and would only be able to be accessed by displaying the files submitted by "All" </li>
+            </ul>
+          </div>
+          <form action="#" onsubmit="selectUser()">
+            <label for="users"> Choose a user: </label>
+            <select id="users" name="users">
+              <option value="All"></option>
+            </select>
+            <label for="new-user"> New user: </label>
+            <input name="new-user" id="new-user" type="text"/>
+            <input type="submit" value="Submit"/>
+          </form>
         </div>
     </div>
 
+    <div id="body-content">
+        <div id="body-text-upload">
+            <h2> Upload File </h2>
+
+            <div id="upload-box">
+                <div id="input-upload-box">
+                    <form action="/visualizer?upload=true&purge=false" method="POST" enctype="multipart/form-data">
+                        <input name="file-input" type="file"/>
+                        <input type="submit" value="Upload"/>
+                    </form>
+                </div>
+
+                <p id="last-uploaded"> Last uploaded file: </p>
+                <div id="uploaded-file"></div>
+                <p id="scroll"></p>
+            </div>
+          </div>
+          <div id="body-text-visualizer">
+
+            <h2> Visualizer </h2>
+
+            <div id="user-files">
+                <p> *Displaying files for all users, current user has not uploaded files under their name </p>
+            </div>
+
+            <p id="display-user-files"> Displaying files for: All </p>
+
+            <form action="#">
+                <label for="uploaded-files">Choose a file to visualize: </label>
+                <select id="uploaded-files" name="uploaded-files" onchange="displayFile()">
+                  <option> No file chosen </option>
+                </select>
+            </form>
+
+            <p id="selected-file"> Selected file: No file chosen </p>
+
+            <button id="open-visualization" onclick="openVisualization()"> Open Visualizer </button>
+            <p> <b> *If you do not get an alert upon the visualizer window opening, close the window and click this button again </b> </p>
+        </div>
+
+        <div id="delete-buttons">
+          <button class="purge" onclick="purgeAll(true, false)"> Delete All Users </button>
+          <button class="purge" onclick="purgeAll(false, true)"> Delete All Files </button>
+          <button class="purge" onclick="purgeAll(true, true)"> Delete Everything </button>
+        </div>
+    </div>
   </body>
 </html>
