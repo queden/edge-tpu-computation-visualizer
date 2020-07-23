@@ -1,4 +1,5 @@
 package com.google.sps;
+<<<<<<< HEAD
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -158,6 +159,7 @@ public final class TestsCaden extends Suite {
             assertEquals(expectedTensor, recievedTensor);
         }
 
+<<<<<<< HEAD
         // Trace is narrow read, instruction does not have narrow read, catch MAE
         @Test(expected = MemoryAccessException.class)
         public void testInvalidNarrowRead() throws Exception, MemoryAccessException, Throwable {
