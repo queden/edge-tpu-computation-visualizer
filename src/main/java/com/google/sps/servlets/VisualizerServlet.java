@@ -91,9 +91,7 @@ public class VisualizerServlet extends HttpServlet {
           // Checks if the user already exists
 
           Filter propertyFilter = new FilterPredicate("user-name", FilterOperator.EQUAL, user);
-          Query userCheck = 
-              new Query("User")
-                  .setFilter(propertyFilter);
+          Query userCheck = new Query("User").setFilter(propertyFilter);
 
           if (((PreparedQuery) datastore.prepare(userCheck)).countEntities() == 0) {
             // Puts the entered user into datastore
@@ -114,7 +112,7 @@ public class VisualizerServlet extends HttpServlet {
 
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response) 
-    throws IOException, ServletException {
+      throws IOException, ServletException {
     String upload = request.getParameter("upload");
 
     if (upload.equals("true")) {
@@ -154,12 +152,6 @@ public class VisualizerServlet extends HttpServlet {
 
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
         datastore.put(memaccessCheckerUpload);
-
-        //
-        Query queryFile = new Query("File").addSort("time", SortDirection.DESCENDING);
-
-        System.out.println(((PreparedQuery) datastore.prepare(queryFile)).countEntities());
-        //
         
         // Updates the last submitted file
         fileEntity = memaccessCheckerUpload;
@@ -189,19 +181,26 @@ public class VisualizerServlet extends HttpServlet {
       
         if (request.getParameter("users").equals("true")) {
           purgeAll(true, false);
+
           user = "All";
         }
 
         // Purge all files
         if (request.getParameter("files").equals("true")) {
           purgeAll(false, true);
+
           fileJson = new FileJson();
           fileEntity = new Entity("File");
         }
       } else {
         // Deletes a single user
         if (request.getParameter("user").equals("true")) {
-          purgeEntity(true, false, Long.parseLong(request.getParameter("user-id")), request.getParameter("user-name"));
+          purgeEntity(
+              true, 
+              false, 
+              Long.parseLong(request.getParameter("user-id")), 
+              request.getParameter("user-name"));
+
           user = "All";
         } else {
           // Deletes a single file
@@ -211,7 +210,9 @@ public class VisualizerServlet extends HttpServlet {
           DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
           Query queryFile = new Query("File").addSort("time", SortDirection.DESCENDING);
 
-          Entity lastUploadedFile = ((PreparedQuery) datastore.prepare(queryFile)).asIterator().next();
+          Entity lastUploadedFile = 
+              ((PreparedQuery) datastore.prepare(queryFile)).asIterator().next();
+
           Long lastId = lastUploadedFile.getKey().getId();
 
           // Resets last uploaded file if the deleted file is the most recent file upload
@@ -331,10 +332,7 @@ public class VisualizerServlet extends HttpServlet {
     ArrayList<User> users = new ArrayList<>();
 
     for (Entity entity : userResults.asIterable()) {
-      users.add(
-          new User(
-              entity.getKey().getId(),
-              (String) entity.getProperty("user-name")));
+      users.add(new User(entity.getKey().getId(), (String) entity.getProperty("user-name")));
     }
 
     return users;
@@ -376,9 +374,7 @@ public class VisualizerServlet extends HttpServlet {
       Filter propertyFilter = new FilterPredicate("user", FilterOperator.EQUAL, name);
 
       queryFile = 
-          new Query("File")
-              .setFilter(propertyFilter)
-              .addSort("time", SortDirection.DESCENDING);
+          new Query("File").setFilter(propertyFilter);
 
       PreparedQuery fileResults = datastore.prepare(queryFile);
 
