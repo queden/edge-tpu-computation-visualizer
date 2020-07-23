@@ -373,8 +373,7 @@ public class VisualizerServlet extends HttpServlet {
       Query queryFile;
       Filter propertyFilter = new FilterPredicate("user", FilterOperator.EQUAL, name);
 
-      queryFile = 
-          new Query("File").setFilter(propertyFilter);
+      queryFile = new Query("File").setFilter(propertyFilter);
 
       PreparedQuery fileResults = datastore.prepare(queryFile);
 
