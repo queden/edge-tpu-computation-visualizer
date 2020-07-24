@@ -4,7 +4,6 @@ import com.google.appengine.api.datastore.Blob;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
-import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory.Builder;
 import com.google.appengine.api.datastore.PreparedQuery;
@@ -190,14 +189,14 @@ public class VisualizerServlet extends HttpServlet {
       // Purge all users
       
         if (request.getParameter("users").equals("true")) {
-          purgeAll(true, false);
+          purgeAll(true);
 
           user = "All";
         }
 
         // Purge all files
         if (request.getParameter("files").equals("true")) {
-          purgeAll(false, true);
+          purgeAll(false);
 
           fileJson = new FileJson();
           fileEntity = new Entity("File");
@@ -206,8 +205,7 @@ public class VisualizerServlet extends HttpServlet {
         // Deletes a single user
         if (request.getParameter("user").equals("true")) {
           purgeEntity(
-              true, 
-              false, 
+              true,
               Long.parseLong(request.getParameter("user-id")), 
               request.getParameter("user-name"));
 
@@ -231,7 +229,7 @@ public class VisualizerServlet extends HttpServlet {
             fileEntity = new Entity("File");
           }
 
-          purgeEntity(false, true, id, null);
+          purgeEntity(false, id, null);
         }
       } 
     }  
@@ -349,34 +347,34 @@ public class VisualizerServlet extends HttpServlet {
   }
 
   // Clears datastore of users and/or files as specified
-  private static void purgeAll(boolean users, boolean files) {
+  private static void purgeAll(boolean allUsers) {
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
-    Query queryFile = new Query("File");
-    Query queryUser = new Query("User");
+    if (!allUsers) {
+      Query queryFile = new Query("File");
 
-    if (files) {
       for (Entity entity : ((PreparedQuery) datastore.prepare(queryFile)).asIterable()) {
         datastore.delete(entity.getKey());
       }
+
+      System.out.println(((PreparedQuery) datastore.prepare(queryFile)).countEntities());
     } else {
+      Query queryUser = new Query("User");
+
       for (Entity entity : ((PreparedQuery) datastore.prepare(queryUser)).asIterable()) {
         datastore.delete(entity.getKey());
       }
-    }
 
-    // Check if purge/submit actually happened
-    
-    System.out.println(((PreparedQuery) datastore.prepare(queryFile)).countEntities());
-    System.out.println(((PreparedQuery) datastore.prepare(queryUser)).countEntities());
+      System.out.println(((PreparedQuery) datastore.prepare(queryUser)).countEntities());
+    }
   }
 
   // Deletes a single user or file
-  private static void purgeEntity(boolean user, boolean file, Long id, String name) {
+  private static void purgeEntity(boolean isUser, Long id, String name) {
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
     Key key = null;
 
-    if (user) {
+    if (isUser) {
       // Retrieves the user based on its key
       key = new Builder("User", id).getKey();  
 
