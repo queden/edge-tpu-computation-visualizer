@@ -23,7 +23,7 @@ import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
 
 @RunWith(TestsCaden.class)
-@Suite.SuiteClasses({TestsCaden.TestGetTraceTensor.class, TestsCaden.TestRelateTensorsToInstructions.class})
+@Suite.SuiteClasses({TestsCaden.TestGetTraceTensor.class, TestsCaden.TestRelateTensorsToInstructions.class, TestsCaden.TestGetLayerToInstructionTable.class})
 public final class TestsCaden extends Suite {
 
     public TestsCaden(Class<?> klass, RunnerBuilder builder) throws InitializationError {
@@ -570,6 +570,160 @@ public final class TestsCaden extends Suite {
             }
 
             return createTensorLayerAllocationTable(dist);
+        }
+    }
+
+    public static class TestGetLayerToInstructionTable {
+        private Validation validation;
+        private Instruction.Builder instructionBuilder;
+        private Hashtable<String, List<Integer>> expected;
+
+        private Method mGetLayerToInstructionTable;
+        private Field mInstructions;
+
+        @Before
+        public void setUp() throws NoSuchMethodException,
+        NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
+            instructionBuilder = Instruction.newBuilder();
+
+            expected = new Hashtable<String, List<Integer>>();
+
+            MemaccessCheckerData.Builder protoBuilder = MemaccessCheckerData.newBuilder();
+
+            Validation validation = new Validation(protoBuilder.build());
+
+            mGetLayerToInstructionTable = Validation.class.getDeclaredMethod("getLayerToInstructionTable");
+            mGetLayerToInstructionTable.setAccessible(true);
+
+            mInstructions = Validation.class.getDeclaredField("instructions");
+            mInstructions.setAccessible(true);
+        }
+
+        // No instructions
+        @Test
+        public void testEmptyInstructionList() throws IllegalAccessException, InvocationTargetException {
+            List<Instruction> instructionList = new ArrayList<Instruction>();
+
+            mInstructions.set(validation, instructionList);
+
+            Hashtable<String, List<Integer>> result = (Hashtable<String, List<Integer>>) mGetLayerToInstructionTable.invoke(validation);
+
+            assertEquals(expected, result);
+        }
+
+        // One instruction
+        @Test
+        public void testOneInstructionList() throws IllegalAccessException, InvocationTargetException {
+            List<Instruction> instructionList = new ArrayList<Instruction>();
+
+            List<Integer> instructionTagList = new ArrayList<Integer>();
+
+            instructionBuilder.setTag(1)
+                              .setLayer("1")
+                              .addNarrowRead(50);
+
+            instructionList.add(instructionBuilder.build());
+            instructionTagList.add(1);
+
+            instructionBuilder.clear();
+
+            mInstructions.set(validation, instructionList);
+
+            expected.put("1", instructionTagList);
+
+            Hashtable<String, List<Integer>> result = (Hashtable<String, List<Integer>>) mGetLayerToInstructionTable.invoke(validation);
+
+            assertEquals(expected, result);
+        }
+
+        // Multiple instructions on the same layer
+        @Test
+        public void testMultipleInstructionListSameLayer() throws IllegalAccessException, InvocationTargetException {
+            List<Instruction> instructionList = new ArrayList<Instruction>();
+
+            List<Integer> instructionTagList = new ArrayList<Integer>();
+
+            instructionBuilder.setTag(1)
+                              .setLayer("1")
+                              .addNarrowRead(50);
+
+            instructionList.add(instructionBuilder.build());
+            instructionTagList.add(1);
+
+            instructionBuilder.clear();
+
+            instructionBuilder.setTag(2)
+                              .setLayer("1")
+                              .addNarrowRead(100);
+
+            instructionList.add(instructionBuilder.build());
+            instructionTagList.add(2);
+
+            instructionBuilder.clear();
+
+            instructionBuilder.setTag(3)
+                              .setLayer("1")
+                              .addNarrowRead(150);
+
+            instructionList.add(instructionBuilder.build());
+            instructionTagList.add(3);
+
+            instructionBuilder.clear();
+
+            mInstructions.set(validation, instructionList);
+
+            expected.put("1", instructionTagList);
+
+            Hashtable<String, List<Integer>> result = (Hashtable<String, List<Integer>>) mGetLayerToInstructionTable.invoke(validation);
+
+            assertEquals(expected, result);
+        }
+
+        // Multiple Instructions each on different layers
+        @Test
+        public void testMultipleInstructionListDifferentLayers() throws IllegalAccessException, InvocationTargetException {
+            List<Instruction> instructionList = new ArrayList<Instruction>();
+
+            List<Integer> instructionTagList1 = new ArrayList<Integer>();
+            List<Integer> instructionTagList2 = new ArrayList<Integer>();
+            List<Integer> instructionTagList3 = new ArrayList<Integer>();
+
+            instructionBuilder.setTag(1)
+                              .setLayer("1")
+                              .addNarrowRead(50);
+
+            instructionList.add(instructionBuilder.build());
+            instructionTagList1.add(1);
+
+            instructionBuilder.clear();
+
+            instructionBuilder.setTag(2)
+                              .setLayer("2")
+                              .addNarrowRead(100);
+
+            instructionList.add(instructionBuilder.build());
+            instructionTagList2.add(2);
+
+            instructionBuilder.clear();
+
+            instructionBuilder.setTag(3)
+                              .setLayer("3")
+                              .addNarrowRead(150);
+
+            instructionList.add(instructionBuilder.build());
+            instructionTagList3.add(3);
+
+            instructionBuilder.clear();
+
+            mInstructions.set(validation, instructionList);
+
+            expected.put("1", instructionTagList1);
+            expected.put("2", instructionTagList2);
+            expected.put("3", instructionTagList3);
+
+            Hashtable<String, List<Integer>> result = (Hashtable<String, List<Integer>>) mGetLayerToInstructionTable.invoke(validation);
+
+            assertEquals(expected, result);
         }
     }
 }

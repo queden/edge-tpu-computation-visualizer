@@ -217,17 +217,21 @@ public class Validation {
   private static Hashtable<String, List<Integer>> getLayerToInstructionTable() {
     Hashtable<String, List<Integer>> layerToInstructionTable =
         new Hashtable<String, List<Integer>>();
+
     // Loops over the instructions, finds the instruction's layer corresponding instruction list
     // and adds the instruciton to that list
     for (Instruction instruction : instructions) {
       String instructionLayer = instruction.getLayer();
       List<Integer> layerInstructions = layerToInstructionTable.get(instructionLayer);
+
       if (layerInstructions == null) {
         layerInstructions = new ArrayList<Integer>();
       }
+
       layerInstructions.add(instruction.getTag());
       layerToInstructionTable.put(instructionLayer, layerInstructions);
     }
+    
     return layerToInstructionTable;
   }
 
