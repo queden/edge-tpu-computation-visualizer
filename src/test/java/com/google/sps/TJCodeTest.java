@@ -24,7 +24,9 @@ import org.junit.runners.model.RunnerBuilder;
 @RunWith(TJCodeTest.class)
 @Suite.SuiteClasses({
     TJCodeTest.TestInstructionTagtoInstructionTable.class,
-    TJCodeTest.TestReadValidate.class})
+    TJCodeTest.TestReadValidate.class,
+    TJCodeTest.TestGetTensor.class,
+    TJCodeTest.TestRelateTensorLabelToTensorToTensorAllocation.class})
 public final class TJCodeTest extends Suite {
   private static Class[] classes = {Validation.class};
 
@@ -833,7 +835,7 @@ public final class TJCodeTest extends Suite {
           i++;
       }
 
-      readValidation.invoke(validation,narrow, wide, INSTRUCTION_ONE.getMaskList(), 0, TRACE_ONE);
+      readValidation.invoke(validation, narrow, wide, INSTRUCTION_ONE.getMaskList(), 0, TRACE_ONE);
     }
 
     // Tests two valid read traces in a single instruction
@@ -923,6 +925,607 @@ public final class TJCodeTest extends Suite {
       } catch (InvocationTargetException e) {
         throw e.getTargetException();
       }               
+    }
+  }
+
+  public static class TestGetTensor {
+    private static Validation validation;
+    private static Method getTensor;
+    private Map<Integer, TensorAllocation> tensorLabelToTensorAllocationNarrow;
+    private Map<Integer, TensorAllocation> tensorLabelToTensorAllocationWide;
+    private static int expectedTensor;
+    private static int traceAddress;
+    private static List<Integer> narrowReadTensorList;
+    private static List<Integer> narrowWriteTensorList;
+    private static List<Integer> wideReadTensorList;
+    private static List<Integer> wideWriteTensorList;
+    private static TensorAllocation.Builder alloBuilder = TensorAllocation.newBuilder();
+
+    private static TensorAllocation ALLO_1;
+    private static TensorAllocation ALLO_2;
+    private static TensorAllocation ALLO_3;
+    private static TensorAllocation ALLO_4;
+    private static TensorAllocation ALLO_5;
+    private static TensorAllocation ALLO_6;
+    private static TensorAllocation ALLO_7;
+    private static TensorAllocation ALLO_8;
+    private static TensorAllocation ALLO_9;
+
+    @Before
+    public void setUp() throws NoSuchMethodException, NoSuchFieldException, IllegalAccessException {
+      ALLO_1 = alloBuilder.setTensorLabel(1).setBaseAddress(1024).setSize(5).build();
+      alloBuilder = alloBuilder.clear();
+
+      ALLO_2 = alloBuilder.setTensorLabel(6).setBaseAddress(367).setSize(10).build();
+      alloBuilder = alloBuilder.clear();
+
+      ALLO_3 = alloBuilder.setTensorLabel(17).setBaseAddress(29).setSize(11).build();
+      alloBuilder = alloBuilder.clear();
+
+      ALLO_4 = alloBuilder.setTensorLabel(5).setBaseAddress(28).setSize(9).build();
+      alloBuilder = alloBuilder.clear();
+
+      ALLO_5 = alloBuilder.setTensorLabel(13).setBaseAddress(1029).setSize(3).build();
+      alloBuilder = alloBuilder.clear();
+
+      ALLO_6 = alloBuilder.setTensorLabel(27).setBaseAddress(1329).setSize(19).build();
+      alloBuilder = alloBuilder.clear();
+
+      ALLO_7 = alloBuilder.setTensorLabel(19).setBaseAddress(59).setSize(26).build();
+      alloBuilder = alloBuilder.clear();
+
+      ALLO_8 = alloBuilder.setTensorLabel(2).setBaseAddress(169).setSize(20).build();
+      alloBuilder = alloBuilder.clear();
+
+      ALLO_9 = alloBuilder.setTensorLabel(16).setBaseAddress(476).setSize(3).build();
+      alloBuilder = alloBuilder.clear();
+
+      MemaccessCheckerData.Builder proto = MemaccessCheckerData.newBuilder();
+      validation = new Validation(proto.build());
+
+      getTensor = 
+          Validation.class.getDeclaredMethod(
+              "getTensor",
+              List.class,
+              int.class, 
+              Map.class);
+
+      getTensor.setAccessible(true);
+
+      narrowReadTensorList = 
+          new ArrayList<>(Arrays.asList(ALLO_1.getTensorLabel(), ALLO_2.getTensorLabel(), ALLO_7.getTensorLabel()));
+
+      narrowWriteTensorList = new ArrayList<Integer>(Arrays.asList(ALLO_6.getTensorLabel(), ALLO_8.getTensorLabel()));
+
+      wideReadTensorList = new ArrayList<Integer>(Arrays.asList(ALLO_3.getTensorLabel(), ALLO_9.getTensorLabel()));
+
+      wideWriteTensorList = new ArrayList<Integer>(Arrays.asList(ALLO_4.getTensorLabel(), ALLO_5.getTensorLabel()));
+
+      tensorLabelToTensorAllocationNarrow = new Hashtable<>();
+      tensorLabelToTensorAllocationNarrow.put(ALLO_1.getTensorLabel(), ALLO_1);
+      tensorLabelToTensorAllocationNarrow.put(ALLO_2.getTensorLabel(), ALLO_2);
+      tensorLabelToTensorAllocationNarrow.put(ALLO_7.getTensorLabel(), ALLO_7);
+      tensorLabelToTensorAllocationNarrow.put(ALLO_6.getTensorLabel(), ALLO_6);
+      tensorLabelToTensorAllocationNarrow.put(ALLO_8.getTensorLabel(), ALLO_8);
+
+      tensorLabelToTensorAllocationWide = new Hashtable<>();
+      tensorLabelToTensorAllocationWide.put(ALLO_3.getTensorLabel(), ALLO_3);
+      tensorLabelToTensorAllocationWide.put(ALLO_9.getTensorLabel(), ALLO_9);
+      tensorLabelToTensorAllocationWide.put(ALLO_4.getTensorLabel(), ALLO_4);
+      tensorLabelToTensorAllocationWide.put(ALLO_5.getTensorLabel(), ALLO_5);
+    }
+
+    // ALLO_2
+    @Test
+    public void testCorrectNarrowRead() throws IllegalAccessException, InvocationTargetException {
+      expectedTensor = ALLO_2.getTensorLabel();
+
+      // Base address
+      traceAddress = ALLO_2.getBaseAddress();     
+      assertEquals(
+          expectedTensor, 
+          (int) 
+              getTensor.invoke(
+                  validation,
+                  narrowReadTensorList, 
+                  traceAddress, 
+                  tensorLabelToTensorAllocationNarrow));
+
+      // Mid address
+      traceAddress = ALLO_2.getBaseAddress() + ALLO_2.getSize() / 2;
+      assertEquals(
+          expectedTensor, 
+          (int) 
+              getTensor.invoke(
+                  validation, 
+                  narrowReadTensorList, 
+                  traceAddress, 
+                  tensorLabelToTensorAllocationNarrow));
+
+      // End address
+      traceAddress = ALLO_2.getBaseAddress() + ALLO_2.getSize() - 1;
+      assertEquals(
+          expectedTensor, 
+          (int) 
+              getTensor.invoke(
+                  validation, 
+                  narrowReadTensorList, 
+                  traceAddress, 
+                  tensorLabelToTensorAllocationNarrow));
+    }
+
+    // ALLO_8
+    @Test
+    public void testCorrectNarrowWrite() throws IllegalAccessException, InvocationTargetException {
+      expectedTensor = ALLO_8.getTensorLabel();
+
+      // Base address
+      traceAddress = ALLO_8.getBaseAddress();     
+      assertEquals(
+          expectedTensor, 
+          (int) 
+              getTensor.invoke(
+                  validation, 
+                  narrowWriteTensorList, 
+                  traceAddress, 
+                  tensorLabelToTensorAllocationNarrow));
+
+      // Mid address
+      traceAddress = ALLO_8.getBaseAddress() + ALLO_8.getSize() / 2;
+      assertEquals(
+          expectedTensor, 
+          (int) 
+              getTensor.invoke(
+                  validation, 
+                  narrowWriteTensorList, 
+                  traceAddress, 
+                  tensorLabelToTensorAllocationNarrow));
+
+      // End address
+      traceAddress = ALLO_8.getBaseAddress() + ALLO_8.getSize() - 1;
+      assertEquals(
+          expectedTensor, 
+          (int) 
+              getTensor.invoke(
+                  validation, 
+                  narrowWriteTensorList, 
+                  traceAddress, 
+                  tensorLabelToTensorAllocationNarrow));
+    }
+
+    // ALLO_3
+    @Test
+    public void testCorrectWideRead() throws IllegalAccessException, InvocationTargetException {
+      expectedTensor = ALLO_3.getTensorLabel();
+
+      // Base address
+      traceAddress = ALLO_3.getBaseAddress();     
+      assertEquals(
+          expectedTensor, 
+          (int) 
+              getTensor.invoke(
+                  validation, wideReadTensorList, traceAddress, tensorLabelToTensorAllocationWide));
+
+      // Mid address
+      traceAddress = ALLO_3.getBaseAddress() + ALLO_3.getSize() / 2;
+      assertEquals(
+          expectedTensor, 
+          (int) 
+              getTensor.invoke(
+                  validation, wideReadTensorList, traceAddress, tensorLabelToTensorAllocationWide));
+
+      // End address
+      traceAddress = ALLO_3.getBaseAddress() + ALLO_3.getSize() - 1;
+      assertEquals(
+          expectedTensor, 
+          (int) 
+              getTensor.invoke(
+                  validation, wideReadTensorList, traceAddress, tensorLabelToTensorAllocationWide));
+    }
+
+    // ALLO_5
+    @Test
+    public void testCorrectWideWrite() throws IllegalAccessException, InvocationTargetException {
+      expectedTensor = ALLO_5.getTensorLabel();
+
+      // Base address
+      traceAddress = ALLO_5.getBaseAddress();     
+      assertEquals(
+          expectedTensor, 
+          (int) 
+              getTensor.invoke(
+                validation, 
+                wideWriteTensorList, 
+                traceAddress, 
+                tensorLabelToTensorAllocationWide));
+
+      // Mid address
+      traceAddress = ALLO_5.getBaseAddress() + ALLO_5.getSize() / 2;
+      assertEquals(
+          expectedTensor, 
+          (int) 
+              getTensor.invoke(
+                validation, 
+                wideWriteTensorList, 
+                traceAddress, 
+                tensorLabelToTensorAllocationWide));
+
+      // End address
+      traceAddress = ALLO_5.getBaseAddress() + ALLO_5.getSize() - 1;
+      assertEquals(
+          expectedTensor, 
+          (int) 
+              getTensor.invoke(
+                  validation, 
+                  wideWriteTensorList, 
+                  traceAddress, 
+                  tensorLabelToTensorAllocationWide));
+    }
+
+    // ALLO_7
+    @Test
+    public void testIncorrectNarrowRead() throws IllegalAccessException, InvocationTargetException {
+      expectedTensor = -1;
+
+      // Before base address
+      traceAddress = ALLO_7.getBaseAddress() - 1;     
+      assertEquals(
+          expectedTensor, 
+          (int) 
+              getTensor.invoke(
+                  validation, 
+                  narrowReadTensorList, 
+                  traceAddress, 
+                  tensorLabelToTensorAllocationNarrow));
+
+      // After end address
+      traceAddress = ALLO_7.getBaseAddress() + ALLO_7.getSize();
+      assertEquals(
+          expectedTensor, 
+          (int) 
+              getTensor.invoke(
+                  validation, 
+                  narrowReadTensorList, 
+                  traceAddress, 
+                  tensorLabelToTensorAllocationNarrow));
+    }
+
+    // ALLO_6
+    @Test
+    public void testIncorrectNarrowWrite() throws IllegalAccessException, InvocationTargetException {
+      expectedTensor = -1;
+
+      // Before base address
+      traceAddress = ALLO_6.getBaseAddress() - 1;     
+      assertEquals(
+          expectedTensor, 
+          (int) 
+              getTensor.invoke(
+                validation, 
+                narrowWriteTensorList, 
+                traceAddress, 
+                tensorLabelToTensorAllocationNarrow));
+
+      // After end address
+      traceAddress = ALLO_6.getBaseAddress() + ALLO_6.getSize();
+      assertEquals(
+          expectedTensor, 
+          (int) 
+              getTensor.invoke(
+                validation, 
+                narrowWriteTensorList, 
+                traceAddress, 
+                tensorLabelToTensorAllocationNarrow));
+    }
+
+    // ALLO_9
+    @Test
+    public void testIncorrectWideRead() throws IllegalAccessException, InvocationTargetException {
+      expectedTensor = -1;
+
+      // Before base address
+      traceAddress = ALLO_9.getBaseAddress() - 1;     
+      assertEquals(
+          expectedTensor, 
+          (int) 
+              getTensor.invoke(
+                  validation, wideReadTensorList, traceAddress, tensorLabelToTensorAllocationWide));
+
+      // After end address
+      traceAddress = ALLO_9.getBaseAddress() + ALLO_9.getSize();
+      assertEquals(
+          expectedTensor, 
+          (int) 
+              getTensor.invoke(
+                  validation, wideReadTensorList, traceAddress, tensorLabelToTensorAllocationWide));
+    }
+
+    // ALLO_4
+    @Test
+    public void testIncorrectWideWrite() throws IllegalAccessException, InvocationTargetException {
+      expectedTensor = -1;
+
+      // Before base address
+      traceAddress = ALLO_4.getBaseAddress() - 1;     
+      assertEquals(
+          expectedTensor, 
+          (int) 
+              getTensor.invoke(
+                  validation, 
+                  wideWriteTensorList, 
+                  traceAddress, 
+                  tensorLabelToTensorAllocationWide));
+
+      // After end address
+      traceAddress = ALLO_4.getBaseAddress() + ALLO_4.getSize();
+      assertEquals(
+          expectedTensor, 
+          (int) 
+              getTensor.invoke(
+                  validation, 
+                  wideWriteTensorList, 
+                  traceAddress, 
+                  tensorLabelToTensorAllocationWide));
+    }
+  }
+
+  public static class TestRelateTensorLabelToTensorToTensorAllocation {
+    private static Validation validation;
+    private static Method relateTensorLabelToTensorAllocation;
+    
+    private static TensorLayerAllocationTable layer1NarrowAllocations;
+    private static TensorLayerAllocationTable layer1WideAllocations;
+    private static TensorLayerAllocationTable layer2NarrowAllocations;
+    private static TensorLayerAllocationTable layer2WideAllocations;
+    
+    private TensorTileAllocationTable tile1Allocations;
+    private TensorTileAllocationTable tile2Allocations;
+    private TensorTileAllocationTable tile3Allocations;
+    
+    private static Map<Integer, TensorAllocation> expectedTableTwoLayers;
+    private static Map<Integer, TensorAllocation> expectedTableLayerOne;
+    private static Map<Integer, TensorAllocation> expectedTableLayerTwo;
+    
+    private static TensorAllocation.Builder alloBuilder = TensorAllocation.newBuilder();
+
+    private static TensorAllocation ALLO_1;
+    private static TensorAllocation ALLO_2;
+    private static TensorAllocation ALLO_3;
+    private static TensorAllocation ALLO_4;
+    private static TensorAllocation ALLO_5;
+    private static TensorAllocation ALLO_6;
+    private static TensorAllocation ALLO_7;
+    private static TensorAllocation ALLO_8;
+    private static TensorAllocation ALLO_9;
+
+    @Before
+    public void setUp() throws NoSuchMethodException, NoSuchFieldException, IllegalAccessException {
+      ALLO_1 = alloBuilder.setTensorLabel(1).setBaseAddress(1024).setSize(5).build();
+      alloBuilder = alloBuilder.clear();
+
+      ALLO_2 = alloBuilder.setTensorLabel(6).setBaseAddress(367).setSize(10).build();
+      alloBuilder = alloBuilder.clear();
+
+      ALLO_3 = alloBuilder.setTensorLabel(17).setBaseAddress(29).setSize(11).build();
+      alloBuilder = alloBuilder.clear();
+
+      ALLO_4 = alloBuilder.setTensorLabel(5).setBaseAddress(28).setSize(9).build();
+      alloBuilder = alloBuilder.clear();
+
+      ALLO_5 = alloBuilder.setTensorLabel(13).setBaseAddress(1029).setSize(3).build();
+      alloBuilder = alloBuilder.clear();
+
+      ALLO_6 = alloBuilder.setTensorLabel(27).setBaseAddress(1329).setSize(19).build();
+      alloBuilder = alloBuilder.clear();
+
+      ALLO_7 = alloBuilder.setTensorLabel(19).setBaseAddress(59).setSize(26).build();
+      alloBuilder = alloBuilder.clear();
+
+      ALLO_8 = alloBuilder.setTensorLabel(2).setBaseAddress(169).setSize(20).build();
+      alloBuilder = alloBuilder.clear();
+
+      ALLO_9 = alloBuilder.setTensorLabel(16).setBaseAddress(476).setSize(3).build();
+      alloBuilder = alloBuilder.clear();
+
+      MemaccessCheckerData.Builder proto = MemaccessCheckerData.newBuilder();
+      validation = new Validation(proto.build());
+
+      relateTensorLabelToTensorAllocation = 
+          Validation.class.getDeclaredMethod("relateTensorLabelToTensorAllocation", List.class);
+
+      relateTensorLabelToTensorAllocation.setAccessible(true);
+
+      TensorLayerAllocationTable.Builder layerBuilder = TensorLayerAllocationTable.newBuilder();
+      TensorTileAllocationTable.Builder tileBuilder = TensorTileAllocationTable.newBuilder();
+
+      List<TensorAllocation> allocations = new ArrayList<>();
+      // Layer 1, narrow
+
+      // Tile 1
+      allocations = new ArrayList<TensorAllocation>(Arrays.asList(ALLO_1, ALLO_2));
+      tile1Allocations = tileBuilder.addAllTensorAllocation(allocations).build();
+      tileBuilder = tileBuilder.clear();
+
+      // Tile 2
+      allocations = new ArrayList<TensorAllocation>();
+      tile2Allocations = tileBuilder.addAllTensorAllocation(allocations).build();
+      tileBuilder = tileBuilder.clear();
+
+      // Tile 3
+      allocations = new ArrayList<TensorAllocation>(Arrays.asList(ALLO_6, ALLO_7));
+      tile3Allocations = tileBuilder.addAllTensorAllocation(allocations).build();
+      tileBuilder = tileBuilder.clear();
+
+      layer1NarrowAllocations = 
+          layerBuilder
+              .setLayer("A")
+              .addAllTensorTileAllocation(
+                  new ArrayList<TensorTileAllocationTable>(
+                      Arrays.asList(tile1Allocations, tile2Allocations, tile3Allocations)))
+              .build();
+
+      layerBuilder = layerBuilder.clear();
+
+      // Layer 1, wide
+
+      // Tile 1
+      allocations = new ArrayList<TensorAllocation>(Arrays.asList(ALLO_3));
+      tile1Allocations = tileBuilder.addAllTensorAllocation(allocations).build();
+      tileBuilder = tileBuilder.clear();
+
+      // Tile 2
+      allocations = new ArrayList<TensorAllocation>(Arrays.asList(ALLO_4, ALLO_5));
+      tile2Allocations = tileBuilder.addAllTensorAllocation(allocations).build();
+      tileBuilder = tileBuilder.clear();
+
+      // Tile 3
+      allocations = new ArrayList<TensorAllocation>(Arrays.asList());
+      tile3Allocations = tileBuilder.addAllTensorAllocation(allocations).build();
+      tileBuilder = tileBuilder.clear();
+
+      layer1WideAllocations = 
+          layerBuilder
+              .setLayer("A")
+              .addAllTensorTileAllocation(
+                  new ArrayList<TensorTileAllocationTable>(
+                      Arrays.asList(tile1Allocations, tile2Allocations, tile3Allocations)))
+              .build();
+
+      layerBuilder = layerBuilder.clear();
+
+      // Layer 2, narrow
+
+      // Tile 1
+      allocations = new ArrayList<TensorAllocation>(Arrays.asList(ALLO_8));
+      tile1Allocations = tileBuilder.addAllTensorAllocation(allocations).build();
+      tileBuilder = tileBuilder.clear();
+
+
+      // Tile 2
+      allocations = new ArrayList<TensorAllocation>(Arrays.asList());
+      tile2Allocations = tileBuilder.addAllTensorAllocation(allocations).build();
+      tileBuilder = tileBuilder.clear();
+      allocations = new ArrayList<>();
+
+      // Tile 3
+      allocations = new ArrayList<TensorAllocation>(Arrays.asList());
+      tile3Allocations = tileBuilder.addAllTensorAllocation(allocations).build();
+      tileBuilder = tileBuilder.clear();
+      allocations = new ArrayList<>();
+
+      layer2NarrowAllocations = 
+          layerBuilder
+              .setLayer("B")
+              .addAllTensorTileAllocation(
+                  new ArrayList<TensorTileAllocationTable>(
+                      Arrays.asList(tile1Allocations, tile2Allocations, tile3Allocations)))
+              .build();
+
+      layerBuilder = layerBuilder.clear();
+
+      // Layer 2, wide
+
+      // Tile 1
+      allocations = new ArrayList<TensorAllocation>(Arrays.asList());
+      tile1Allocations = tileBuilder.addAllTensorAllocation(allocations).build();
+      tileBuilder = tileBuilder.clear();
+      allocations = new ArrayList<>();
+
+      // Tile 2
+      allocations = new ArrayList<TensorAllocation>(Arrays.asList(ALLO_9));
+      tile2Allocations = tileBuilder.addAllTensorAllocation(allocations).build();
+      tileBuilder = tileBuilder.clear();
+      allocations = new ArrayList<>();
+
+      // Tile 3
+      allocations = new ArrayList<TensorAllocation>(Arrays.asList());
+      tile3Allocations = tileBuilder.addAllTensorAllocation(allocations).build();
+      tileBuilder = tileBuilder.clear();
+      allocations = new ArrayList<>();
+
+      layer2WideAllocations = 
+          layerBuilder
+              .setLayer("B")
+              .addAllTensorTileAllocation(
+                  new ArrayList<TensorTileAllocationTable>(
+                      Arrays.asList(tile1Allocations, tile2Allocations, tile3Allocations)))
+              .build();
+
+      layerBuilder = layerBuilder.clear();
+
+      expectedTableTwoLayers = new Hashtable<>();
+      expectedTableTwoLayers.put(ALLO_1.getTensorLabel(), ALLO_1);
+      expectedTableTwoLayers.put(ALLO_2.getTensorLabel(), ALLO_2);
+      expectedTableTwoLayers.put(ALLO_7.getTensorLabel(), ALLO_7);
+      expectedTableTwoLayers.put(ALLO_6.getTensorLabel(), ALLO_6);
+      expectedTableTwoLayers.put(ALLO_8.getTensorLabel(), ALLO_8);
+      expectedTableTwoLayers.put(ALLO_3.getTensorLabel(), ALLO_3);
+      expectedTableTwoLayers.put(ALLO_9.getTensorLabel(), ALLO_9);
+      expectedTableTwoLayers.put(ALLO_4.getTensorLabel(), ALLO_4);
+      expectedTableTwoLayers.put(ALLO_5.getTensorLabel(), ALLO_5);
+
+      expectedTableLayerOne = new Hashtable<>();
+      expectedTableLayerOne.put(ALLO_1.getTensorLabel(), ALLO_1);
+      expectedTableLayerOne.put(ALLO_2.getTensorLabel(), ALLO_2);
+      expectedTableLayerOne.put(ALLO_7.getTensorLabel(), ALLO_7);
+      expectedTableLayerOne.put(ALLO_6.getTensorLabel(), ALLO_6);
+      expectedTableLayerOne.put(ALLO_4.getTensorLabel(), ALLO_4);
+      expectedTableLayerOne.put(ALLO_3.getTensorLabel(), ALLO_3);
+      expectedTableLayerOne.put(ALLO_5.getTensorLabel(), ALLO_5);
+
+      expectedTableLayerTwo = new Hashtable<>();
+      expectedTableLayerTwo.put(ALLO_8.getTensorLabel(), ALLO_8);
+      expectedTableLayerTwo.put(ALLO_9.getTensorLabel(), ALLO_9);
+    }
+
+    @Test
+    public void testEmptyLayer() throws IllegalAccessException, InvocationTargetException {
+      TensorLayerAllocationTable.Builder layerBuilder = TensorLayerAllocationTable.newBuilder();
+
+      TensorLayerAllocationTable emptyLayer = 
+          layerBuilder
+              .setLayer("C")
+              .addAllTensorTileAllocation(new ArrayList<TensorTileAllocationTable>(Arrays.asList()))
+              .build();
+
+      assertEquals(
+          new Hashtable<Integer, TensorAllocation>(), 
+          relateTensorLabelToTensorAllocation.invoke(
+              validation, new ArrayList<TensorLayerAllocationTable>(Arrays.asList(emptyLayer))));
+    }
+
+    @Test
+    public void testLayerOne() throws IllegalAccessException, InvocationTargetException {
+      assertEquals(
+          expectedTableLayerOne, 
+          relateTensorLabelToTensorAllocation.invoke(
+              validation, 
+              new ArrayList<TensorLayerAllocationTable>(
+                  Arrays.asList(layer1NarrowAllocations, layer1WideAllocations))));
+    }
+
+    @Test
+    public void testLayerTwo() throws IllegalAccessException, InvocationTargetException {
+      assertEquals(
+          expectedTableLayerTwo, 
+          relateTensorLabelToTensorAllocation.invoke(
+              validation, 
+              new ArrayList<TensorLayerAllocationTable>(
+                  Arrays.asList(layer2NarrowAllocations, layer2WideAllocations))));
+    }
+
+    @Test
+    public void testTwoLayers() throws IllegalAccessException, InvocationTargetException {
+      assertEquals(
+          expectedTableTwoLayers, 
+          relateTensorLabelToTensorAllocation.invoke(
+              validation, 
+              new ArrayList<TensorLayerAllocationTable>(
+                  Arrays.asList(
+                      layer1NarrowAllocations, 
+                      layer1WideAllocations, 
+                      layer2NarrowAllocations, 
+                      layer2WideAllocations))));
     }
   }
 }
