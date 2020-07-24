@@ -44,6 +44,7 @@ public class VisualizerServlet extends HttpServlet {
   private static String user = "All";
   private static FileJson fileJson = new FileJson();
   private static Entity fileEntity = new Entity("File");
+  private static String errorMessage = "";
 
   @Override 
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -73,7 +74,10 @@ public class VisualizerServlet extends HttpServlet {
                 getUsers(), 
                 user, 
                 timeZone, 
-                dateTime.format(formatter));
+                dateTime.format(formatter),
+                errorMessage);
+        
+        errorMessage = "";
 
         Gson gson = new Gson();
 
@@ -99,6 +103,8 @@ public class VisualizerServlet extends HttpServlet {
             userEntity.setProperty("user-name", user);
             userEntity.setProperty("time", new Date());
             datastore.put(userEntity);
+          } else {
+            errorMessage = "User already exists.";
           }
         }     
       } 
@@ -122,16 +128,20 @@ public class VisualizerServlet extends HttpServlet {
       // Will not execute if the user failed to select a file after clicking "upload"
       if (filePart.getSubmittedFileName().length() > 0) {
         InputStream fileInputStream = filePart.getInputStream();
+        MemaccessCheckerData memaccessChecker;
 
-        // IF BINARY FILE
-        // byte[] byteArray = ByteStreams.toByteArray(fileInputStream);
-        // MemaccessCheckerData memaccessChecker = MemaccessCheckerData.parseFrom(byteArray);
-
-        // IF TEXT FILE
-        InputStreamReader reader = new InputStreamReader(fileInputStream, "ASCII");
-        MemaccessCheckerData.Builder builder = MemaccessCheckerData.newBuilder();
-        TextFormat.merge(reader, builder);
-        MemaccessCheckerData memaccessChecker = builder.build();
+        // Checks if the file uploaded is a binary file or a text file
+        if (filePart.getSubmittedFileName().toLowerCase().endsWith(".bin")) {
+          // IF BINARY FILE
+          byte[] byteArray = ByteStreams.toByteArray(fileInputStream);
+          memaccessChecker = MemaccessCheckerData.parseFrom(byteArray);
+        } else {
+          // IF TEXT FILE
+          InputStreamReader reader = new InputStreamReader(fileInputStream, "ASCII");
+          MemaccessCheckerData.Builder builder = MemaccessCheckerData.newBuilder();
+          TextFormat.merge(reader, builder);
+          memaccessChecker = builder.build();
+        }
 
         // Put the simulation trace proto into datastore
         ZonedDateTime dateTime = ZonedDateTime.now(ZoneId.of(ZoneOffset.UTC.getId()));

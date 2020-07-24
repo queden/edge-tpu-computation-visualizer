@@ -97,6 +97,11 @@ async function uploadFile() {
   const users = response.users;
   const currentUser = response.currentUser;
   const zone = response.zone;
+  const errorMessage = response.errorMessage;
+
+  if (errorMessage != '') {
+    alert("User already exists");
+  }
 
   const box = document.getElementById("uploaded-file");
   box.innerHTML = '';
