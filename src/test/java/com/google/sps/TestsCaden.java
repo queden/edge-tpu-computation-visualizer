@@ -319,14 +319,31 @@ public final class TestsCaden extends Suite {
         @Test
         public void testEmptyAllocationTable() throws InvalidTensorAddressException, IllegalAccessException, InvocationTargetException {
             mInstructions.set(validation, new ArrayList<Instruction>());
+
             mInstructionTagToInstruction.set(validation, new Hashtable<Integer, Instruction>());
 
             List<TensorLayerAllocationTable> emptyTable = new ArrayList<TensorLayerAllocationTable>();
 
             mRelateTensorsToInstructions.invoke(validation, emptyTable, true);
             
-            // Make sure it runs without exceptions
+            // Make sure it runs without doing anything
+            assertEquals(new Hashtable<Integer, Instruction>(), mInstructionTagToInstruction.get(validation));
         }
+
+        // Empty allocation table, make sure nothing happens
+        @Test
+        public void testNonEmptyAllocationTableEmptyInstructions() throws InvalidTensorAddressException, IllegalAccessException, InvocationTargetException {
+            mInstructions.set(validation, new ArrayList<Instruction>());
+
+            mInstructionTagToInstruction.set(validation, new Hashtable<Integer, Instruction>());
+
+            List<TensorLayerAllocationTable> table = createTensorLayerAllocationTable(1, 1);
+
+            mRelateTensorsToInstructions.invoke(validation, table, true);
+            
+            // Make sure it runs without doing anything
+            assertEquals(new Hashtable<Integer, Instruction>(), mInstructionTagToInstruction.get(validation));
+        }        
 
         // One layer allocation table with valid instruction
         @Test
@@ -350,30 +367,176 @@ public final class TestsCaden extends Suite {
 
             List<TensorLayerAllocationTable> table = createTensorLayerAllocationTable(1, 1);
 
-            System.out.println(table);
+            mRelateTensorsToInstructions.invoke(validation, table, true);
+            
+            Hashtable<Integer, Instruction> resultingTable = (Hashtable<Integer, Instruction>) mInstructionTagToInstruction.get(validation);
+
+            Instruction resultingInstruction = resultingTable.get(1);
+
+            assertEquals(1, resultingInstruction.getNarrowWrite(0));
+        }
+
+        // Multiple layer allocation table with valid instruction
+        @Test
+        public void testMultiLayerAllocationTable() throws InvalidTensorAddressException, IllegalAccessException, InvocationTargetException {
+            ArrayList<Instruction> instructions = new ArrayList<Instruction>();
+
+            instructionBuilder.setLayer("0")
+                              .setTag(1)
+                              .addNarrowWrite(50);
+
+            Instruction instruction1 = instructionBuilder.build();
+
+            instructions.add(instruction1);
+
+            instructionBuilder.clear()
+                              .setLayer("1")
+                              .setTag(2)
+                              .addNarrowRead(67);
+
+            Instruction instruction2 = instructionBuilder.build();
+
+            instructions.add(instruction2);
+
+            Hashtable<Integer, Instruction> tagToInstruction = new Hashtable<Integer, Instruction>();
+
+            tagToInstruction.put(1, instruction1);
+            tagToInstruction.put(2, instruction2);
+
+            mInstructions.set(validation, instructions);
+            mInstructionTagToInstruction.set(validation, tagToInstruction);
+
+            List<TensorLayerAllocationTable> table = createTensorLayerAllocationTable(2, 1);
 
             mRelateTensorsToInstructions.invoke(validation, table, true);
             
             Hashtable<Integer, Instruction> resultingTable = (Hashtable<Integer, Instruction>) mInstructionTagToInstruction.get(validation);
 
-            System.out.println(resultingTable);
+            Instruction resultingInstruction1 = resultingTable.get(1);
+            Instruction resultingInstruction2 = resultingTable.get(2);
 
-            Instruction resultingInstruction = resultingTable.get(1);
-
-            assertEquals(0, resultingInstruction.getNarrowWrite(0));
+            assertEquals(1, resultingInstruction1.getNarrowWrite(0));
+            assertEquals(2, resultingInstruction2.getNarrowRead(0));
         }
 
-        public static List<TensorLayerAllocationTable> createTensorLayerAllocationTable(int numLayers, int numTensors) {
+        // One layer allocation table with multiple tensors allocated
+        @Test
+        public void testOneLayerMultipleTensors() throws InvalidTensorAddressException, IllegalAccessException, InvocationTargetException {
+            ArrayList<Instruction> instructions = new ArrayList<Instruction>();
+
+            instructionBuilder.setLayer("0")
+                              .setTag(1)
+                              .addNarrowWrite(150);
+
+            Instruction instruction1 = instructionBuilder.build();
+
+            instructions.add(instruction1);
+
+            Hashtable<Integer, Instruction> tagToInstruction = new Hashtable<Integer, Instruction>();
+
+            tagToInstruction.put(1, instruction1);
+
+            mInstructions.set(validation, instructions);
+            mInstructionTagToInstruction.set(validation, tagToInstruction);
+
+            List<TensorLayerAllocationTable> table = createTensorLayerAllocationTable(1, 3);
+
+            mRelateTensorsToInstructions.invoke(validation, table, true);
+            
+            Hashtable<Integer, Instruction> resultingTable = (Hashtable<Integer, Instruction>) mInstructionTagToInstruction.get(validation);
+
+            Instruction resultingInstruction1 = resultingTable.get(1);
+
+            assertEquals(2, resultingInstruction1.getNarrowWrite(0));
+        }
+
+        // Multiple layer allocation table with invalid instruction
+        @Test (expected = InvalidTensorAddressException.class)
+        public void testMultiLayerAllocationTableWithInvalidInstruction() throws InvalidTensorAddressException, IllegalAccessException, InvocationTargetException, Throwable {
+            ArrayList<Instruction> instructions = new ArrayList<Instruction>();
+
+            instructionBuilder.setLayer("0")
+                              .setTag(1)
+                              .addNarrowWrite(267);
+
+            Instruction instruction1 = instructionBuilder.build();
+
+            instructions.add(instruction1);
+
+            Hashtable<Integer, Instruction> tagToInstruction = new Hashtable<Integer, Instruction>();
+
+            tagToInstruction.put(1, instruction1);
+
+            mInstructions.set(validation, instructions);
+            mInstructionTagToInstruction.set(validation, tagToInstruction);
+
+            List<TensorLayerAllocationTable> table = createTensorLayerAllocationTable(2, 2);
+
+            try {
+                mRelateTensorsToInstructions.invoke(validation, table, true);
+            } catch (InvocationTargetException e) {
+                throw e.getTargetException();
+            }
+            
+            Hashtable<Integer, Instruction> resultingTable = (Hashtable<Integer, Instruction>) mInstructionTagToInstruction.get(validation);
+
+            Instruction resultingInstruction1 = resultingTable.get(1);
+
+            assertEquals(1, resultingInstruction1.getNarrowWrite(0));
+        }
+
+        // Multiple layer allocation table with invalid instruction
+        @Test (expected = InvalidTensorAddressException.class)
+        public void testMultiLayerAllocationTableWithInstructionInvalidOnCurrentLayer() throws InvalidTensorAddressException, IllegalAccessException, InvocationTargetException, Throwable {
+            ArrayList<Instruction> instructions = new ArrayList<Instruction>();
+
+            instructionBuilder.setLayer("1")
+                              .setTag(1)
+                              .addNarrowWrite(150);
+
+            Instruction instruction1 = instructionBuilder.build();
+
+            instructions.add(instruction1);
+
+            Hashtable<Integer, Instruction> tagToInstruction = new Hashtable<Integer, Instruction>();
+
+            tagToInstruction.put(1, instruction1);
+
+            mInstructions.set(validation, instructions);
+            mInstructionTagToInstruction.set(validation, tagToInstruction);
+
+            int[] dist = {2, 1, 2};
+
+            List<TensorLayerAllocationTable> table = createTensorLayerAllocationTable(dist);
+
+            try {
+                mRelateTensorsToInstructions.invoke(validation, table, true);
+            } catch (InvocationTargetException e) {
+                throw e.getTargetException();
+            }
+            
+            Hashtable<Integer, Instruction> resultingTable = (Hashtable<Integer, Instruction>) mInstructionTagToInstruction.get(validation);
+
+            Instruction resultingInstruction1 = resultingTable.get(1);
+
+            assertEquals(1, resultingInstruction1.getNarrowWrite(0));
+        }
+
+        /** 
+        * Helper method that creates a tensor layer allocation table for a specified number of layers and tensors.
+        * Input array's length is number of layers, each entry is tensors on that layer
+        */
+        public static List<TensorLayerAllocationTable> createTensorLayerAllocationTable(int[] distribution) {
             List<TensorLayerAllocationTable> table = new ArrayList<TensorLayerAllocationTable>();
 
             TensorLayerAllocationTable.Builder tlatBuilder = TensorLayerAllocationTable.newBuilder();
             TensorTileAllocationTable.Builder ttatBuilder = TensorTileAllocationTable.newBuilder();
             TensorAllocation.Builder taBuilder = TensorAllocation.newBuilder();
 
-            int tensorLabel = 0;
+            int tensorLabel = 1;
 
-            for (int i = 0; i < numLayers; i++) {
-                for (int j = 0; j < numTensors; j++) {
+            for (int i = 0; i < distribution.length; i++) {
+                for (int j = 0; j < distribution[i]; j++) {
                     taBuilder.setTensorLabel(tensorLabel);
                     taBuilder.setBaseAddress(j * 100);
                     taBuilder.setSize(100);
@@ -381,13 +544,32 @@ public final class TestsCaden extends Suite {
                     ttatBuilder.addTensorAllocation(0, taBuilder.build());
 
                     tensorLabel++;
+
+                    taBuilder.clear();
                 }
                 tlatBuilder.setLayer(String.valueOf(i)).addTensorTileAllocation(ttatBuilder.build());
 
+                ttatBuilder.clear();
+
                 table.add(tlatBuilder.build());
+
+                tlatBuilder.clear();
             }
 
             return table;
+        }
+
+        /**
+        * Creates a tensor layer allocation table with a specified number of layers, each with that number of tensors.
+        */
+        public static List<TensorLayerAllocationTable> createTensorLayerAllocationTable(int numLayers, int numTensors) {
+            int[] dist = new int[numLayers];
+
+            for (int i = 0; i < numLayers; i++) {
+                dist[i] = numTensors;
+            }
+
+            return createTensorLayerAllocationTable(dist);
         }
     }
 }
