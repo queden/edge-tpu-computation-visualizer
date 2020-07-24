@@ -188,9 +188,17 @@ public class Validation {
           writes.set(i, tensorLabel);
         }
         if (isNarrow) {
+          // Clear current values of reads and writes, which refer to base addresses
+          instructionBuilder.clearNarrowRead();
+          instructionBuilder.clearNarrowWrite();
+
           instructionBuilder.addAllNarrowRead(reads);
           instructionBuilder.addAllNarrowWrite(writes);
         } else {
+          // Clear current values of reads and writes, which refer to base addresses
+          instructionBuilder.clearWideRead();
+          instructionBuilder.clearWideWrite();
+
           instructionBuilder.addAllWideRead(reads);
           instructionBuilder.addAllWideWrite(writes);
         }
