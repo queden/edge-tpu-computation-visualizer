@@ -1,5 +1,7 @@
 package com.google.sps.servlets;
 
+// import com.google.appengine.api.blobstore.BlobstoreInputStream;
+// import com.google.appengine.api.blobstore.BlobKey;
 import com.google.appengine.api.datastore.Blob;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
@@ -12,6 +14,13 @@ import com.google.appengine.api.datastore.Query.Filter;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
 import com.google.appengine.api.datastore.Query.SortDirection;
+import com.google.appengine.tools.cloudstorage.GcsFileOptions;
+import com.google.appengine.tools.cloudstorage.GcsFilename;
+import com.google.appengine.tools.cloudstorage.GcsInputChannel;
+import com.google.appengine.tools.cloudstorage.GcsOutputChannel;
+import com.google.appengine.tools.cloudstorage.GcsService;
+import com.google.appengine.tools.cloudstorage.GcsServiceFactory;
+import com.google.appengine.tools.cloudstorage.RetryParams;
 import com.google.common.io.ByteStreams;
 import com.google.gson.Gson;
 import com.google.protobuf.TextFormat;
@@ -19,6 +28,7 @@ import com.google.sps.data.*;
 import com.google.sps.proto.MemaccessCheckerDataProto.*;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.InputStreamReader;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -142,26 +152,39 @@ public class VisualizerServlet extends HttpServlet {
           memaccessChecker = builder.build();
         }
 
-        // Put the simulation trace proto into datastore
+        // Put the file information into datastore
         ZonedDateTime dateTime = ZonedDateTime.now(ZoneId.of(ZoneOffset.UTC.getId()));
         DateTimeFormatter formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME;
+
+        String checkerName = (memaccessChecker.getName().equals("")) 
+                ? filePart.getSubmittedFileName() 
+                : memaccessChecker.getName();
 
         Entity memaccessCheckerUpload = new Entity("File");
         memaccessCheckerUpload.setProperty("date", dateTime.format(formatter));
         memaccessCheckerUpload.setProperty("time", new Date());
-        memaccessCheckerUpload.setProperty(
-            "name",
-            (memaccessChecker.getName().equals("")) 
-                ? filePart.getSubmittedFileName() 
-                : memaccessChecker.getName());
-
+        memaccessCheckerUpload.setProperty("name", checkerName);
         memaccessCheckerUpload.setProperty("user", user);
         memaccessCheckerUpload.setProperty(
-            "memaccess-checker", new Blob(memaccessChecker.toByteArray()));        
+            "memaccess-checker", dateTime.format(formatter) + ":" + checkerName);        
 
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-        datastore.put(memaccessCheckerUpload);
         
+        datastore.put(memaccessCheckerUpload);
+
+        // Write file to Cloud Storage using the file's upload time and name as it's unique id
+        GcsFileOptions instance = GcsFileOptions.getDefaultInstance();
+
+        GcsService gcsService = GcsServiceFactory.createGcsService();
+        GcsFilename fileNameWrite = new GcsFilename("trace_info_files", dateTime.format(formatter) + ":" + checkerName);
+
+        // Gets the file in its byte array form
+        byte[] byteArray = memaccessChecker.toByteArray();
+        ByteBuffer buffer = ByteBuffer.wrap(byteArray, 0, barr.length);
+
+        // Create and write to the GCS object
+        gcsService.createOrReplace(fileNameWrite, instance, buffer);
+
         // Updates the last submitted file
         fileEntity = memaccessCheckerUpload;
 
@@ -186,8 +209,8 @@ public class VisualizerServlet extends HttpServlet {
     } else {
       // Purges datastore as specified
       if (request.getParameter("purge").equals("true")) {
-      // Purge all users
-      
+
+        // Purge all users
         if (request.getParameter("users").equals("true")) {
           purgeAll(true);
 

@@ -7,12 +7,22 @@ import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory.Builder;
+import com.google.appengine.tools.cloudstorage.GcsFileOptions;
+import com.google.appengine.tools.cloudstorage.GcsFilename;
+import com.google.appengine.tools.cloudstorage.GcsInputChannel;
+import com.google.appengine.tools.cloudstorage.GcsOutputChannel;
+import com.google.appengine.tools.cloudstorage.GcsService;
+import com.google.appengine.tools.cloudstorage.GcsServiceFactory;
+import com.google.appengine.tools.cloudstorage.RetryParams;
+import com.google.common.io.ByteStreams;
 import com.google.gson.Gson;
 import com.google.sps.data.*;
 import com.google.sps.Validation;
 import com.google.sps.proto.MemaccessCheckerDataProto.*;
 import com.google.sps.results.*;
+import java.io.InputStream;
 import java.io.IOException;
+import java.nio.channels.Channels;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -41,10 +51,16 @@ public class ReportServlet extends HttpServlet {
           System.out.println("file not found.");
         }
 
-        // Parses the simulation trace out of the respective entity's Blob in datastore
-        MemaccessCheckerData memaccessChecker = 
-            MemaccessCheckerData.parseFrom(
-                ((Blob) retrievedMemaccessChecker.getProperty("memaccess-checker")).getBytes());
+        // Retrive and read file from Cloud Storage
+        GcsService gcsService = GcsServiceFactory.createGcsService();
+        GcsFilename fileName = new GcsFilename("trace_info_files", retrievedMemaccessChecker.getProperty("memaccess-checker").toString());
+
+        GcsInputChannel readChannel = gcsService.openReadChannel(fileName, 0);
+        InputStream fileStream = Channels.newInputStream(readChannel);
+
+        // Gets the file as a byte array and parses it into proto message
+        byte[] byteArray = ByteStreams.toByteArray(fileStream);
+        MemaccessCheckerData memaccessChecker = MemaccessCheckerData.parseFrom(byteArray);
 
         validation = new Validation(memaccessChecker);
 
