@@ -32,7 +32,6 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Date;
 import javax.servlet.ServletException;
@@ -257,7 +256,8 @@ public class VisualizerServlet extends HttpServlet {
   }
 
   // Creates a proto message out of the uploaded file's input stream
-  private static MemaccessCheckerData getMessage(InputStream fileInputStream, Part filePart) throws IOException, InvalidProtocolBufferException, UnsupportedEncodingException {
+  private static MemaccessCheckerData getMessage(InputStream fileInputStream, Part filePart) 
+      throws IOException, InvalidProtocolBufferException, UnsupportedEncodingException {
     // Checks if the file uploaded is a binary file or a text file
     if (filePart.getSubmittedFileName().toLowerCase().endsWith(".bin")) {
       // If binary file
@@ -443,7 +443,8 @@ public class VisualizerServlet extends HttpServlet {
   }
 
   // Deletes a single user or file from datastore and/or Cloud Storage
-  private static void purgeEntity(boolean isUser, Long id, String name) throws IOException, EntityNotFoundException {
+  private static void purgeEntity(boolean isUser, Long id, String name) 
+      throws IOException, EntityNotFoundException {
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
     Key key = null;
 
