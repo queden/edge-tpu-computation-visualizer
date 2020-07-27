@@ -417,28 +417,35 @@ public class VisualizerServlet extends HttpServlet {
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
     if (!allUsers) {
+      // Deletes all files.
+
       Query queryFile = new Query("File");
 
       GcsService gcsService = GcsServiceFactory.createGcsService();
       GcsFilename fileName;
 
       for (Entity entity : ((PreparedQuery) datastore.prepare(queryFile)).asIterable()) {
-        datastore.delete(entity.getKey());
-
         fileName = new GcsFilename("trace_info_files", entity.getProperty("memaccess-checker").toString());
 
         gcsService.delete(fileName);
+        datastore.delete(entity.getKey());
       }
-
-      System.out.println(((PreparedQuery) datastore.prepare(queryFile)).countEntities());
     } else {
+      // Deletes all users.
+
       Query queryUser = new Query("User");
 
       for (Entity entity : ((PreparedQuery) datastore.prepare(queryUser)).asIterable()) {
         datastore.delete(entity.getKey());
       }
 
-      System.out.println(((PreparedQuery) datastore.prepare(queryUser)).countEntities());
+      // Resets each file's user that previously had the deleted user to the default "All".
+      Query queryFile = new Query("File");
+      PreparedQuery fileResults = datastore.prepare(queryFile);
+      
+      for (Entity entity : fileResults.asIterable()) {
+        entity.setProperty("user", "All");
+      }
     }
   }
 
@@ -452,11 +459,8 @@ public class VisualizerServlet extends HttpServlet {
       // Retrieves the user based on its key.
       key = new Builder("User", id).getKey();  
 
-      Query queryFile;
       Filter propertyFilter = new FilterPredicate("user", FilterOperator.EQUAL, name);
-
-      queryFile = new Query("File").setFilter(propertyFilter);
-
+      Query queryFile = new Query("File").setFilter(propertyFilter);
       PreparedQuery fileResults = datastore.prepare(queryFile);
 
       // Resets each file's user that previously had the deleted user to the default "All".

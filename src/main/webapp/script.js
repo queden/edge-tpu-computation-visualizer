@@ -1,6 +1,6 @@
-// Updates the time zone to be used throughout the website
+// Updates the time zone to be used throughout the website.
 async function submitTimeZone() {
-  // Retrieves the selected time zone
+  // Retrieves the selected time zone.
   const select = document.getElementById("time-zone");
   const zone = select.options[select.selectedIndex].value;
 
@@ -41,16 +41,28 @@ async function selectUser() {
   }
 }
 
+// Deletes a single user.
 async function deleteUser() {
+  // Retrieves the selected user.
   const select = document.getElementById("users");
   const user = select.options[select.selectedIndex];
 
+  // Prevents the user from attempting to delete the default option.
   if (user.text == "All") {
     alert("Cannot delete user \"All\"");
   } else {
+    // Confirms if the user wants to delete the selected user.
     var purge = confirm("You are about to delete user \"" + user.text + "\". Do you wish to continue?");
 
     if (purge == true) {
+      /*
+        /visualizer -> sends the information to the visualizer servlet
+        upload=false -> user is NOT uploading a file
+        purge=user -> user is NOT doing a blanket delete operation
+        user=true -> user IS deleting a user
+        user-id=user.value -> the selected user's key id in datastore
+        user-name=user.text -> the name of the selected user
+      */
       await fetch('/visualizer?upload=false&purge=false&user=true&user-id=' + user.value + "&user-name=" + user.text, {method: 'POST'});
       await uploadFile();
 
@@ -61,17 +73,27 @@ async function deleteUser() {
   }
 }
 
+// Deletes a single file.
 async function deleteFile() {
+  // Retrieves the selected file.
   const select = document.getElementById("uploaded-files");
   const file = select.options[select.selectedIndex];
-  console.log(file.text);
 
+  // Prevents the user from attempting to delete a non-selected file.
   if (file.text == "No file chosen") {
     alert("You must choose a file to delete.");
   } else {
+    // Confirms if the user wants to delete the selected file.
     var purge = confirm("You are about to delete file: " + file.text + ". Do you wish to continue?");
 
     if (purge == true) {
+      /*
+        /visualizer -> sends the information to the visualizer servlet
+        upload=false -> user is NOT uploading a file
+        purge=false -> user is NOT doing a blanket delete operation
+        user=false -> user is NOT deleting a user
+        file-id=file.value -> the id of the file's entity in datastore
+      */
       await fetch('/visualizer?upload=false&purge=false&user=false&file-id=' + file.value, {method: 'POST'});
       await uploadFile();
 
@@ -82,14 +104,14 @@ async function deleteFile() {
   }
 }
 
-// Handles the upload of the selected file
+// Handles the upload of the selected file as well as the loading of the page.
 async function uploadFile() {
   /*
     /visualizer -> sends information to the visualizer servlet
     time=false -> does NOT update the time zone
     user=false -> does NOT update the current user
   */
-  const call = await fetch('/visualizer?time=false&user=false&process=loadfiles', {method: 'GET'});
+  const call = await fetch('/visualizer?time=false&user=false', {method: 'GET'});
   const response = await call.json();
 
   const uploadFile = response.uploadFile;
@@ -99,6 +121,8 @@ async function uploadFile() {
   const zone = response.zone;
   const errorMessage = response.errorMessage;
 
+  // Gives feedback to the user if they were attempting to add a duplicate user
+  // (in which case the duplicate addition would be prevented).
   if (errorMessage != '') {
     alert("User already exists");
   }
@@ -107,10 +131,10 @@ async function uploadFile() {
   box.innerHTML = '';
 
   if (uploadFile.fileName != "null") {
-    // Adds the uploaded file information to be displayed
+    // Adds the uploaded file information to be displayed.
     addFileInfo(uploadFile);
   } else {
-    // Alerts the user if they failed to select a file after clicking "upload"
+    // Alerts the user if they failed to select a file after clicking "upload".
     const p = document.createElement("p");
 
     p.innerHTML = "Please select a file.";
@@ -119,35 +143,35 @@ async function uploadFile() {
     box.appendChild(p);
   }
 
-  // Adds the correct time zone information to the page
+  // Adds the correct time zone information to the page.
   const timeZoneBox = document.getElementById("time-zone-display");
   timeZoneBox.innerHTML = "Time Zone: " + zone;
 
-  // Adds the current user information to the page
+  // Adds the current user information to the page.
   const userNameBox = document.getElementById("user-name");
   userNameBox.innerHTML = "User: " + currentUser;
   userNameBox.title = currentUser;
 
-  // Shows the user who's files they are currently viewing
+  // Shows the user who's files they are currently viewing.
   const displayUserFilesBox = document.getElementById("display-user-files");
   displayUserFilesBox.innerHTML = '';
   displayUserFilesBox.innerHTML = "Displaying files for: " + currentUser;
 
   if (files.length > 0) {
-    // Checks if the current user has uploaded files under their name
+    // Checks if the current user has uploaded files under their name.
     const userFiles = files[0].userFilesExist;
     const userContainer = document.getElementById("user-files");
 
     if (userFiles == false) {
-      // Displays "error" message if the user has not uploaded files under their name
+      // Displays "error" message if the user has not uploaded files under their name.
       userContainer.style.display = "block";
     } else {
-      // Hides "error" message
+      // Hides "error" message.
       userContainer.style.display = "none";
     }
   }
 
-  // Populates the drop down menu of all known users
+  // Populates the drop down menu of all known users.
   addUsers(users);
 
   const select = document.getElementById("uploaded-files");
@@ -157,24 +181,24 @@ async function uploadFile() {
   option.text = "No file chosen";
   select.appendChild(option);
 
-  // Appends each file into the file drop down menu
+  // Appends each file into the file drop down menu.
   files.forEach((file) => {
     select.appendChild(createFile(file));
   });
 }
 
-// Adds the uploaded file information to be displayed
+// Adds the uploaded file information to be displayed.
 function addFileInfo(response) {
   const box = document.getElementById("uploaded-file");
 
-  // File name and time
+  // File name and time.
   var p = document.createElement("p");
   p.innerHTML = response.fileName + " at " + response.time;
   p.style.fontWeight = "bold";
 
   box.appendChild(p);
 
-  // User who uploaded the file
+  // User who uploaded the file.
   var p = document.createElement("p");
   p.innerHTML = "Uploaded by: " + response.uploadUser;
   p.style.fontWeight = "bold";
@@ -187,48 +211,48 @@ function addFileInfo(response) {
 
   box.appendChild(p);
 
-  // Name of the simulation trace in the uploaded file
+  // Name of the simulation trace in the uploaded file.
   p = document.createElement("p");
   p.innerHTML = "Simulation trace name: " + response.fileTrace;
 
   box.appendChild(p);
 
-  // Number of tiles in the simulation trace
+  // Number of tiles in the memaccess checker.
   p = document.createElement("p");
   p.innerHTML = "Number of tiles: " + response.fileTiles;
 
   box.appendChild(p);
 
-  // Size of the narrow memory
+  // Size of the narrow memory.
   p = document.createElement("p");
   p.innerHTML = "Narrow memory size: " + response.narrowBytes + " Bytes";
 
   box.appendChild(p);
 
-  // Size of the wide memory
+  // Size of the wide memory.
   p = document.createElement("p");
   p.innerHTML = "Wide memory size: " + response.wideBytes + " Bytes";
 
   box.appendChild(p);
 }
 
-// Populates the drop down menu of all known users
+// Populates the drop down menu of all known users.
 function addUsers(users) {
   const select = document.getElementById("users");
   select.innerHTML = '';
 
-  // Creates the default "All" users option
+  // Creates the default "All" users option.
   const selectOption = document.createElement("option");
   selectOption.text = "All";
   select.appendChild(selectOption);
 
-  // Appends each user into the user drop down menu
+  // Appends each user into the user drop down menu.
   users.forEach((user) => {
     select.appendChild(createUser(user));
   });
 }
 
-// Creates file options out of previously uploaded files to append to the select list
+// Creates file options out of previously uploaded files to append to the select list.
 function createFile(file) {
   const selectOption = document.createElement("option");
   selectOption.value = file.id;
@@ -236,7 +260,7 @@ function createFile(file) {
   return selectOption;
 }
 
-// Creates user options out of all known users
+// Creates user options out of all known users.
 function createUser(user) {
   const selectOption = document.createElement("option");
   selectOption.value = user.id;
@@ -244,15 +268,16 @@ function createUser(user) {
   return selectOption;
 }
 
-// Shows the user which file they have currently selected
+// Shows the user which file they have currently selected.
 function displayFile() {
-  // Retrieves the selected file
+  // Retrieves the selected file.
   const select = document.getElementById("uploaded-files");
   const file = select.options[select.selectedIndex].text;
 
   const selectedFileBox = document.getElementById("selected-file");
   selectedFileBox.innerHTML = '';
 
+  // Checks if the user has selected a file and changes feedback message accordingly
   if (file == "No file chosen") {
     selectedFileBox.style.color = "red";
   } else {
@@ -261,9 +286,9 @@ function displayFile() {
   } 
 }
 
-// Opens a pop-up window containing the visualization page
+// Opens a pop-up window containing the visualization page.
 function openVisualization() {
-  // Retrieves the selected file
+  // Retrieves the selected file.
   const select = document.getElementById("uploaded-files");
   const file = select.options[select.selectedIndex];
 
