@@ -1,6 +1,7 @@
 var data1 = [];
 var data2 = [];
-var memoryType = "Narrow Memory";
+var narrow = "Narrow Memory";
+var wide = "Wide Memory";
 
 for (var i = 0; i < 1400; i++) {
     var datum = {};
@@ -20,9 +21,9 @@ for (var i = 0; i < 1400; i++) {
 //change the memory location
 function change(value) {
     if (value === 1) {
-        extractData(data1);
+        extractData(data1, wide);
     } else {
-        extractData(data2);
+        extractData(data2, narrow);
     }
 }
 //filter the data based on the tile selected 
@@ -37,7 +38,7 @@ function filterJSON(json, key, value) {
 }
 
 // Get the data
-function extractData(rawData) {
+function extractData(rawData, memoryType) {
     var data;
     d3.select('#inds')
         .on("change", function() {
@@ -51,13 +52,13 @@ function extractData(rawData) {
             //    d.active = true;
             // });
 
-            displayChart(data);
+            displayChart(data, memoryType, section);
         });
 
     // generate initial graph
     data = filterJSON(rawData, 'tile', '0');
     console.log(data)
-    displayChart(data);
+    displayChart(data,memoryType, '0');
 }
 
 //Set up the chart
@@ -96,7 +97,13 @@ var xAxis = d3.svg.axis().scale(x).orient("bottom"),
     yAxis = d3.svg.axis().scale(y).orient("left");
 
 //Draws the chart
-function displayChart(data) {
+function displayChart(data, memoryType, section) {
+    //Display the memory type
+    const displayMemoryType = document.getElementById("memory-type");
+    displayMemoryType.innerHTML = memoryType;
+    //Display tile 
+    const displayTile = document.getElementById("tile");
+    displayTile.innerHTML = "Tile " + section;
     colorScale = d3.scale.ordinal().domain([0, d3.max(data, function(d) {
         return d.layer;
     })]).range(['#FF5714', '#ccc', '#1BE7FF']);
@@ -291,4 +298,4 @@ function displayChart(data) {
     }
 
 }
-extractData(data1)
+extractData(data1, wide)
