@@ -34,12 +34,12 @@ public class ReportServlet extends HttpServlet {
     String json = "";
     
     if (request.getParameter("process").equals("pre")) {
-        // Executes the preprocessing of the simulation trace
+        // Executes the preprocessing of the simulation trace.
 
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
         Entity retrievedMemaccessChecker = null;
 
-        // Retrieves the file based on its entity's key, throws an error if the key doesn't exist
+        // Retrieves the file based on its entity's key, throws an error if the key doesn't exist.
         try {
           Key key = new Builder("File", Long.parseLong(request.getParameter("fileId"))).getKey();
           retrievedMemaccessChecker = datastore.get(key);
@@ -47,7 +47,7 @@ public class ReportServlet extends HttpServlet {
           System.out.println("file not found.");
         }
 
-        // Retrive and read file from Cloud Storage
+        // Retrive and read file from Cloud Storage.
         GcsService gcsService = GcsServiceFactory.createGcsService();
         GcsFilename fileName = 
             new GcsFilename(
@@ -57,7 +57,7 @@ public class ReportServlet extends HttpServlet {
         GcsInputChannel readChannel = gcsService.openReadChannel(fileName, 0);
         InputStream fileStream = Channels.newInputStream(readChannel);
 
-        // Gets the file as a byte array and parses it into proto message
+        // Gets the file as a byte array and parses it into proto message.
         byte[] byteArray = ByteStreams.toByteArray(fileStream);
         MemaccessCheckerData memaccessChecker = MemaccessCheckerData.parseFrom(byteArray);
 
@@ -67,7 +67,7 @@ public class ReportServlet extends HttpServlet {
 
         json = new Gson().toJson(preProcessResults);
     } else {
-        // Executes the trace processing of the memaccess checker
+        // Executes the trace processing of the memaccess checker.
 
         long start = Long.parseLong(request.getParameter("start"));
 

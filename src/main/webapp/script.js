@@ -268,36 +268,36 @@ function openVisualization() {
   const file = select.options[select.selectedIndex];
 
   if (file.text == "No file chosen") {
-    // Prevents the user from trying to access the visualizer without selecting a file
+    // Prevents the user from trying to access the visualizer without selecting a file.
     alert("You must choose a file");
   } else {
-    // Creates and opens the pop-up window
+    // Creates and opens the pop-up window.
     const visualizerWindow = window.open("report.html", "Visualizer", "_blank", "toolbar=yes,scrollbars=yes,resizable=yes,width=400,height=400", "true");
     visualizerWindow.title = "Visualizer";
     visualizerWindow.focus();
 
-    // Listener to retrieve information from the main page
+    // Listener to retrieve information from the main page.
     visualizerWindow.addEventListener("message", function(message) {
-      // Determines if the sent data is the file's id or information
+      // Determines if the sent data is the file's id or information.
       if (!(isNaN(parseInt(message.data)))) {
-        // Stores the selected file's id
+        // Stores the selected file's id.
 
         const fileIdBox = visualizerWindow.document.getElementById("trace-info-box");
         fileIdBox.title = message.data;
       } else {
-        // Displays the selected file's information
+        // Displays the selected file's information.
 
         const fileInfoBox = visualizerWindow.document.getElementById("file-info");
         fileInfoBox.innerHTML += message.data;
       }
     });
 
-    // Checks and executes the specified functions after the pop-up has finished loading
+    // Checks and executes the specified functions after the pop-up has finished loading.
     visualizerWindow.onload = function() {
-      // Lets the user know the window has completed its loading
+      // Lets the user know the window has completed its loading.
       visualizerWindow.alert("Visualizer loaded.");
 
-      // Passes the file id and the file information to the pop-up window
+      // Passes the file id and the file information to the pop-up window.
 
       visualizerWindow.postMessage(file.value, "*"); 
       visualizerWindow.postMessage(file.text, "*");
@@ -305,7 +305,7 @@ function openVisualization() {
   }
 }
 
-// Runs the visualization of the chosen simulation trace
+// Runs the visualization of the chosen simulation trace.
 async function runVisualization() {
   alert("Visualization begun");
 
@@ -320,7 +320,7 @@ async function runVisualization() {
   const preprocess = await fetch('/report?process=pre&fileId=' + traceBox.title, {method: 'GET'});
   const preprocessResponse = await preprocess.json();
 
-  // Process initial json information
+  // Process initial json information.
   // TODO: Substitute
   const init = document.createElement("p");
   init.innerHTML = preprocessResponse.message;
@@ -330,7 +330,7 @@ async function runVisualization() {
 
   if (!preprocessResponse.isError) {
     for (i = 0; i < numTraces ; i += 1000) {
-      // Run through the traces, information processing will happen within the function
+      // Run through the traces, information processing will happen within the function.
 
       await runTraces(i, numTraces);
     }
@@ -346,13 +346,13 @@ async function runVisualization() {
 }
 
 /*
-  Processes the different chunks of specified trace indicies
+  Processes the different chunks of specified trace indicies.
 
   start -> the beginning index of the traces to be processed
   numTraces -> the total number of traces
 */
 async function runTraces(start, numTraces) {
-  // Retrieves box to display error/processing information
+  // Retrieves box to display error/processing information.
   const traceBox = document.getElementById("trace-info-box");
 
   /*
@@ -363,7 +363,7 @@ async function runTraces(start, numTraces) {
   const traceResponse = await fetch('/report?process=post&start=' + start, {method: 'GET'});
   const traceProcess = await traceResponse.json();
 
-  // Process json trace information
+  // Process json trace information.
   // TODO: Substitute
   var responseMessage = document.createElement("p");
 
@@ -378,7 +378,7 @@ async function runTraces(start, numTraces) {
   traceBox.appendChild(responseMessage);
 }
 
-// Deletes the specified elements from datastore
+// Deletes the specified elements from datastore.
 async function purgeAll(users, files) {
   var message = "";
 
@@ -390,7 +390,7 @@ async function purgeAll(users, files) {
     message = "all users and files";
   }
 
-  // Double checks if the user actually wants to delete elements from datastore
+  // Double checks if the user actually wants to delete elements from datastore.
   var purge = confirm("You are about to delete " + message + ". Do you wish to continue?");
 
   if (purge == true) {
@@ -408,7 +408,7 @@ async function purgeAll(users, files) {
   }
 }
 
-// Updates the visualizer state
+// Updates the visualizer state.
 function loadMemory() { 
  // TODO: Substitute with visualizer function
 }
