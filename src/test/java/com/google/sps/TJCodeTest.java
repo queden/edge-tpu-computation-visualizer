@@ -794,6 +794,14 @@ public final class TJCodeTest extends Suite {
             .setBytes(4)
             .build();
 
+    private final TraceEvent TRACE_FOUR = 
+        TraceEvent.newBuilder()
+            .setAccessType(TraceEvent.AccessType.WIDE_WRITE)
+            .setInstructionTag(5)
+            .setAddress(564)
+            .setBytes(4)
+            .build();
+
     @Before
     public void setUp() throws NoSuchMethodException, NoSuchFieldException, IllegalAccessException {
       MemaccessCheckerData.Builder proto = MemaccessCheckerData.newBuilder();
@@ -925,6 +933,43 @@ public final class TJCodeTest extends Suite {
       } catch (InvocationTargetException e) {
         throw e.getTargetException();
       }               
+    }
+
+    @Test (expected = Exception.class)
+    public void testEmptyMaskList() 
+        throws IllegalAccessException, InvocationTargetException, 
+            Throwable {
+      try {
+        readValidation.invoke(
+            validation, narrow, wide, new ArrayList<Boolean>(), 0, TRACE_TWO_ONE);
+      } catch (InvocationTargetException e) {
+        throw e.getTargetException();
+      }  
+    }
+
+    @Test (expected = Exception.class)
+    public void testNonAllocatedArrays() 
+        throws IllegalAccessException, InvocationTargetException, 
+            Throwable {
+
+      try {
+        readValidation.invoke(
+            validation, narrow, wide, INSTRUCTION_TWO.getMaskList(), 1, TRACE_TWO_ONE);
+            
+        readValidation.invoke(
+            validation, narrow, wide, INSTRUCTION_TWO.getMaskList(),  1, TRACE_TWO_TWO);
+      } catch (InvocationTargetException e) {
+        throw e.getTargetException();
+      }
+    }
+
+    @Test
+    public void testIncorrectAccessType() 
+        throws IllegalAccessException, InvocationTargetException, 
+            Throwable {
+
+        readValidation.invoke(
+            validation, narrow, wide, INSTRUCTION_THREE.getMaskList(), 0, TRACE_FOUR);
     }
   }
 
