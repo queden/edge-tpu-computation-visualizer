@@ -1,8 +1,5 @@
 package com.google.sps.servlets;
 
-// import com.google.appengine.api.blobstore.BlobstoreInputStream;
-// import com.google.appengine.api.blobstore.BlobKey;
-import com.google.appengine.api.datastore.Blob;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
@@ -16,11 +13,8 @@ import com.google.appengine.api.datastore.Query.FilterPredicate;
 import com.google.appengine.api.datastore.Query.SortDirection;
 import com.google.appengine.tools.cloudstorage.GcsFileOptions;
 import com.google.appengine.tools.cloudstorage.GcsFilename;
-import com.google.appengine.tools.cloudstorage.GcsInputChannel;
-import com.google.appengine.tools.cloudstorage.GcsOutputChannel;
 import com.google.appengine.tools.cloudstorage.GcsService;
 import com.google.appengine.tools.cloudstorage.GcsServiceFactory;
-import com.google.appengine.tools.cloudstorage.RetryParams;
 import com.google.common.io.ByteStreams;
 import com.google.gson.Gson;
 import com.google.protobuf.TextFormat;
@@ -28,7 +22,6 @@ import com.google.sps.data.*;
 import com.google.sps.proto.MemaccessCheckerDataProto.*;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.InputStreamReader;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -156,7 +149,8 @@ public class VisualizerServlet extends HttpServlet {
         ZonedDateTime dateTime = ZonedDateTime.now(ZoneId.of(ZoneOffset.UTC.getId()));
         DateTimeFormatter formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME;
 
-        String checkerName = (memaccessChecker.getName().equals("")) 
+        String checkerName = 
+            (memaccessChecker.getName().equals("")) 
                 ? filePart.getSubmittedFileName() 
                 : memaccessChecker.getName();
 
@@ -176,7 +170,8 @@ public class VisualizerServlet extends HttpServlet {
         GcsFileOptions instance = GcsFileOptions.getDefaultInstance();
 
         GcsService gcsService = GcsServiceFactory.createGcsService();
-        GcsFilename fileNameWrite = new GcsFilename("trace_info_files", dateTime.format(formatter) + ":" + checkerName);
+        GcsFilename fileNameWrite = 
+            new GcsFilename("trace_info_files", dateTime.format(formatter) + ":" + checkerName);
 
         // Gets the file in its byte array form
         byte[] byteArray = memaccessChecker.toByteArray();
