@@ -295,34 +295,39 @@ public class Validation {
       throws Exception, MemoryAccessException {
     List<Integer> AccessTypeTensorList;
     int tensor = -1;
+    String memoryAccessType;
     // Tracks if the corresponding instruction has the trace entry's access type.
     Boolean hasAccessType = true;
 
     if (traceAccessType == TraceEvent.AccessType.NARROW_READ) {
       if (instruction.getNarrowReadCount() != 0) {
+        memoryAccessType = "Narrow";
         AccessTypeTensorList = instruction.getNarrowReadList();
-        tensor = getTensor(AccessTypeTensorList, traceAddress, tensorLabelToTensorAllocationNarrow);
+        tensor = getTensor(AccessTypeTensorList, traceAddress, tensorLabelToTensorAllocationNarrow, memoryAccessType);
       } else {
         hasAccessType = false;
       }
     } else if (traceAccessType == TraceEvent.AccessType.NARROW_WRITE) {
       if (instruction.getNarrowWriteCount() != 0) {
+        memoryAccessType = "Narrow";  
         AccessTypeTensorList = instruction.getNarrowWriteList();
-        tensor = getTensor(AccessTypeTensorList, traceAddress, tensorLabelToTensorAllocationNarrow);
+        tensor = getTensor(AccessTypeTensorList, traceAddress, tensorLabelToTensorAllocationNarrow, memoryAccessType);
       } else {
         hasAccessType = false;
       }
     } else if (traceAccessType == TraceEvent.AccessType.WIDE_READ) {
       if (instruction.getWideReadCount() != 0) {
+        memoryAccessType = "Wide";  
         AccessTypeTensorList = instruction.getWideReadList();
-        tensor = getTensor(AccessTypeTensorList, traceAddress, tensorLabelToTensorAllocationWide);
+        tensor = getTensor(AccessTypeTensorList, traceAddress, tensorLabelToTensorAllocationWide, memoryAccessType);
       } else {
         hasAccessType = false;
       }
     } else if (traceAccessType == TraceEvent.AccessType.WIDE_WRITE) {
       if (instruction.getWideWriteCount() != 0) {
+        memoryAccessType = "Wide";
         AccessTypeTensorList = instruction.getWideWriteList();
-        tensor = getTensor(AccessTypeTensorList, traceAddress, tensorLabelToTensorAllocationWide);
+        tensor = getTensor(AccessTypeTensorList, traceAddress, tensorLabelToTensorAllocationWide, memoryAccessType);
       } else {
         hasAccessType = false;
       }
@@ -353,11 +358,19 @@ public class Validation {
     return tensor;
   }
   /** Retrieves the correct tensor depending on the specific access type instruction list. */
-  public static int getTensor(
+  public static int getTensor (
       List<Integer> accessTypeTensorList,
       int traceAddress,
-      Map<Integer, TensorAllocation> tensorLabelToTensorAllocationTable) {
+      Map<Integer, TensorAllocation> tensorLabelToTensorAllocationTable,
+      String memoryAccessType) throws Exception{
     int tensor = -1;
+    if (tensorLabelToTensorAllocationTable.size() == 0){
+        throw new Exception(
+          "The "
+              + memoryAccessType
+              + " allocation table is empty."
+              + " ");
+    }
     for (int i = 0; i < accessTypeTensorList.size(); i++) {
       TensorAllocation tensorAlloc =
           tensorLabelToTensorAllocationTable.get(accessTypeTensorList.get(i));
