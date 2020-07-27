@@ -1,0 +1,39 @@
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" href="style.css">
+        <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
+    </head>
+    <body>
+    <div id = "nav-bar"> 
+        </div>
+        <div id="heading-content"> 
+            <h1 id="heading">Computation Visualizer</h1>
+        </div>
+        
+        <div id="container">
+            <div id="element"></div>
+        </div>
+        <form action="#">
+            <label for="uploaded-files">Choose a file: </label>
+            <select id="uploaded-files" name="uploaded-files"></select>
+        </form>
+        <form action='#' onsubmit="runVisualization()">
+            <input type="submit" value="Run!" />
+        </form>
+        <div id="test-box">
+        </div>
+        
+    <p id="chart"></p>
+    <h3 id="memory-type"></h3>
+<script src="https://d3js.org/d3.v3.min.js"></script>
+
+<button type="button" onClick="change(1)">wide</button>
+<button type="button" onClick="change(2)">narrow</button>
+<select id="inds">
+		<option value="0" selected="selected">Tile 0</option>
+		<option value="1">Tile 1</option>
+		<option value="2">Tile 2</option>
+</select>
+    <script type="text/javascript" src="report.js"></script>
+</body>

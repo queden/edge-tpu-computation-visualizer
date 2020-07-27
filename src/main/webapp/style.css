@@ -1,3 +1,6 @@
+
+/* This is a style sheet for the components of the html pages. */
+
 #nav-bar {
     background-color: #000100;
     width: 100vw;
@@ -125,6 +128,76 @@ p, li {
   border-color: white;
 }
 
+#chart {
+	  max-width: 100%;
+	  overflow:auto;
+}
+
+text {
+    pointer-events: none;
+}
+
+.grandparent text {
+    font-weight: bold;
+}
+
+/* rect {
+    stroke:#0096c7;;
+    stroke-width: 1px;
+    fill : #023e8a;
+}
+
+rect.parent,
+.grandparent rect {
+    stroke-width: 3px;
+}
+
+.grandparent:hover rect {
+    fill: #023e8a;
+}
+
+.children rect.parent,
+.grandparent rect {
+    cursor: pointer;
+    fill: #023e8a;
+}
+
+.children rect.child {
+    opacity: 0.5;
+    fill : orange;
+}
+.children rect.parent {
+    fill: #023e8a;
+}
+
+.children:hover rect.child {
+    opacity: 1;
+    stroke-width: 1px;
+}
+
+.children:hover rect.parent {
+    opacity: 0;
+}
+
+.legend {
+    margin-bottom:8px !important;
+}
+
+.legend rect {
+    stroke-width: 0px;
+}
+
+.legend text {
+    text-anchor: middle;
+    pointer-events: auto;
+    font-size: 13px;
+    font-family: sans-serif;
+    fill: #023e8a;
+} */
+
+.form-group {
+    text-align:left;
+}
 #open-visualization {
   padding: 20px 45px;
   font-size: 24px;
@@ -137,6 +210,7 @@ p, li {
   font-size: 24px;
   background-color: limegreen;
   color: white;
+
 }
 
 #file-info {
@@ -155,6 +229,39 @@ p, li {
   flex-direction: column;
 }
 
+
+#close-button {
+  position: absolute;
+  top: 15px;
+  right: 35px;
+  color: #f1f1f1;
+  font-size: 40px;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+svg {
+  font: 10px sans-serif;
+}
+
+.subBar { 
+  fill: gray;
+  opacity: 0.5;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.brush .extent {
+  stroke: #fff;
+  fill: steelblue;
+  fill-opacity: .25;
+  shape-rendering: crispEdges;
+}
 .purge {
   font-size: 25px;
   padding: 22px 55px;
@@ -164,4 +271,5 @@ p, li {
   cursor: pointer;
   border-radius: 12px;
   border-color: white;
+
 }
