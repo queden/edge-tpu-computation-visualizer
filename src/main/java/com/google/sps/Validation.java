@@ -359,12 +359,12 @@ public class Validation {
       List<Integer> accessTypeTensorList,
       int traceAddress,
       Map<Integer, TensorAllocation> tensorLabelToTensorAllocationTable,
-      String accessType) throws Exception{
+      String memoryType) throws Exception{
     int tensor = -1;
     if (tensorLabelToTensorAllocationTable.size() == 0){
         throw new Exception(
           "The "
-              + accessType
+              + memoryType
               + " allocation table is empty."
               + " ");
     }
