@@ -3,6 +3,7 @@ package com.google.sps.servlets;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory.Builder;
 import com.google.appengine.api.datastore.PreparedQuery;
@@ -18,16 +19,20 @@ import com.google.appengine.tools.cloudstorage.GcsServiceFactory;
 import com.google.common.io.ByteStreams;
 import com.google.gson.Gson;
 import com.google.protobuf.TextFormat;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.sps.data.*;
 import com.google.sps.proto.MemaccessCheckerDataProto.*;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.ByteBuffer;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Date;
 import javax.servlet.ServletException;
@@ -120,7 +125,7 @@ public class VisualizerServlet extends HttpServlet {
 
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response) 
-      throws IOException, ServletException {
+      throws IOException, ServletException{
     String upload = request.getParameter("upload");
 
     if (upload.equals("true")) {
@@ -130,20 +135,8 @@ public class VisualizerServlet extends HttpServlet {
       // Will not execute if the user failed to select a file after clicking "upload"
       if (filePart.getSubmittedFileName().length() > 0) {
         InputStream fileInputStream = filePart.getInputStream();
-        MemaccessCheckerData memaccessChecker;
 
-        // Checks if the file uploaded is a binary file or a text file
-        if (filePart.getSubmittedFileName().toLowerCase().endsWith(".bin")) {
-          // IF BINARY FILE
-          byte[] byteArray = ByteStreams.toByteArray(fileInputStream);
-          memaccessChecker = MemaccessCheckerData.parseFrom(byteArray);
-        } else {
-          // IF TEXT FILE
-          InputStreamReader reader = new InputStreamReader(fileInputStream, "ASCII");
-          MemaccessCheckerData.Builder builder = MemaccessCheckerData.newBuilder();
-          TextFormat.merge(reader, builder);
-          memaccessChecker = builder.build();
-        }
+        MemaccessCheckerData memaccessChecker = getMessage(fileInputStream, filePart);
 
         // Put the file information into datastore
         ZonedDateTime dateTime = ZonedDateTime.now(ZoneId.of(ZoneOffset.UTC.getId()));
@@ -175,7 +168,7 @@ public class VisualizerServlet extends HttpServlet {
 
         // Gets the file in its byte array form
         byte[] byteArray = memaccessChecker.toByteArray();
-        ByteBuffer buffer = ByteBuffer.wrap(byteArray, 0, barr.length);
+        ByteBuffer buffer = ByteBuffer.wrap(byteArray, 0, byteArray.length);
 
         // Create and write to the GCS object
         gcsService.createOrReplace(fileNameWrite, instance, buffer);
@@ -190,8 +183,8 @@ public class VisualizerServlet extends HttpServlet {
             memaccessChecker.getName().equals("") ? "No name provided" : memaccessChecker.getName();
             
         int fileTiles = memaccessChecker.getNumTiles();
-        int narrowBytes = memaccessChecker.getNarrowMemorySizeBytes();
-        int wideBytes = memaccessChecker.getWideMemorySizeBytes();
+        String narrowBytes = commaFormat(memaccessChecker.getNarrowMemorySizeBytes());
+        String wideBytes = commaFormat(memaccessChecker.getWideMemorySizeBytes());
 
         fileJson =
             new FileJson(fileName, fileSize, fileTrace, fileTiles, narrowBytes, wideBytes, user);
@@ -222,10 +215,14 @@ public class VisualizerServlet extends HttpServlet {
       } else {
         // Deletes a single user
         if (request.getParameter("user").equals("true")) {
-          purgeEntity(
+          try {
+            purgeEntity(
               true,
               Long.parseLong(request.getParameter("user-id")), 
               request.getParameter("user-name"));
+          } catch(EntityNotFoundException e) {
+            System.out.println("User not found.");
+          }
 
           user = "All";
         } else {
@@ -247,12 +244,32 @@ public class VisualizerServlet extends HttpServlet {
             fileEntity = new Entity("File");
           }
 
-          purgeEntity(false, id, null);
+          try {
+            purgeEntity(false, id, null);
+          } catch(EntityNotFoundException e) {
+            System.out.println("File not found.");
+          }       
         }
       } 
     }  
 
     response.sendRedirect("/index.html");
+  }
+
+  // Creates a proto message out of the uploaded file's input stream
+  private static MemaccessCheckerData getMessage(InputStream fileInputStream, Part filePart) throws IOException, InvalidProtocolBufferException, UnsupportedEncodingException {
+    // Checks if the file uploaded is a binary file or a text file
+    if (filePart.getSubmittedFileName().toLowerCase().endsWith(".bin")) {
+      // If binary file
+      byte[] byteArray = ByteStreams.toByteArray(fileInputStream);
+      return MemaccessCheckerData.parseFrom(byteArray);
+    } else {
+      // If text file
+      InputStreamReader reader = new InputStreamReader(fileInputStream, "ASCII");
+      MemaccessCheckerData.Builder builder = MemaccessCheckerData.newBuilder();
+      TextFormat.merge(reader, builder);
+      return builder.build();
+    }
   }
 
   // Function to retrieve the file size information in terms of Bytes/KB/MB/GB
@@ -274,6 +291,37 @@ public class VisualizerServlet extends HttpServlet {
     }
 
     return result;
+  }
+
+  // Adds a comma for every 3 digits
+  private static String commaFormat(int input) {
+    Integer value = new Integer(input);
+    String result = value.toString();
+    
+    char[] resultArray = result.toCharArray();
+    List<String> chars = new ArrayList<String>();
+
+    int count = 0;
+    
+    for (int i = resultArray.length - 1; i > -1; i--) {
+      count++;
+
+      chars.add(0, String.valueOf(resultArray[i]));
+
+      // Appends a comma to the front of the string if there are more digits to come
+      if (count == 3 && i != 0) {
+        chars.add(0, ",");
+        count = 0;
+      }
+    }
+
+    String finalResult = "";
+
+    for (String character : chars) {
+      finalResult += character;
+    }
+
+    return finalResult;
   }
 
   // Determines the appropriate file information to be displayed on the page
@@ -364,15 +412,22 @@ public class VisualizerServlet extends HttpServlet {
     return users;
   }
 
-  // Clears datastore of users and/or files as specified
-  private static void purgeAll(boolean allUsers) {
+  // Clears datastore and/or Cloud Storage of users and/or files as specified
+  private static void purgeAll(boolean allUsers) throws IOException {
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
     if (!allUsers) {
       Query queryFile = new Query("File");
 
+      GcsService gcsService = GcsServiceFactory.createGcsService();
+      GcsFilename fileName;
+
       for (Entity entity : ((PreparedQuery) datastore.prepare(queryFile)).asIterable()) {
         datastore.delete(entity.getKey());
+
+        fileName = new GcsFilename("trace_info_files", entity.getProperty("memaccess-checker").toString());
+
+        gcsService.delete(fileName);
       }
 
       System.out.println(((PreparedQuery) datastore.prepare(queryFile)).countEntities());
@@ -387,8 +442,8 @@ public class VisualizerServlet extends HttpServlet {
     }
   }
 
-  // Deletes a single user or file
-  private static void purgeEntity(boolean isUser, Long id, String name) {
+  // Deletes a single user or file from datastore and/or Cloud Storage
+  private static void purgeEntity(boolean isUser, Long id, String name) throws IOException, EntityNotFoundException {
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
     Key key = null;
 
@@ -409,6 +464,15 @@ public class VisualizerServlet extends HttpServlet {
       }
     } else {
       key = new Builder("File", id).getKey();
+      
+      // Deletes file from Cloud Storage
+      Entity fileEntity = datastore.get(key);
+
+      GcsService gcsService = GcsServiceFactory.createGcsService();
+      GcsFilename fileName = 
+            new GcsFilename("trace_info_files", fileEntity.getProperty("memaccess-checker").toString());
+          
+      gcsService.delete(fileName);
     }
 
     datastore.delete(key); 

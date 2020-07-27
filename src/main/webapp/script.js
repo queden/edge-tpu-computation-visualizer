@@ -116,10 +116,6 @@ async function uploadFile() {
     p.innerHTML = "Please select a file.";
     p.style.color = "red";
 
-    // Erases scroll bar message
-    const scroll = document.getElementById("scroll");
-    scroll.innerHTML = '';
-
     box.appendChild(p);
   }
 
@@ -256,7 +252,13 @@ function displayFile() {
 
   const selectedFileBox = document.getElementById("selected-file");
   selectedFileBox.innerHTML = '';
-  selectedFileBox.innerHTML = "Selected file: " + file;
+
+  if (file == "No file chosen") {
+    selectedFileBox.style.color = "red";
+  } else {
+    selectedFileBox.innerHTML = "Selected file: " + file;
+    selectedFileBox.style.color = "limegreen";
+  } 
 }
 
 // Opens a pop-up window containing the visualization page
