@@ -4,8 +4,10 @@ import com.google.sps.exceptions.*;
 import com.google.sps.proto.MemaccessCheckerDataProto.*;
 import com.google.sps.results.*;
 import com.google.sps.structures.*;
+
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -15,8 +17,8 @@ public class Validation {
   private static List<TensorLayerAllocationTable> tensorLayerAllocationNarrow;
   private static List<TensorLayerAllocationTable> tensorLayerAllocationWide;
 
-  private static Map<Integer, TensorAllocation> tensorLabelToTensorAllocationNarrow;
-  private static Map<Integer, TensorAllocation> tensorLabelToTensorAllocationWide;
+  private static Map<Pair, TensorAllocation> layerTensorLabelToTensorAllocationNarrow;
+  private static Map<Pair, TensorAllocation> layerTensorLabelToTensorAllocationWide;
 
   private static ArrayList<Instruction> instructions;
   private static Map<Integer, Instruction> instructionTagtoInstruction;
@@ -44,8 +46,8 @@ public class Validation {
     tensorLayerAllocationNarrow = memaccessCheckerData.getTensorLayerAllocationNarrowList();
     tensorLayerAllocationWide = memaccessCheckerData.getTensorLayerAllocationWideList();
 
-    tensorLabelToTensorAllocationNarrow = new Hashtable<Integer, TensorAllocation>();
-    tensorLabelToTensorAllocationWide = new Hashtable<Integer, TensorAllocation>();
+    layerTensorLabelToTensorAllocationNarrow = new Hashtable<Pair, TensorAllocation>();
+    layerTensorLabelToTensorAllocationWide = new Hashtable<Pair, TensorAllocation>();
 
     traceEvents = memaccessCheckerData.getTraceEventList();
     instructions = new ArrayList<Instruction>();
@@ -75,7 +77,7 @@ public class Validation {
         message = e.getMessage();
         isError = true;
       }
-    } catch (ArrayIndexOutOfBoundsException e) {
+    } catch (Exception e) {
       if (!isError) {
         message = e.getMessage();
         isError = true;
@@ -89,17 +91,17 @@ public class Validation {
         message = e.getMessage();
         isError = true;
       }
-    } catch (ArrayIndexOutOfBoundsException e) {
+    } catch (Exception e) {
       if (!isError) {
         message = e.getMessage();
         isError = true;
       }
     }
 
-    tensorLabelToTensorAllocationNarrow =
-        relateTensorLabelToTensorAllocation(tensorLayerAllocationNarrow);
-    tensorLabelToTensorAllocationWide =
-        relateTensorLabelToTensorAllocation(tensorLayerAllocationWide);
+    // layerTensorLabelToTensorAllocationNarrow =
+    //     relateTensorLabelToTensorAllocation(tensorLayerAllocationNarrow);
+    // layerTensorLabelToTensorAllocationWide =
+    //     relateTensorLabelToTensorAllocation(tensorLayerAllocationWide);
 
     return new PreProcessResults(isError, message, traceEvents.size());
   }
@@ -124,7 +126,7 @@ public class Validation {
    */
   private static void relateTensorsToInstructions(
       List<TensorLayerAllocationTable> tensorLayerAllocationTable, boolean isNarrow)
-      throws InvalidTensorAddressException {
+      throws Exception, InvalidTensorAddressException {
     // Get the layer to instruction map.
     Hashtable<String, List<Integer>> layerToInstructionTable = getLayerToInstructionTable();
 
@@ -133,8 +135,7 @@ public class Validation {
       String curLayer = tensorLayerAllocation.getLayer();
 
       // Gets first tileAllocation, this could change if allocations are different across tile.
-      TensorTileAllocationTable tensorTileAllocationTable =
-          tensorLayerAllocation.getTensorTileAllocation(0);
+      TensorTileAllocationTable tensorTileAllocationTable = getTileUnion(tensorLayerAllocation, isNarrow);
 
       // Get the list of tensors allocated on the tile.
       ArrayList<TensorAllocation> tensorAllocationList = new ArrayList<TensorAllocation>();
@@ -145,6 +146,7 @@ public class Validation {
       for (TensorAllocation tensorAllocation : tensorAllocationList) {
         addressIntervalList.add(new AddressInterval(tensorAllocation));
       }
+
       IntervalTree<AddressInterval> addressIntervalTree =
           new IntervalTree<AddressInterval>(addressIntervalList);
 
@@ -218,6 +220,101 @@ public class Validation {
 
     }
   }
+
+  private static TensorTileAllocationTable getTileUnion(TensorLayerAllocationTable tensorLayerAllocation, boolean isNarrow) throws Exception {
+    List<TensorTileAllocationTable> layerTileAllocationTables = tensorLayerAllocation.getTensorTileAllocationList();
+
+    // Assuming all tiles need to be there 
+    if (layerTileAllocationTables.size() != numTiles) {
+      throw new Exception(
+          "Tensor layer allocation table has "
+          + layerTileAllocationTables.size()
+          + " tiles, expecting "
+          + numTiles
+          + "."
+      );
+    }
+
+    Hashtable<Integer, Integer> layerTensorLabelToMaxSize = new Hashtable<Integer, Integer>();
+
+    HashSet<TensorAllocation> tensorSet = new HashSet<TensorAllocation>();
+
+    TensorTileAllocationTable.Builder unionTileBuilder = TensorTileAllocationTable.newBuilder();
+
+    for (TensorTileAllocationTable tensorTileAllocation : layerTileAllocationTables) {
+      for (TensorAllocation tensor : tensorTileAllocation.getTensorAllocationList()) {
+        Integer max = layerTensorLabelToMaxSize.get(tensor.getTensorLabel());
+
+        // If tensor does not have a max, 
+        if (max == null) {
+          tensorSet.add(tensor);
+          max = 0;
+        }
+
+        max = Math.max(max, tensor.getSize());
+        layerTensorLabelToMaxSize.put(tensor.getTensorLabel(), max);
+      } 
+    }
+
+    for (TensorAllocation tensor : tensorSet) {
+      int curTensorLabel = tensor.getTensorLabel();
+      Integer maxSize = layerTensorLabelToMaxSize.get(curTensorLabel);
+
+      if (maxSize == null) {
+        maxSize = 0;
+      }
+
+      TensorAllocation.Builder unionTensorBuilder = TensorAllocation.newBuilder();
+      unionTensorBuilder.mergeFrom(tensor);
+      unionTensorBuilder.setSize(maxSize);
+
+      TensorAllocation unionTensor = unionTensorBuilder.build();
+      Pair layerLabelPair = new Pair(tensorLayerAllocation.getLayer(), curTensorLabel);
+
+      unionTileBuilder.addTensorAllocation(unionTensor);
+      
+      if (isNarrow) {
+        layerTensorLabelToTensorAllocationNarrow.put(layerLabelPair, unionTensor);
+      } else {
+        layerTensorLabelToTensorAllocationWide.put(layerLabelPair, unionTensor);
+      }
+      
+    }
+
+    return unionTileBuilder.build();
+
+
+    /** TODO: Will have information on what the max size is for each tensor label. Maybe make a set of tensor allocations, then iterate over that set and find out what they're max size is, build that into the tile,
+    * while doing so, adding it to the hashmap as a pair of current layer and tensor, to the tensor allocation object. Nice */
+
+    // TensorTileAllocationTable.Builder tensorTileAllocationBuilder = TensorTileAllocationTable.newBuilder();
+
+    // // Assuming that all tiles have all tensors
+    // int numAllocations = layerTileAllocationTables.get(0).getTensorAllocationCount();
+
+    // // TODO: So will every tile have every tensor even if its blank?
+    // for (int i = 0; i < numAllocations; i++) {
+    //   TensorAllocation firstTileCurTensor = layerTileAllocationTables.get(0).getTensorAllocation(i);
+
+    //   TensorAllocation.Builder tensorBuilder = TensorAllocation.newBuilder();
+    //   tensorBuilder.setTensorLabel(firstTileCurTensor.getTensorLabel())
+    //                .setBaseAddress(firstTileCurTensor.getBaseAddress());
+
+    //   int maxSize = firstTileCurTensor.getSize();
+
+    //   for (int j = 0; j < numTiles; j++) {
+    //     TensorAllocation curTensor = layerTileAllocationTables.get(j).getTensorAllocation(i);
+    //     maxSize = Math.max(maxSize, curTensor.getSize());
+    //   }
+
+    //   tensorBuilder.setSize(maxSize);
+
+    //   tensorTileAllocationBuilder.addTensorAllocation(tensorBuilder.build());
+    // }
+
+    // return tensorTileAllocationBuilder.build();
+  }
+
   /** Returns a map of the layer to the corresponding instructions that operate in that layer. */
   private static Hashtable<String, List<Integer>> getLayerToInstructionTable() {
     Hashtable<String, List<Integer>> layerToInstructionTable =
@@ -291,27 +388,27 @@ public class Validation {
     }
   }
 
-  /** Creates a map from tensor label to the corresponding tensor allocation information */
-  private static Map<Integer, TensorAllocation> relateTensorLabelToTensorAllocation(
-      List<TensorLayerAllocationTable> tensorLayAllocs) {
-    Hashtable<Integer, TensorAllocation> tensorLabelToTensorAllocation =
-        new Hashtable<Integer, TensorAllocation>();
+//   /** Creates a map from tensor label to the corresponding tensor allocation information */
+//   private static Map<Integer, TensorAllocation> relateTensorLabelToTensorAllocation(
+//       List<TensorLayerAllocationTable> tensorLayAllocs) {
+//     Hashtable<Integer, TensorAllocation> tensorLabelToTensorAllocation =
+//         new Hashtable<Integer, TensorAllocation>();
 
-    for (TensorLayerAllocationTable tensorLayAlloc : tensorLayAllocs) {
-      List<TensorTileAllocationTable> tensorTileAllocs =
-          tensorLayAlloc.getTensorTileAllocationList();
+//     for (TensorLayerAllocationTable tensorLayAlloc : tensorLayAllocs) {
+//       List<TensorTileAllocationTable> tensorTileAllocs =
+//           tensorLayAlloc.getTensorTileAllocationList();
 
-      for (TensorTileAllocationTable tensorTileAlloc : tensorTileAllocs) {
-        List<TensorAllocation> tensorAllocs = tensorTileAlloc.getTensorAllocationList();
+//       for (TensorTileAllocationTable tensorTileAlloc : tensorTileAllocs) {
+//         List<TensorAllocation> tensorAllocs = tensorTileAlloc.getTensorAllocationList();
         
-        for (TensorAllocation tensorAlloc : tensorAllocs) {
-          tensorLabelToTensorAllocation.put(tensorAlloc.getTensorLabel(), tensorAlloc);
-        }
-      }
-    }
+//         for (TensorAllocation tensorAlloc : tensorAllocs) {
+//           tensorLabelToTensorAllocation.put(tensorAlloc.getTensorLabel(), tensorAlloc);
+//         }
+//       }
+//     }
 
-    return tensorLabelToTensorAllocation;
-  }
+//     return tensorLabelToTensorAllocation;
+//   }
 
   /**
    * Returns the tensor that the trace entry is operating on based on its corresponding instruction.
@@ -323,32 +420,33 @@ public class Validation {
     int tensor = -1;
     // Tracks if the corresponding instruction has the trace entry's access type.
     Boolean hasAccessType = true;
+    String layer = instruction.getLayer();
 
     if (traceAccessType == TraceEvent.AccessType.NARROW_READ) {
       if (instruction.getNarrowReadCount() != 0) {
         AccessTypeTensorList = instruction.getNarrowReadList();
-        tensor = getTensor(AccessTypeTensorList, traceAddress, tensorLabelToTensorAllocationNarrow, NARROW);
+        tensor = getTensor(AccessTypeTensorList, traceAddress, layerTensorLabelToTensorAllocationNarrow, layer);
       } else {
         hasAccessType = false;
       }
     } else if (traceAccessType == TraceEvent.AccessType.NARROW_WRITE) {
       if (instruction.getNarrowWriteCount() != 0) {
         AccessTypeTensorList = instruction.getNarrowWriteList();
-        tensor = getTensor(AccessTypeTensorList, traceAddress, tensorLabelToTensorAllocationNarrow, NARROW);
+        tensor = getTensor(AccessTypeTensorList, traceAddress, layerTensorLabelToTensorAllocationNarrow, layer);
       } else {
         hasAccessType = false;
       }
     } else if (traceAccessType == TraceEvent.AccessType.WIDE_READ) {
       if (instruction.getWideReadCount() != 0) {
         AccessTypeTensorList = instruction.getWideReadList();
-        tensor = getTensor(AccessTypeTensorList, traceAddress, tensorLabelToTensorAllocationWide, WIDE);
+        tensor = getTensor(AccessTypeTensorList, traceAddress, layerTensorLabelToTensorAllocationWide, layer);
       } else {
         hasAccessType = false;
       }
     } else if (traceAccessType == TraceEvent.AccessType.WIDE_WRITE) {
       if (instruction.getWideWriteCount() != 0) {
         AccessTypeTensorList = instruction.getWideWriteList();
-        tensor = getTensor(AccessTypeTensorList, traceAddress, tensorLabelToTensorAllocationWide, WIDE);
+        tensor = getTensor(AccessTypeTensorList, traceAddress, layerTensorLabelToTensorAllocationWide, layer);
       } else {
         hasAccessType = false;
       }
@@ -384,7 +482,7 @@ public class Validation {
       List<Integer> accessTypeTensorList,
       int traceAddress,
       Map<Integer, TensorAllocation> tensorLabelToTensorAllocationTable,
-      String memoryType) throws Exception {
+      String memoryType) throws Exception{
     int tensor = -1;
 
     if (tensorLabelToTensorAllocationTable.size() == 0){
@@ -397,7 +495,7 @@ public class Validation {
 
     for (int i = 0; i < accessTypeTensorList.size(); i++) {
       TensorAllocation tensorAlloc =
-          tensorLabelToTensorAllocationTable.get(accessTypeTensorList.get(i));
+          tensorLabelToTensorAllocationTable.get(new Pair(layer, accessTypeTensorList.get(i)));
 
       int start = tensorAlloc.getBaseAddress();
       int end = start + tensorAlloc.getSize();
@@ -472,6 +570,32 @@ public class Validation {
           }
         }
       }
+    }
+  }
+
+  private static class Pair {
+    private String layer;
+    private int tensorLabel;
+
+    public Pair(String layer, int tensorLabel) {
+      this.layer = layer;
+      this.tensorLabel = tensorLabel;
+    }
+
+    public String getLayer() {
+      return layer;
+    }
+
+    public int getTensorLabel() {
+      return tensorLabel;
+    }
+
+    @Override
+    public int hashCode() {
+      int result = 17;
+      result = 31 * result + layer.hashCode();
+      result = 31 * result + tensorLabel;
+      return result;
     }
   }
 
