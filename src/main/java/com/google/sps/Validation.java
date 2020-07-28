@@ -103,13 +103,16 @@ public class Validation {
   }
 
   public static ProcessResults process(long start, long end) {
+    List<Delta> narrowDeltas = new ArrayList<Delta>();
+    List<Delta> wideDeltas = new ArrayList<Delta>();
+    
     try {
-      validateTraceEvents(start, end);
+      validateTraceEvents(start, end, narrowDeltas, wideDeltas);
     } catch (Exception e) {
-      return new ProcessResults(e, narrow, wide);
+      return new ProcessResults(e, narrowDeltas, wideDeltas);
     }
 
-    return new ProcessResults(null, narrow, wide);
+    return new ProcessResults(null, narrowDeltas, wideDeltas);
   }
 
   /**
@@ -225,7 +228,7 @@ public class Validation {
    * Given a list of trace entries, validates that trace entries proceeded in the right order and
    * operated on the correct traces.
    */
-  public static void validateTraceEvents(long start, long end)
+  public static List<Delta> validateTraceEvents(long start, long end)
       throws Exception, InvalidTensorOperationException, InvalidTensorReadException, MemoryAccessException {
     if (traceEvents.isEmpty()) {
       throw new Exception("No trace entry to be validated ");
@@ -253,14 +256,16 @@ public class Validation {
         throw new InvalidMaskException(traceEvent.getInstructionTag(), traceEvent.getAccessType());
       }
 
+      List<Delta> narrowDeltas;
+
       // If the trace entry is a write, performs a write validation. If it a read, performs a read
       // validation.
       if (accessType == TraceEvent.AccessType.NARROW_WRITE
           || accessType == TraceEvent.AccessType.WIDE_WRITE) {
-        writeValidation(narrow, wide, masks, traceTensor, traceEvent);
+        writeValidation(masks, traceTensor, traceEvent);
       } else if (accessType == TraceEvent.AccessType.NARROW_READ
           || accessType == TraceEvent.AccessType.WIDE_READ) {
-        readValidation(narrow, wide, masks, traceTensor, traceEvent);
+        readValidation(masks, traceTensor, traceEvent);
       }
     }
   }
@@ -375,8 +380,7 @@ public class Validation {
    * Validates that the write validation has a corresponding tensor and writes it to the correct
    * address in the memory arrays.
    */
-  public static void writeValidation(
-      int[][] narrow, int[][] wide, List<Boolean> masks, int tensor, TraceEvent traceEvent) {
+  public static void writeValidation(String layer, List<Boolean> masks, int tensor, TraceEvent traceEvent) {
     int address = traceEvent.getAddress();
     if (traceEvent.getAccessType() == TraceEvent.AccessType.NARROW_WRITE) {
       // Iterate through the tiles.
@@ -405,8 +409,7 @@ public class Validation {
    * Validates that the tensor that the read trace entry is reading has been written before the read
    * occurs.
    */
-  public static void readValidation(
-      int[][] narrow, int[][] wide, List<Boolean> masks, int tensor, TraceEvent traceEvent)
+  public static void readValidation(List<Boolean> masks, int tensor, TraceEvent traceEvent)
       throws InvalidTensorReadException {
     int address = traceEvent.getAddress();
     if (traceEvent.getAccessType() == TraceEvent.AccessType.NARROW_READ) {
