@@ -277,7 +277,7 @@ function displayFile() {
   const selectedFileBox = document.getElementById("selected-file");
   selectedFileBox.innerHTML = '';
 
-  // Checks if the user has selected a file and changes feedback message accordingly
+  // Checks if the user has selected a file and changes feedback message accordingly.
   if (file == "No file chosen") {
     selectedFileBox.style.color = "red";
   } else {
@@ -309,6 +309,7 @@ function openVisualization() {
 
         const fileIdBox = visualizerWindow.document.getElementById("trace-info-box");
         fileIdBox.title = message.data;
+        console.log(fileIdBox.title);
       } else {
         // Displays the selected file's information.
 
@@ -336,6 +337,7 @@ async function runVisualization() {
 
   const traceBox = document.getElementById("trace-info-box");
   traceBox.innerHTML = '';
+  console.log(traceBox.title);
 
   /*
     /report -> sends to report servlet
@@ -359,6 +361,8 @@ async function runVisualization() {
 
       await runTraces(i, numTraces);
     }
+  } else {
+    // Handle error?
   }
 
   const done = document.createElement("p");

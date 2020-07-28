@@ -134,8 +134,9 @@ public class VisualizerServlet extends HttpServlet {
       // Will not execute if the user failed to select a file after clicking "upload".
       if (filePart.getSubmittedFileName().length() > 0) {
         InputStream fileInputStream = filePart.getInputStream();
+        String fileName = filePart.getSubmittedFileName();
 
-        MemaccessCheckerData memaccessChecker = getMessage(fileInputStream, filePart);
+        MemaccessCheckerData memaccessChecker = getMessage(fileInputStream, fileName);
 
         // Put the file information into datastore.
         ZonedDateTime dateTime = ZonedDateTime.now(ZoneId.of(ZoneOffset.UTC.getId()));
@@ -158,11 +159,10 @@ public class VisualizerServlet extends HttpServlet {
         
         datastore.put(memaccessCheckerUpload);
 
-        // Write file to Cloud Storage using the file's upload time and name as it's unique id.
+        // Write file to Cloud Storage using the file's upload time and name as its unique id.
         GcsFileOptions instance = GcsFileOptions.getDefaultInstance();
-
         GcsService gcsService = GcsServiceFactory.createGcsService();
-        GcsFilename fileNameWrite = 
+        GcsFilename gcsFile = 
             new GcsFilename("trace_info_files", dateTime.format(formatter) + ":" + checkerName);
 
         // Gets the file in its byte array form.
@@ -170,13 +170,12 @@ public class VisualizerServlet extends HttpServlet {
         ByteBuffer buffer = ByteBuffer.wrap(byteArray, 0, byteArray.length);
 
         // Create and write to the GCS object.
-        gcsService.createOrReplace(fileNameWrite, instance, buffer);
+        gcsService.createOrReplace(gcsFile, instance, buffer);
 
         // Updates the last submitted file.
         fileEntity = memaccessCheckerUpload;
 
         // Holds the last uploaded file information.
-        String fileName = filePart.getSubmittedFileName();
         String fileSize = getBytes(filePart.getSize());
         String fileTrace = 
             memaccessChecker.getName().equals("") ? "No name provided" : memaccessChecker.getName();
@@ -256,10 +255,10 @@ public class VisualizerServlet extends HttpServlet {
   }
 
   // Creates a proto message out of the uploaded file's input stream.
-  private static MemaccessCheckerData getMessage(InputStream fileInputStream, Part filePart) 
+  private static MemaccessCheckerData getMessage(InputStream fileInputStream, String fileName) 
       throws IOException, InvalidProtocolBufferException, UnsupportedEncodingException {
     // Checks if the file uploaded is a binary file or a text file.
-    if (filePart.getSubmittedFileName().toLowerCase().endsWith(".bin")) {
+    if (fileName.toLowerCase().endsWith(".bin")) {
       // If binary file
       byte[] byteArray = ByteStreams.toByteArray(fileInputStream);
       return MemaccessCheckerData.parseFrom(byteArray);

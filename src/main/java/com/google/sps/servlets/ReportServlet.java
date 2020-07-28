@@ -12,12 +12,16 @@ import com.google.appengine.tools.cloudstorage.GcsService;
 import com.google.appengine.tools.cloudstorage.GcsServiceFactory;
 import com.google.common.io.ByteStreams;
 import com.google.gson.Gson;
+import com.google.protobuf.TextFormat;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.sps.data.*;
 import com.google.sps.Validation;
 import com.google.sps.proto.MemaccessCheckerDataProto.*;
 import com.google.sps.results.*;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.channels.Channels;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -39,6 +43,8 @@ public class ReportServlet extends HttpServlet {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
         Entity retrievedMemaccessChecker = null;
 
+        System.out.println(request.getParameter("fileId"));
+
         // Retrieves the file based on its entity's key, throws an error if the key doesn't exist.
         try {
           Key key = new Builder("File", Long.parseLong(request.getParameter("fileId"))).getKey();
@@ -55,10 +61,10 @@ public class ReportServlet extends HttpServlet {
                 retrievedMemaccessChecker.getProperty("memaccess-checker").toString());
 
         GcsInputChannel readChannel = gcsService.openReadChannel(fileName, 0);
-        InputStream fileStream = Channels.newInputStream(readChannel);
+        InputStream fileInputStream = Channels.newInputStream(readChannel);
 
-        // Gets the file as a byte array and parses it into proto message.
-        byte[] byteArray = ByteStreams.toByteArray(fileStream);
+        // Parses the retrieved file into a proto message.
+        byte[] byteArray = ByteStreams.toByteArray(fileInputStream);
         MemaccessCheckerData memaccessChecker = MemaccessCheckerData.parseFrom(byteArray);
 
         validation = new Validation(memaccessChecker);

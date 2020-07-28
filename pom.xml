@@ -20,18 +20,18 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>com.google.cloud</groupId>
-        <artifactId>libraries-bom</artifactId>
-        <version>7.0.0</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-
-      <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
         <version>29.0-jre</version>
-    </dependency>
+      </dependency>
+
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>libraries-bom</artifactId>
+        <version>8.0.0</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -60,7 +60,6 @@
         <artifactId>appengine-gcs-client</artifactId>
         <version>0.8.1</version>
     </dependency>
-
 
     <dependency>
       <groupId>junit</groupId>
