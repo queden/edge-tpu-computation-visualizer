@@ -104,6 +104,10 @@ p, li {
   font-weight: bold;
 }
 
+#choose-file {
+  font-size: 20px;
+}
+
 #selected-file {
   font-weight: bold;
   font-size: 20px;
