@@ -1,3 +1,14 @@
+async function test() {
+  console.log("enter");
+  const pre = await fetch('/report?process=pre&fileId=5910974510923776', {method: 'GET'});
+  const preresp = await pre.json();
+
+  const post = await fetch('/report?process=post&start=0', {method: 'GET'});
+  const postresp = await post.json();
+  const narrow = await postresp['narrow'];
+  console.log(postresp);
+  console.log(narrow);
+}
 var data1 = [];
 var data2 = [];
 var narrow = "Narrow Memory";
@@ -57,8 +68,10 @@ function extractData(rawData, memoryType) {
 
     // generate initial graph
     data = filterJSON(rawData, 'tile', '0');
+
     console.log(data)
     displayChart(data,memoryType, '0');
+
 }
 
 //Set up the chart
@@ -302,4 +315,8 @@ function displayChart(data, memoryType, section) {
     }
 
 }
+
 extractData(data1, wide)
+
+
+

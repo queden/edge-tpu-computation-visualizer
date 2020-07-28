@@ -211,6 +211,7 @@ function displayFile() {
   const selectedFileBox = document.getElementById("selected-file");
   selectedFileBox.innerHTML = '';
   selectedFileBox.innerHTML = "Selected file: " + file;
+   console.log(select.options[select.selectedIndex].value);
 }
 
 // Opens a pop-up window containing the visualization page
