@@ -150,69 +150,88 @@ public class Validation {
 
       // Loops through the instructions on this layer and updates their tensor based off of the
       // layer's interval tree.
-      for (int layerInstructionTag : layerInstructions) {
-        instructionBuilder.mergeFrom(instructionTagtoInstruction.get(layerInstructionTag));
 
-        // Gets the corresponding reads and writes, depending on if the memory is narrow or wide.
-        ArrayList<Integer> reads = new ArrayList<Integer>();
-        ArrayList<Integer> writes = new ArrayList<Integer>();
+      if (layerInstructions != null) {
+        for (int layerInstructionTag : layerInstructions) {
+            instructionBuilder.mergeFrom(instructionTagtoInstruction.get(layerInstructionTag));
 
-        if (isNarrow) {
-          reads.addAll(instructionBuilder.getNarrowReadList());
-          writes.addAll(instructionBuilder.getNarrowWriteList());
+            // Gets the corresponding reads and writes, depending on if the memory is narrow or wide.
+            ArrayList<Integer> reads = new ArrayList<Integer>();
+            ArrayList<Integer> writes = new ArrayList<Integer>();
 
-        } else {
-          reads.addAll(instructionBuilder.getWideReadList());
-          writes.addAll(instructionBuilder.getWideWriteList());
+            if (isNarrow) {
+                reads.addAll(instructionBuilder.getNarrowReadList());
+                writes.addAll(instructionBuilder.getNarrowWriteList());
+
+            } else {
+                reads.addAll(instructionBuilder.getWideReadList());
+                writes.addAll(instructionBuilder.getWideWriteList());
+            }
+
+            // Gets the operation's corresponding tensors from the interval tree and assigns them.
+            for (int i = 0; i < reads.size(); i++) {
+                AddressInterval address = new AddressInterval(reads.get(i));
+                // Returns the address interval of the tensor that the address falls in
+                AddressInterval tensorAddressInterval = addressIntervalTree.containsAddress(address);
+
+                if (tensorAddressInterval == null) {
+                    throw new InvalidTensorAddressException(address.start(), layerInstructionTag, isNarrow);
+                }
+                int tensorLabel = tensorAddressInterval.label();
+                reads.set(i, tensorLabel);
+            }
+
+            for (int i = 0; i < writes.size(); i++) {
+                AddressInterval address = new AddressInterval(writes.get(i));
+                AddressInterval tensorAddressInterval = addressIntervalTree.containsAddress(address);
+                if (tensorAddressInterval == null) {
+                    throw new InvalidTensorAddressException(address.start(), layerInstructionTag, isNarrow);
+                }
+                int tensorLabel = tensorAddressInterval.label();
+                writes.set(i, tensorLabel);
+            }
+
+            if (isNarrow) {
+                // Clear current values of reads and writes, which refer to base addresses
+                instructionBuilder.clearNarrowRead();
+                instructionBuilder.clearNarrowWrite();
+
+                instructionBuilder.addAllNarrowRead(reads);
+                instructionBuilder.addAllNarrowWrite(writes);
+            } else {
+                // Clear current values of reads and writes, which refer to base addresses
+                instructionBuilder.clearWideRead();
+                instructionBuilder.clearWideWrite();
+
+                instructionBuilder.addAllWideRead(reads);
+                instructionBuilder.addAllWideWrite(writes);
+            }
+
+            instructionTagtoInstruction.put(layerInstructionTag, instructionBuilder.build());
         }
-
-        // Gets the operation's corresponding tensors from the interval tree and assigns them.
-        for (int i = 0; i < reads.size(); i++) {
-          AddressInterval address = new AddressInterval(reads.get(i));
-          // Returns the address interval of the tensor that the address falls in
-          AddressInterval tensorAddressInterval = addressIntervalTree.containsAddress(address);
-
-          if (tensorAddressInterval == null) {
-            throw new InvalidTensorAddressException(address.start(), layerInstructionTag, isNarrow);
-          }
-          int tensorLabel = tensorAddressInterval.label();
-          reads.set(i, tensorLabel);
-        }
-        for (int i = 0; i < writes.size(); i++) {
-          AddressInterval address = new AddressInterval(writes.get(i));
-          AddressInterval tensorAddressInterval = addressIntervalTree.containsAddress(address);
-          if (tensorAddressInterval == null) {
-            throw new InvalidTensorAddressException(address.start(), layerInstructionTag, isNarrow);
-          }
-          int tensorLabel = tensorAddressInterval.label();
-          writes.set(i, tensorLabel);
-        }
-        if (isNarrow) {
-          instructionBuilder.addAllNarrowRead(reads);
-          instructionBuilder.addAllNarrowWrite(writes);
-        } else {
-          instructionBuilder.addAllWideRead(reads);
-          instructionBuilder.addAllWideWrite(writes);
-        }
-        instructionTagtoInstruction.put(layerInstructionTag, instructionBuilder.build());
       }
+
     }
   }
   /** Returns a map of the layer to the corresponding instructions that operate in that layer. */
   private static Hashtable<String, List<Integer>> getLayerToInstructionTable() {
     Hashtable<String, List<Integer>> layerToInstructionTable =
         new Hashtable<String, List<Integer>>();
+
     // Loops over the instructions, finds the instruction's layer corresponding instruction list
     // and adds the instruciton to that list
     for (Instruction instruction : instructions) {
       String instructionLayer = instruction.getLayer();
       List<Integer> layerInstructions = layerToInstructionTable.get(instructionLayer);
+
       if (layerInstructions == null) {
         layerInstructions = new ArrayList<Integer>();
       }
+
       layerInstructions.add(instruction.getTag());
       layerToInstructionTable.put(instructionLayer, layerInstructions);
     }
+    
     return layerToInstructionTable;
   }
 
