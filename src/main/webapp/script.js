@@ -41,71 +41,8 @@ async function selectUser() {
   }
 }
 
-// Deletes a single user.
-async function deleteUser() {
-  // Retrieves the selected user.
-  const select = document.getElementById("users");
-  const user = select.options[select.selectedIndex];
-
-  // Prevents the user from attempting to delete the default option.
-  if (user.text == "All") {
-    alert("Cannot delete user \"All\"");
-  } else {
-    // Confirms if the user wants to delete the selected user.
-    var purge = confirm("You are about to delete user \"" + user.text + "\". Do you wish to continue?");
-
-    if (purge == true) {
-      /*
-        /visualizer -> sends the information to the visualizer servlet
-        upload=false -> user is NOT uploading a file
-        purge=user -> user is NOT doing a blanket delete operation
-        user=true -> user IS deleting a user
-        user-id=user.value -> the selected user's key id in datastore
-        user-name=user.text -> the name of the selected user
-      */
-      await fetch('/visualizer?upload=false&purge=false&user=true&user-id=' + user.value + "&user-name=" + user.text, {method: 'POST'});
-      await uploadFile();
-
-      alert("User deleted");
-    } else {
-      alert("Delete aborted");
-    }
-  }
-}
-
-// Deletes a single file.
-async function deleteFile() {
-  // Retrieves the selected file.
-  const select = document.getElementById("uploaded-files");
-  const file = select.options[select.selectedIndex];
-
-  // Prevents the user from attempting to delete a non-selected file.
-  if (file.text == "No file chosen") {
-    alert("You must choose a file to delete.");
-  } else {
-    // Confirms if the user wants to delete the selected file.
-    var purge = confirm("You are about to delete file: " + file.text + ". Do you wish to continue?");
-
-    if (purge == true) {
-      /*
-        /visualizer -> sends the information to the visualizer servlet
-        upload=false -> user is NOT uploading a file
-        purge=false -> user is NOT doing a blanket delete operation
-        user=false -> user is NOT deleting a user
-        file-id=file.value -> the id of the file's entity in datastore
-      */
-      await fetch('/visualizer?upload=false&purge=false&user=false&file-id=' + file.value, {method: 'POST'});
-      await uploadFile();
-
-      alert("File deleted");
-    } else {
-      alert("Delete aborted");
-    }
-  }
-}
-
 // Handles the upload of the selected file as well as the loading of the page.
-async function uploadFile() {
+async function loadMainPage() {
   /*
     /visualizer -> sends information to the visualizer servlet
     time=false -> does NOT update the time zone
@@ -286,6 +223,69 @@ function displayFile() {
   } 
 }
 
+// Deletes a single file.
+async function deleteFile() {
+  // Retrieves the selected file.
+  const select = document.getElementById("uploaded-files");
+  const file = select.options[select.selectedIndex];
+
+  // Prevents the user from attempting to delete a non-selected file.
+  if (file.text == "No file chosen") {
+    alert("You must choose a file to delete.");
+  } else {
+    // Confirms if the user wants to delete the selected file.
+    var purge = confirm("You are about to delete file: " + file.text + ". Do you wish to continue?");
+
+    if (purge == true) {
+      /*
+        /visualizer -> sends the information to the visualizer servlet
+        upload=false -> user is NOT uploading a file
+        purge=false -> user is NOT doing a blanket delete operation
+        user=false -> user is NOT deleting a user
+        file-id=file.value -> the id of the file's entity in datastore
+      */
+      await fetch('/visualizer?upload=false&purge=false&user=false&file-id=' + file.value, {method: 'POST'});
+      await loadMainPage();
+
+      alert("File deleted");
+    } else {
+      alert("Delete aborted");
+    }
+  }
+}
+
+// Deletes a single user.
+async function deleteUser() {
+  // Retrieves the selected user.
+  const select = document.getElementById("users");
+  const user = select.options[select.selectedIndex];
+
+  // Prevents the user from attempting to delete the default option.
+  if (user.text == "All") {
+    alert("Cannot delete user \"All\"");
+  } else {
+    // Confirms if the user wants to delete the selected user.
+    var purge = confirm("You are about to delete user \"" + user.text + "\". Do you wish to continue?");
+
+    if (purge == true) {
+      /*
+        /visualizer -> sends the information to the visualizer servlet
+        upload=false -> user is NOT uploading a file
+        purge=user -> user is NOT doing a blanket delete operation
+        user=true -> user IS deleting a user
+        user-id=user.value -> the selected user's key id in datastore
+        user-name=user.text -> the name of the selected user
+      */
+      await fetch('/visualizer?upload=false&purge=false&user=true&user-id=' + user.value + "&user-name=" + user.text, {method: 'POST'});
+      await loadMainPage();
+
+      alert("User deleted");
+    } else {
+      alert("Delete aborted");
+    }
+  }
+}
+
 // Opens a pop-up window containing the visualization page.
 function openVisualization() {
   // Retrieves the selected file.
@@ -431,7 +431,7 @@ async function purgeAll(users, files) {
       files=files -> does/does not delete all files
     */
     await fetch('/visualizer?upload=false&purge=true&users=' + users + '&files=' + files, {method: 'POST'});
-    await uploadFile();
+    await loadMainPage();
   } else {
     alert("Purge aborted");
   }
