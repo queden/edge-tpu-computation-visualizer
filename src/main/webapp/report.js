@@ -3,14 +3,14 @@ var data2 = [];
 var narrow = "Narrow Memory";
 var wide = "Wide Memory";
 
-for (var i = 0; i < 1400; i++) {
+for (var i = 0; i < 23; i++) {
     var datum = {};
     datum.location = i;
-    datum.layer = (1400 - i) % 23;
+    datum.layer = (2621 - i) % 23;
     datum.tile = i % 2;
     data1.push(datum);
 }
-for (var i = 0; i < 1400; i++) {
+for (var i = 0; i < 23; i++) {
     var datum = {};
     datum.location = i;
     datum.layer = i % 23;
@@ -104,9 +104,12 @@ function displayChart(data, memoryType, section) {
     //Display tile 
     const displayTile = document.getElementById("tile");
     displayTile.innerHTML = "Tile " + section;
+
     colorScale = d3.scale.ordinal().domain([0, d3.max(data, function(d) {
         return d.layer;
     })]).range(['#FF5714', '#ccc', '#1BE7FF']);
+
+    console.log(focus.node().getBBox());
     var bars = focus.selectAll('.bar').remove();
     focus.select(".x.axis").remove();
     focus.select(".y.axis").remove();
@@ -226,7 +229,7 @@ function displayChart(data, memoryType, section) {
             .attr({
                 height: function(d, i) {
                     if (data.length < 23) {
-                        var newHeight = (27 * data.length) / 15
+                        var newHeight = 410 / data.length;
                         return newHeight;
                     }
 
@@ -248,7 +251,8 @@ function displayChart(data, memoryType, section) {
                     return colorScale(d.layer);
                 }
             })
-
+        
+       console.log(focus.node().getBBox());
 
     }
 
@@ -275,8 +279,8 @@ function displayChart(data, memoryType, section) {
             .classed('bar', true)
             .attr({
                 height: function(d, i) {
-                    var newHeight = (3 * data.length) / 280
-                    return 20;
+                    var newHeight = 410 / data.length;
+                    return newHeight;
                 },
                 width: function(d) {
                     return x.rangeBand()
