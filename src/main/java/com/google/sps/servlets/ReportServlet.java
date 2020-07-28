@@ -36,6 +36,7 @@ public class ReportServlet extends HttpServlet {
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     String json = "";
+    Gson gson = new Gson();
     
     if (request.getParameter("process").equals("pre")) {
         // Executes the preprocessing of the simulation trace.
@@ -71,7 +72,7 @@ public class ReportServlet extends HttpServlet {
 
         PreProcessResults preProcessResults = validation.preProcess();
 
-        json = new Gson().toJson(preProcessResults);
+        json = gson.toJson(preProcessResults);
     } else {
         // Executes the trace processing of the memaccess checker.
 
@@ -81,7 +82,7 @@ public class ReportServlet extends HttpServlet {
 
         ProcessResults processResults = validation.process(start, start + 1000);
         
-        json = new Gson().toJson(processResults);
+        json = gson.toJson(processResults);
     }
 
     response.setContentType("application/json;");
