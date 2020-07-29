@@ -20,13 +20,27 @@
 
         <p id="file-info"> Viewing file: </p>
         <button id="run-button" onclick="runVisualization()"> Run! </button>
+        
+        <h3 id="memory-type"></h3>
+
+        <button type="button" onClick="change(1)">wide</button>
+        <button type="button" onClick="change(2)">narrow</button>
+        <select id="inds">
+            <option value="0" selected="selected">Tile 0</option>
+            <option value="1">Tile 1</option>
+            <option value="2">Tile 2</option>
+        </select>
 
         <!-- TODO: Substitute with chart info -->
-        <p id="chart" style="color: blue; font-size: 48px;"> Viz go here </p>
+        <!-- <p id="chart" style="color: blue; font-size: 48px;"> Viz go here </p> -->
+        <div id="container">
+            <div id="element"></div>
+        </div>
 
         <div id="trace-info-box">
         </div>
     </body>
-    <script src="//d3js.org/d3.v4.min.js"></script>
-    <script type="text/javascript" src="script.js" onload="loadMemory()"></script>
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <script type="text/javascript" src="script.js"></script>
+    <script type="text/javascript" src="report.js"></script>
 </html>
