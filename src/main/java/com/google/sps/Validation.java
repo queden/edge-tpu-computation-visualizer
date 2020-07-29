@@ -25,10 +25,10 @@ public class Validation {
   private static int[][] narrow;
   private static int[][] wide;
 
-  public static int narrowSize;
-  public static int wideSize;
+  private static int narrowSize;
+  private static int wideSize;
 
-  public static int numTiles;
+  private static int numTiles;
 
   // Memory access types.
   public static final String NARROW_READ = "Narrow Read";
@@ -152,82 +152,103 @@ public class Validation {
 
       // Loops through the instructions on this layer and updates their tensor based off of the
       // layer's interval tree.
-      for (int layerInstructionTag : layerInstructions) {
-        instructionBuilder.mergeFrom(instructionTagtoInstruction.get(layerInstructionTag));
 
-        // Gets the corresponding reads and writes, depending on if the memory is narrow or wide.
-        ArrayList<Integer> reads = new ArrayList<Integer>();
-        ArrayList<Integer> writes = new ArrayList<Integer>();
+      if (layerInstructions != null) {
+        for (int layerInstructionTag : layerInstructions) {
+            instructionBuilder.mergeFrom(instructionTagtoInstruction.get(layerInstructionTag));
 
-        if (isNarrow) {
-          reads.addAll(instructionBuilder.getNarrowReadList());
-          writes.addAll(instructionBuilder.getNarrowWriteList());
+            // Gets the corresponding reads and writes, depending on if the memory is narrow or wide.
+            ArrayList<Integer> reads = new ArrayList<Integer>();
+            ArrayList<Integer> writes = new ArrayList<Integer>();
 
-        } else {
-          reads.addAll(instructionBuilder.getWideReadList());
-          writes.addAll(instructionBuilder.getWideWriteList());
+            if (isNarrow) {
+                reads.addAll(instructionBuilder.getNarrowReadList());
+                writes.addAll(instructionBuilder.getNarrowWriteList());
+
+            } else {
+                reads.addAll(instructionBuilder.getWideReadList());
+                writes.addAll(instructionBuilder.getWideWriteList());
+            }
+
+            // Gets the operation's corresponding tensors from the interval tree and assigns them.
+            for (int i = 0; i < reads.size(); i++) {
+                AddressInterval address = new AddressInterval(reads.get(i));
+                // Returns the address interval of the tensor that the address falls in
+                AddressInterval tensorAddressInterval = addressIntervalTree.containsAddress(address);
+
+                if (tensorAddressInterval == null) {
+                    throw new InvalidTensorAddressException(address.start(), layerInstructionTag, isNarrow);
+                }
+                int tensorLabel = tensorAddressInterval.label();
+                reads.set(i, tensorLabel);
+            }
+
+            for (int i = 0; i < writes.size(); i++) {
+                AddressInterval address = new AddressInterval(writes.get(i));
+                AddressInterval tensorAddressInterval = addressIntervalTree.containsAddress(address);
+                if (tensorAddressInterval == null) {
+                    throw new InvalidTensorAddressException(address.start(), layerInstructionTag, isNarrow);
+                }
+                int tensorLabel = tensorAddressInterval.label();
+                writes.set(i, tensorLabel);
+            }
+
+            if (isNarrow) {
+                // Clear current values of reads and writes, which refer to base addresses
+                instructionBuilder.clearNarrowRead();
+                instructionBuilder.clearNarrowWrite();
+
+                instructionBuilder.addAllNarrowRead(reads);
+                instructionBuilder.addAllNarrowWrite(writes);
+            } else {
+                // Clear current values of reads and writes, which refer to base addresses
+                instructionBuilder.clearWideRead();
+                instructionBuilder.clearWideWrite();
+
+                instructionBuilder.addAllWideRead(reads);
+                instructionBuilder.addAllWideWrite(writes);
+            }
+
+            instructionTagtoInstruction.put(layerInstructionTag, instructionBuilder.build());
         }
-
-        // Gets the operation's corresponding tensors from the interval tree and assigns them.
-        for (int i = 0; i < reads.size(); i++) {
-          AddressInterval address = new AddressInterval(reads.get(i));
-          // Returns the address interval of the tensor that the address falls in
-          AddressInterval tensorAddressInterval = addressIntervalTree.containsAddress(address);
-
-          if (tensorAddressInterval == null) {
-            throw new InvalidTensorAddressException(address.start(), layerInstructionTag, isNarrow);
-          }
-          int tensorLabel = tensorAddressInterval.label();
-          reads.set(i, tensorLabel);
-        }
-        for (int i = 0; i < writes.size(); i++) {
-          AddressInterval address = new AddressInterval(writes.get(i));
-          AddressInterval tensorAddressInterval = addressIntervalTree.containsAddress(address);
-          if (tensorAddressInterval == null) {
-            throw new InvalidTensorAddressException(address.start(), layerInstructionTag, isNarrow);
-          }
-          int tensorLabel = tensorAddressInterval.label();
-          writes.set(i, tensorLabel);
-        }
-        if (isNarrow) {
-          instructionBuilder.addAllNarrowRead(reads);
-          instructionBuilder.addAllNarrowWrite(writes);
-        } else {
-          instructionBuilder.addAllWideRead(reads);
-          instructionBuilder.addAllWideWrite(writes);
-        }
-        instructionTagtoInstruction.put(layerInstructionTag, instructionBuilder.build());
       }
+
     }
   }
   /** Returns a map of the layer to the corresponding instructions that operate in that layer. */
   private static Hashtable<String, List<Integer>> getLayerToInstructionTable() {
     Hashtable<String, List<Integer>> layerToInstructionTable =
         new Hashtable<String, List<Integer>>();
+
     // Loops over the instructions, finds the instruction's layer corresponding instruction list
     // and adds the instruciton to that list
     for (Instruction instruction : instructions) {
       String instructionLayer = instruction.getLayer();
       List<Integer> layerInstructions = layerToInstructionTable.get(instructionLayer);
+
       if (layerInstructions == null) {
         layerInstructions = new ArrayList<Integer>();
       }
+
       layerInstructions.add(instruction.getTag());
       layerToInstructionTable.put(instructionLayer, layerInstructions);
     }
+    
     return layerToInstructionTable;
   }
+
   /** Given a list of instructions, maps each instruction tag to its corresponding instruction. */
-  public static void relateInstructionTagtoInstructionTable() {
+  private static void relateInstructionTagtoInstructionTable() {
     for (Instruction instruction : instructions) {
       instructionTagtoInstruction.put(instruction.getTag(), instruction);
     }
   }
+
   /**
    * Given a list of trace entries, validates that trace entries proceeded in the right order and
    * operated on the correct traces.
    */
-  public static void validateTraceEvents(long start, long end)
+  private static void validateTraceEvents(long start, long end)
       throws Exception, InvalidTensorOperationException, InvalidTensorReadException, MemoryAccessException {
     if (traceEvents.isEmpty()) {
       throw new Exception("No trace entry to be validated ");
@@ -268,7 +289,7 @@ public class Validation {
   }
 
   /** Creates a map from tensor label to the corresponding tensor allocation information */
-  public static Map<Integer, TensorAllocation> relateTensorLabelToTensorAllocation(
+  private static Map<Integer, TensorAllocation> relateTensorLabelToTensorAllocation(
       List<TensorLayerAllocationTable> tensorLayAllocs) {
     Hashtable<Integer, TensorAllocation> tensorLabelToTensorAllocation =
         new Hashtable<Integer, TensorAllocation>();
@@ -292,7 +313,7 @@ public class Validation {
   /**
    * Returns the tensor that the trace entry is operating on based on its corresponding instruction.
    */
-  public static int getTraceTensor(
+  private static int getTraceTensor(
       int traceAddress, TraceEvent.AccessType traceAccessType, Instruction instruction)
       throws Exception, MemoryAccessException {
     List<Integer> AccessTypeTensorList;
@@ -355,12 +376,14 @@ public class Validation {
     return tensor;
   }
   /** Retrieves the correct tensor depending on the specific access type instruction list. */
+
   public static int getTensor (
       List<Integer> accessTypeTensorList,
       int traceAddress,
       Map<Integer, TensorAllocation> tensorLabelToTensorAllocationTable,
       String memoryType) throws Exception{
     int tensor = -1;
+
     if (tensorLabelToTensorAllocationTable.size() == 0){
         throw new Exception(
           "The "
@@ -368,11 +391,14 @@ public class Validation {
               + " allocation table is empty."
               + " ");
     }
+
     for (int i = 0; i < accessTypeTensorList.size(); i++) {
       TensorAllocation tensorAlloc =
           tensorLabelToTensorAllocationTable.get(accessTypeTensorList.get(i));
+
       int start = tensorAlloc.getBaseAddress();
       int end = start + tensorAlloc.getSize();
+
       if (traceAddress >= start && traceAddress < end) {
         tensor = accessTypeTensorList.get(i);
         break;
@@ -385,7 +411,7 @@ public class Validation {
    * Validates that the write validation has a corresponding tensor and writes it to the correct
    * address in the memory arrays.
    */
-  public static void writeValidation(
+  private static void writeValidation(
       int[][] narrow, int[][] wide, List<Boolean> masks, int tensor, TraceEvent traceEvent) {
     int address = traceEvent.getAddress();
     if (traceEvent.getAccessType() == TraceEvent.AccessType.NARROW_WRITE) {
@@ -415,7 +441,7 @@ public class Validation {
    * Validates that the tensor that the read trace entry is reading has been written before the read
    * occurs.
    */
-  public static void readValidation(
+  private static void readValidation(
       int[][] narrow, int[][] wide, List<Boolean> masks, int tensor, TraceEvent traceEvent)
       throws InvalidTensorReadException {
     int address = traceEvent.getAddress();
