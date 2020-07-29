@@ -1,35 +1,52 @@
 async function test() {
-  console.log("enter");
-  const pre = await fetch('/report?process=pre&fileId=5910974510923776', {method: 'GET'});
+  const pre = await fetch('/report?process=pre&fileId=5348024557502464', {method: 'GET'});
   const preresp = await pre.json();
 
   const post = await fetch('/report?process=post&start=0', {method: 'GET'});
   const postresp = await post.json();
-  const narrow = await postresp['narrow'];
-  console.log(postresp);
-  console.log(narrow);
+   console.log(preresp);
+   return preresp;
 }
-var data1 = [];
+;(async () => {
+  const result = await test()
+  console.log(result)
+var narrowSize = result["narrowSize"] 
+var data1 = new Array(narrowSize);
 var data2 = [];
 var narrow = "Narrow Memory";
 var wide = "Wide Memory";
-
-for (var i = 0; i < 23; i++) {
-    var datum = {};
-    datum.location = i;
-    datum.layer = (2621 - i) % 23;
-    datum.tile = i % 2;
-    data1.push(datum);
+var narrowAlloc = result['tensorAllocationNarrow'];
+console.log(narrowAlloc.length)
+console.log(data1.length)
+var max = 0;
+for (var i = 0; i < narrowAlloc.length; i++){
+    var allocs = narrowAlloc[i]["tensorTileAllocation_"][0]["tensorAllocation_"];
+    var tileAllocs = narrowAlloc[i]["tensorTileAllocation_"];
+    for (var tile = 0; tile < tileAllocs.length; tile++){
+        allocs = tileAllocs[tile]["tensorAllocation_"]
+        for (var j = 0; j < allocs.length; j++){
+            var alloc = allocs[j];
+            var start = 0;
+            var end = 0;
+            start = alloc["baseAddress_"];
+            end = start + alloc["size_"];
+            for (var k = start; k < end; k++){
+                if (end > narrowSize){
+                    break;
+                }
+                var datum = {}
+                datum.location = k;
+                datum.layer = narrowAlloc[i]["layer_"];
+                datum.tile = tile;
+                datum.label = alloc["tensorLabel_"]
+                data1.push(datum)
+            }
+        }
+    }
 }
-for (var i = 0; i < 23; i++) {
-    var datum = {};
-    datum.location = i;
-    datum.layer = i % 23;
-    datum.tile = 0;
-    data2.push(datum);
-}
 
-//change the memory location
+
+//change the memory location -- TODO
 function change(value) {
     if (value === 1) {
         extractData(data1, wide);
@@ -62,15 +79,15 @@ function extractData(rawData, memoryType) {
             //    d.tile = +d.tile;
             //    d.active = true;
             // });
-
-            displayChart(data, memoryType, section);
+            var sortedData = data.slice().sort((a, b) => d3.ascending(a.location, b.location))
+            displayChart(sortedData, memoryType, section);
         });
 
     // generate initial graph
     data = filterJSON(rawData, 'tile', '0');
-
+    var sortedData = data.slice().sort((a, b) => d3.ascending(a.location, b.location))
     console.log(data)
-    displayChart(data,memoryType, '0');
+    displayChart(sortedData,memoryType, '0');
 
 }
 
@@ -119,14 +136,18 @@ function displayChart(data, memoryType, section) {
     displayTile.innerHTML = "Tile " + section;
 
     colorScale = d3.scale.ordinal().domain([0, d3.max(data, function(d) {
-        return d.layer;
+        return d.label;
     })]).range(['#FF5714', '#ccc', '#1BE7FF']);
+    layerPosition = d3.scale.ordinal().domain(d3.map(data, function(d) {
+        return d.layer;
+    })).range([0, 1, 2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22]);
 
     console.log(focus.node().getBBox());
     var bars = focus.selectAll('.bar').remove();
     focus.select(".x.axis").remove();
     focus.select(".y.axis").remove();
     //update scales
+    
     x.domain(data.map(function(d) {
         return d.location
     }));
@@ -261,7 +282,7 @@ function displayChart(data, memoryType, section) {
 
                 },
                 fill: function(d) {
-                    return colorScale(d.layer);
+                    return colorScale(d.label);
                 }
             })
         
@@ -293,7 +314,7 @@ function displayChart(data, memoryType, section) {
             .attr({
                 height: function(d, i) {
                     var newHeight = 410 / data.length;
-                    return newHeight;
+                    return 17;
                 },
                 width: function(d) {
                     return x.rangeBand()
@@ -306,10 +327,10 @@ function displayChart(data, memoryType, section) {
                     return 379 - y(d.layer)
                 },
                 fill: function(d) {
-                    return colorScale(d.layer);
+                    return colorScale(d.label);
                 },
                 stroke: function(d) {
-                    return colorScale(d.layer);
+                    return colorScale(d.label);
                 }
             })
     }
@@ -318,5 +339,4 @@ function displayChart(data, memoryType, section) {
 
 extractData(data1, wide)
 
-
-
+})()
