@@ -104,6 +104,10 @@ p, li {
   font-weight: bold;
 }
 
+#choose-file {
+  font-size: 20px;
+}
+
 #selected-file {
   font-weight: bold;
   font-size: 20px;
@@ -224,9 +228,24 @@ rect.parent,
 	overflow:auto;
 }
 
+#delete-user, #delete-file {
+  font-size: 18px;
+  cursor: pointer;
+  background-color: red;
+  color: white;
+  border-radius: 12px;
+  border-color: white;
+}
+
 #delete-buttons {
   display: flex;
   flex-direction: column;
+}
+
+#done {
+  color: mediumspringgreen;
+  font-size: 20px;
+  display: none;
 }
 
 

@@ -1,16 +1,18 @@
 package com.google.sps.results;
 
+import com.google.sps.structures.Delta;
+import java.util.List;
+
 public class ProcessResults {
   public Exception error;
   public String message;
-  public int[][] narrow;
-  public int[][] wide;
+  public List<Delta> narrowDeltas;
+  public List<Delta> wideDeltas;
 
-  public ProcessResults(Exception error, int[][] narrow, int[][] wide) {
+  public ProcessResults(Exception error, List<Delta> narrowDeltas, List<Delta> wideDeltas) {
     this.error = error;
     this.message = error.getMessage();
-    System.out.println(message);
-    this.narrow = narrow;
-    this.wide = wide;
+    this.narrowDeltas = narrowDeltas;
+    this.wideDeltas = wideDeltas;
   }
 }

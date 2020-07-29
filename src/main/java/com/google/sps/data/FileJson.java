@@ -10,8 +10,8 @@ public class FileJson {
   private String fileSize;
   private String fileTrace;
   private int fileTiles;
-  private int narrowBytes;
-  private int wideBytes;
+  private String narrowBytes;
+  private String wideBytes;
   private String time;
   private String dateTimeString;
   private String zone;
@@ -23,8 +23,8 @@ public class FileJson {
       String fileSize, 
       String fileTrace, 
       int fileTiles, 
-      int narrowBytes, 
-      int wideBytes, 
+      String narrowBytes, 
+      String wideBytes, 
       String dateTimeString, 
       String zone,
       String uploadUser) {
@@ -47,8 +47,8 @@ public class FileJson {
       String fileSize, 
       String fileTrace, 
       int fileTiles, 
-      int narrowBytes, 
-      int wideBytes,
+      String narrowBytes, 
+      String wideBytes,
       String uploadUser) {
 
   this(fileName, fileSize, fileTrace, fileTiles, narrowBytes, wideBytes, "", "", uploadUser);
@@ -73,12 +73,12 @@ public class FileJson {
   // Constructor to be used when a file has not been uploaded but the time zone information is 
   // necessary
   public FileJson(String dateTimeString, String zone) {
-    this("null", "null", "null", 0 , 0, 0, "", zone, "");
+    this("null", "null", "null", 0 , "null", "null", "", zone, "");
   }
 
   // Constructor to be used when resetting the file information
   public FileJson() {
-    this("null", "null", "null", 0 , 0 , 0, "", "", "");
+    this("null", "null", "null", 0 , "null" , "null", "", "", "");
   }
 
   // Generates the appropriate time information of the file according to the time zone
