@@ -215,6 +215,8 @@ public class Validation {
             }
 
             instructionTagtoInstruction.put(layerInstructionTag, instructionBuilder.build());
+
+            instructionBuilder.clear();
         }
       }
 
