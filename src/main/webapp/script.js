@@ -335,9 +335,11 @@ function openVisualization() {
 async function runVisualization() {
   alert("Visualization begun");
 
+  const done = document.getElementById("done");
+  done.style.display = "none";
+
   const traceBox = document.getElementById("trace-info-box");
   traceBox.innerHTML = '';
-  console.log(traceBox.title);
 
   /*
     /report -> sends to report servlet
@@ -365,13 +367,7 @@ async function runVisualization() {
     // Handle error?
   }
 
-  const done = document.createElement("p");
-
-  done.innerHTML = "Validation finished.";
-
-  traceBox.appendChild(done);
-
-  alert("Visualization completed");
+  done.style.display = "block";
 }
 
 /*

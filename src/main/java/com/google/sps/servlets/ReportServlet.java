@@ -44,8 +44,6 @@ public class ReportServlet extends HttpServlet {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
         Entity retrievedMemaccessChecker = null;
 
-        System.out.println(request.getParameter("fileId"));
-
         // Retrieves the file based on its entity's key, throws an error if the key doesn't exist.
         try {
           Key key = new Builder("File", Long.parseLong(request.getParameter("fileId"))).getKey();

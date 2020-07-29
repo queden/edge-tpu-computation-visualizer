@@ -242,6 +242,12 @@ rect.parent,
   flex-direction: column;
 }
 
+#done {
+  color: mediumspringgreen;
+  font-size: 20px;
+  display: none;
+}
+
 
 #close-button {
   position: absolute;
