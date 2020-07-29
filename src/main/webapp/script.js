@@ -299,7 +299,6 @@ async function runVisualization() {
 
 /*
   Processes the different chunks of specified trace indicies
-
   start -> the beginning index of the traces to be processed
   numTraces -> the total number of traces
 */
