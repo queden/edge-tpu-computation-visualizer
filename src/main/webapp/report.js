@@ -5,6 +5,7 @@ async function test() {
   const post = await fetch('/report?process=post&start=0', {method: 'GET'});
   const postresp = await post.json();
    console.log(preresp);
+   console.log(postresp);
    return preresp;
 }
 ;(async () => {
