@@ -377,11 +377,11 @@ public class Validation {
   }
   /** Retrieves the correct tensor depending on the specific access type instruction list. */
 
-  public static int getTensor (
+  private static int getTensor (
       List<Integer> accessTypeTensorList,
       int traceAddress,
       Map<Integer, TensorAllocation> tensorLabelToTensorAllocationTable,
-      String memoryType) throws Exception{
+      String memoryType) throws Exception {
     int tensor = -1;
 
     if (tensorLabelToTensorAllocationTable.size() == 0){

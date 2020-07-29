@@ -1033,7 +1033,8 @@ public final class TJCodeTest extends Suite {
               "getTensor",
               List.class,
               int.class, 
-              Map.class);
+              Map.class,
+              String.class);
 
       getTensor.setAccessible(true);
 
@@ -1074,7 +1075,8 @@ public final class TJCodeTest extends Suite {
                   validation,
                   narrowReadTensorList, 
                   traceAddress, 
-                  tensorLabelToTensorAllocationNarrow));
+                  tensorLabelToTensorAllocationNarrow,
+                  "Narrow"));
 
       // Mid address
       traceAddress = ALLO_2.getBaseAddress() + ALLO_2.getSize() / 2;
@@ -1085,7 +1087,8 @@ public final class TJCodeTest extends Suite {
                   validation, 
                   narrowReadTensorList, 
                   traceAddress, 
-                  tensorLabelToTensorAllocationNarrow));
+                  tensorLabelToTensorAllocationNarrow,
+                  "Narrow"));
 
       // End address
       traceAddress = ALLO_2.getBaseAddress() + ALLO_2.getSize() - 1;
@@ -1096,7 +1099,8 @@ public final class TJCodeTest extends Suite {
                   validation, 
                   narrowReadTensorList, 
                   traceAddress, 
-                  tensorLabelToTensorAllocationNarrow));
+                  tensorLabelToTensorAllocationNarrow,
+                  "Narrow"));
     }
 
     // ALLO_8
@@ -1113,7 +1117,8 @@ public final class TJCodeTest extends Suite {
                   validation, 
                   narrowWriteTensorList, 
                   traceAddress, 
-                  tensorLabelToTensorAllocationNarrow));
+                  tensorLabelToTensorAllocationNarrow,
+                  "Narrow"));
 
       // Mid address
       traceAddress = ALLO_8.getBaseAddress() + ALLO_8.getSize() / 2;
@@ -1124,7 +1129,8 @@ public final class TJCodeTest extends Suite {
                   validation, 
                   narrowWriteTensorList, 
                   traceAddress, 
-                  tensorLabelToTensorAllocationNarrow));
+                  tensorLabelToTensorAllocationNarrow,
+                  "Narrow"));
 
       // End address
       traceAddress = ALLO_8.getBaseAddress() + ALLO_8.getSize() - 1;
@@ -1135,7 +1141,8 @@ public final class TJCodeTest extends Suite {
                   validation, 
                   narrowWriteTensorList, 
                   traceAddress, 
-                  tensorLabelToTensorAllocationNarrow));
+                  tensorLabelToTensorAllocationNarrow,
+                  "Narrow"));
     }
 
     // ALLO_3
@@ -1149,7 +1156,11 @@ public final class TJCodeTest extends Suite {
           expectedTensor, 
           (int) 
               getTensor.invoke(
-                  validation, wideReadTensorList, traceAddress, tensorLabelToTensorAllocationWide));
+                  validation, 
+                  wideReadTensorList, 
+                  traceAddress, 
+                  tensorLabelToTensorAllocationWide, 
+                  "Wide"));
 
       // Mid address
       traceAddress = ALLO_3.getBaseAddress() + ALLO_3.getSize() / 2;
@@ -1157,7 +1168,11 @@ public final class TJCodeTest extends Suite {
           expectedTensor, 
           (int) 
               getTensor.invoke(
-                  validation, wideReadTensorList, traceAddress, tensorLabelToTensorAllocationWide));
+                  validation, 
+                  wideReadTensorList, 
+                  traceAddress, 
+                  tensorLabelToTensorAllocationWide, 
+                  "Wide"));
 
       // End address
       traceAddress = ALLO_3.getBaseAddress() + ALLO_3.getSize() - 1;
@@ -1165,7 +1180,11 @@ public final class TJCodeTest extends Suite {
           expectedTensor, 
           (int) 
               getTensor.invoke(
-                  validation, wideReadTensorList, traceAddress, tensorLabelToTensorAllocationWide));
+                  validation, 
+                  wideReadTensorList, 
+                  traceAddress, 
+                  tensorLabelToTensorAllocationWide, 
+                  "Wide"));
     }
 
     // ALLO_5
@@ -1182,7 +1201,8 @@ public final class TJCodeTest extends Suite {
                 validation, 
                 wideWriteTensorList, 
                 traceAddress, 
-                tensorLabelToTensorAllocationWide));
+                tensorLabelToTensorAllocationWide,
+                "Wide"));
 
       // Mid address
       traceAddress = ALLO_5.getBaseAddress() + ALLO_5.getSize() / 2;
@@ -1193,7 +1213,8 @@ public final class TJCodeTest extends Suite {
                 validation, 
                 wideWriteTensorList, 
                 traceAddress, 
-                tensorLabelToTensorAllocationWide));
+                tensorLabelToTensorAllocationWide,
+                "Wide"));
 
       // End address
       traceAddress = ALLO_5.getBaseAddress() + ALLO_5.getSize() - 1;
@@ -1204,24 +1225,35 @@ public final class TJCodeTest extends Suite {
                   validation, 
                   wideWriteTensorList, 
                   traceAddress, 
-                  tensorLabelToTensorAllocationWide));
+                  tensorLabelToTensorAllocationWide,
+                  "Wide"));
     }
 
     // ALLO_7
     @Test
-    public void testIncorrectNarrowRead() throws IllegalAccessException, InvocationTargetException {
+    public void testIncorrectNarrowReadBeforeBaseAddress() 
+        throws IllegalAccessException, InvocationTargetException {
       expectedTensor = -1;
 
       // Before base address
-      traceAddress = ALLO_7.getBaseAddress() - 1;     
+      traceAddress = ALLO_7.getBaseAddress() - 1;
+
       assertEquals(
-          expectedTensor, 
-          (int) 
-              getTensor.invoke(
-                  validation, 
-                  narrowReadTensorList, 
-                  traceAddress, 
-                  tensorLabelToTensorAllocationNarrow));
+        expectedTensor, 
+        (int) 
+            getTensor.invoke(
+                validation, 
+                narrowReadTensorList, 
+                traceAddress, 
+                tensorLabelToTensorAllocationNarrow,
+                "Narrow"));
+    }
+      
+    // ALLO_7
+    @Test
+    public void testIncorrectNarrowReadAfterEndAddress() 
+        throws IllegalAccessException, InvocationTargetException {
+      expectedTensor = -1;
 
       // After end address
       traceAddress = ALLO_7.getBaseAddress() + ALLO_7.getSize();
@@ -1232,12 +1264,14 @@ public final class TJCodeTest extends Suite {
                   validation, 
                   narrowReadTensorList, 
                   traceAddress, 
-                  tensorLabelToTensorAllocationNarrow));
+                  tensorLabelToTensorAllocationNarrow,
+                  "Narrow")); 
     }
 
     // ALLO_6
     @Test
-    public void testIncorrectNarrowWrite() throws IllegalAccessException, InvocationTargetException {
+    public void testIncorrectNarrowWriteBeforeBaseAddress() 
+        throws IllegalAccessException, InvocationTargetException {
       expectedTensor = -1;
 
       // Before base address
@@ -1249,7 +1283,15 @@ public final class TJCodeTest extends Suite {
                 validation, 
                 narrowWriteTensorList, 
                 traceAddress, 
-                tensorLabelToTensorAllocationNarrow));
+                tensorLabelToTensorAllocationNarrow,
+                "Narrow"));
+    }
+      
+    // ALLO_6
+    @Test
+    public void testIncorrectNarrowWriteAfterEndAddress() 
+        throws IllegalAccessException, InvocationTargetException {
+      expectedTensor = -1;
 
       // After end address
       traceAddress = ALLO_6.getBaseAddress() + ALLO_6.getSize();
@@ -1260,12 +1302,14 @@ public final class TJCodeTest extends Suite {
                 validation, 
                 narrowWriteTensorList, 
                 traceAddress, 
-                tensorLabelToTensorAllocationNarrow));
+                tensorLabelToTensorAllocationNarrow,
+                "Narrow"));
     }
 
     // ALLO_9
     @Test
-    public void testIncorrectWideRead() throws IllegalAccessException, InvocationTargetException {
+    public void testIncorrectWideReadBeforeBaseAddress() 
+        throws IllegalAccessException, InvocationTargetException {
       expectedTensor = -1;
 
       // Before base address
@@ -1274,7 +1318,18 @@ public final class TJCodeTest extends Suite {
           expectedTensor, 
           (int) 
               getTensor.invoke(
-                  validation, wideReadTensorList, traceAddress, tensorLabelToTensorAllocationWide));
+                  validation, 
+                   wideReadTensorList, 
+                  traceAddress, 
+                  tensorLabelToTensorAllocationWide, 
+                  "Wide"));
+    }
+      
+    // ALLO_9
+    @Test
+    public void testIncorrectWideReadAfterEndAddress() 
+        throws IllegalAccessException, InvocationTargetException {
+      expectedTensor = -1;
 
       // After end address
       traceAddress = ALLO_9.getBaseAddress() + ALLO_9.getSize();
@@ -1282,12 +1337,17 @@ public final class TJCodeTest extends Suite {
           expectedTensor, 
           (int) 
               getTensor.invoke(
-                  validation, wideReadTensorList, traceAddress, tensorLabelToTensorAllocationWide));
+                  validation, 
+                  wideReadTensorList, 
+                  traceAddress, 
+                  tensorLabelToTensorAllocationWide, 
+                  "Wide"));
     }
 
     // ALLO_4
     @Test
-    public void testIncorrectWideWrite() throws IllegalAccessException, InvocationTargetException {
+    public void testIncorrectWideWriteBeforeBaseAddress() 
+        throws IllegalAccessException, InvocationTargetException {
       expectedTensor = -1;
 
       // Before base address
@@ -1299,7 +1359,15 @@ public final class TJCodeTest extends Suite {
                   validation, 
                   wideWriteTensorList, 
                   traceAddress, 
-                  tensorLabelToTensorAllocationWide));
+                  tensorLabelToTensorAllocationWide,
+                  "Wide"));
+    }
+
+    // ALLO_4
+    @Test
+    public void testIncorrectWideWriteAfterEndAddress() 
+        throws IllegalAccessException, InvocationTargetException {
+      expectedTensor = -1;
 
       // After end address
       traceAddress = ALLO_4.getBaseAddress() + ALLO_4.getSize();
@@ -1310,7 +1378,8 @@ public final class TJCodeTest extends Suite {
                   validation, 
                   wideWriteTensorList, 
                   traceAddress, 
-                  tensorLabelToTensorAllocationWide));
+                  tensorLabelToTensorAllocationWide,
+                  "Wide")); 
     }
   }
 
