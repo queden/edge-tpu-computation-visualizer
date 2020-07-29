@@ -9,10 +9,10 @@ public class PreProcessResults {
   public int numTiles;
   public int narrowSize;
   public int wideSize;
-  List<TensorLayerAllocationTable> tensorAllocationsNarrow;
+  List<TensorLayerAllocationTable> tensorAllocationNarrow;
   List<TensorLayerAllocationTable> tensorAllocationWide;
 
-  public PreProcessResults(boolean isError, String message, int numTraces, int numTiles, int narrowSize, int wideSize, List<TensorLayerAllocationTable> tensorAllocationsNarrow, List<TensorLayerAllocationTable> tensorAllocationWide) {
+  public PreProcessResults(boolean isError, String message, int numTraces, int numTiles, int narrowSize, int wideSize, List<TensorLayerAllocationTable> tensorAllocationNarrow, List<TensorLayerAllocationTable> tensorAllocationWide) {
     this.isError = isError;
     this.message = message;
     this.numTraces = numTraces;
