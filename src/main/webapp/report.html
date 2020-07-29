@@ -5,6 +5,7 @@
         <link rel="stylesheet" href="style.css">
         <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
         <script type="text/javascript" src="script.js"></script>
+        <script src="https://d3js.org/d3.v3.min.js"></script> 
     </head>
     <body>
       <div id = "nav-bar"> 
@@ -14,6 +15,7 @@
 
         <ul>
           <li> Please close this window before selecting another file to run </li>
+          <li> You must run the visualization before attempting to switch tiles or memory types </li>
           <li> You can run the visualization as many times as you want by clicking the "Run" button </li>
         </ul>
 
@@ -22,24 +24,40 @@
         
         <h3 id="memory-type"></h3>
 
-        <button type="button" onClick="change(1)">wide</button>
-        <button type="button" onClick="change(2)">narrow</button>
-        <select id="inds">
-            <option value="0" selected="selected">Tile 0</option>
-            <option value="1">Tile 1</option>
-            <option value="2">Tile 2</option>
-        </select>
+        <div id="memory-switch">
+          Switch between narrow and wide memory:
+          <button class="memory" type="button" onclick="change(1)"> Wide </button>
+          <button class="memory" type="button" onclick="change(2)"> Narrow </button>
+        </div>
+
+        <form action="#">
+          <label for="tile-select"> Choose a tile: </label>
+          <select id="tile-select" name="tile-select">
+              <option value="0" selected="selected">Tile 0</option>
+          </select>
+        </form>
 
         <!-- TODO: Substitute with chart info -->
         <!-- <p id="chart" style="color: blue; font-size: 48px;"> Viz go here </p> -->
-        <div id="container">
+        <div id="chart"></div>
+        <!-- <div id="container">
             <div id="element"></div>
+        </div> -->
+
+        <div id="response-messages">
+          <div id="trace-processes">
+            <div id="trace-info-box"></div>
+            <p id="done"> Validation finished </p>
+          </div>
+        
+          <div id="errors">
+            <p> Errors: </p>
+          </div>
         </div>
 
-        <div id="trace-info-box"></div>
-        <p id="done"> Validation finished </p>
+        
     </body>
-    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <!-- <script type="text/javascript" src="report.js"></script> -->
+     
     <script type="text/javascript" src="script.js"></script>
-    <script type="text/javascript" src="report.js"></script>
 </html>
