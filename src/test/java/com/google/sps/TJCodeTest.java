@@ -1381,6 +1381,78 @@ public final class TJCodeTest extends Suite {
                   tensorLabelToTensorAllocationWide,
                   "Wide")); 
     }
+
+    // ALLO_2
+    @Test (expected = Exception.class)
+    public void testNarrowReadEmptyAllocationTable() 
+        throws IllegalAccessException, InvocationTargetException, Throwable {
+      traceAddress = ALLO_2.getBaseAddress();
+
+      try {
+        getTensor.invoke(
+          validation,
+          narrowReadTensorList,
+          traceAddress,
+          new Hashtable<Integer, TensorAllocation>(),
+          "Narrow");
+      } catch (InvocationTargetException e) {
+        throw e.getTargetException();
+      }
+    }
+
+    // ALLO_8
+    @Test (expected = Exception.class)
+    public void testNarrowWriteEmptyAllocationTable() 
+        throws IllegalAccessException, InvocationTargetException, Throwable {
+      traceAddress = ALLO_8.getBaseAddress();
+
+      try {
+        getTensor.invoke(
+          validation,
+          narrowReadTensorList,
+          traceAddress,
+          new Hashtable<Integer, TensorAllocation>(),
+          "Narrow");
+      } catch (InvocationTargetException e) {
+        throw e.getTargetException();
+      }
+    }
+
+    // ALLO_3
+    @Test (expected = Exception.class)
+    public void testWideReadEmptyAllocationTable() 
+        throws IllegalAccessException, InvocationTargetException, Throwable {
+      traceAddress = ALLO_3.getBaseAddress();
+
+      try {
+        getTensor.invoke(
+          validation,
+          narrowReadTensorList,
+          traceAddress,
+          new Hashtable<Integer, TensorAllocation>(),
+          "Wide");
+      } catch (InvocationTargetException e) {
+        throw e.getTargetException();
+      }
+    }
+
+    // ALLO_5
+    @Test (expected = Exception.class)
+    public void testWideWriteEmptyAllocationTable() 
+        throws IllegalAccessException, InvocationTargetException, Throwable {
+      traceAddress = ALLO_5.getBaseAddress();
+
+      try {
+        getTensor.invoke(
+          validation,
+          narrowReadTensorList,
+          traceAddress,
+          new Hashtable<Integer, TensorAllocation>(),
+          "Wide");
+      } catch (InvocationTargetException e) {
+        throw e.getTargetException();
+      }
+    }
   }
 
   public static class TestRelateTensorLabelToTensorToTensorAllocation {
