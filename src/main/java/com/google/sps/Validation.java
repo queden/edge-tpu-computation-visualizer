@@ -251,7 +251,7 @@ public class Validation {
    * Given a list of trace entries, validates that trace entries proceeded in the right order and
    * operated on the correct traces.
    */
-  private static void validateTraceEvents(long start, long end)
+  public static void validateTraceEvents(long start, long end, List<Delta> narrowDeltas, List<Delta> wideDeltas)
       throws Exception, InvalidTensorOperationException, InvalidTensorReadException, MemoryAccessException {
     if (traceEvents.isEmpty()) {
       throw new Exception("No trace entry to be validated ");
@@ -278,8 +278,6 @@ public class Validation {
       if (masks.isEmpty()) {
         throw new InvalidMaskException(traceEvent.getInstructionTag(), traceEvent.getAccessType());
       }
-
-      List<Delta> narrowDeltas;
 
       // If the trace entry is a write, performs a write validation. If it a read, performs a read
       // validation.
@@ -416,7 +414,7 @@ public class Validation {
    * Validates that the write validation has a corresponding tensor and writes it to the correct
    * address in the memory arrays.
    */
-  public static void writeValidation(String layer, List<Boolean> masks, int tensor, TraceEvent traceEvent) {
+  public static void writeValidation(String layer, List<Boolean> masks, int tensor, TraceEvent traceEvent, List<Delta> narrowDeltas, List<Delta> wideDeltas) {
     int address = traceEvent.getAddress();
     if (traceEvent.getAccessType() == TraceEvent.AccessType.NARROW_WRITE) {
       // Iterate through the tiles.
@@ -426,6 +424,7 @@ public class Validation {
           int endAddress = traceEvent.getBytes() + address;
           for (int currentByte = address; currentByte < endAddress; currentByte++) {
             narrow[tile][currentByte] = tensor;
+            narrowDeltas.add(new Delta(layer, tile, currentByte, tensor));
           }
         }
       }
@@ -436,6 +435,7 @@ public class Validation {
           int endAddress = traceEvent.getBytes() + address;
           for (int currentByte = address; currentByte < endAddress; currentByte++) {
             wide[tile][currentByte] = tensor;
+            wideDeltas.add(new Delta(layer, tile, currentByte, tensor))
           }
         }
       }
