@@ -103,7 +103,7 @@ public class Validation {
     // layerTensorLabelToTensorAllocationWide =
     //     relateTensorLabelToTensorAllocation(tensorLayerAllocationWide);
 
-    return new PreProcessResults(isError, message, traceEvents.size());
+    return new PreProcessResults(isError, message, traceEvents.size(), numTiles, narrowSize, wideSize, tensorLayerAllocationNarrow, tensorLayerAllocationWide);
   }
 
   public static ProcessResults process(long start, long end) {
@@ -376,11 +376,13 @@ public class Validation {
         throw new InvalidMaskException(traceEvent.getInstructionTag(), traceEvent.getAccessType());
       }
 
+      String layer = instruction.getLayer();
+
       // If the trace entry is a write, performs a write validation. If it a read, performs a read
       // validation.
       if (accessType == TraceEvent.AccessType.NARROW_WRITE
           || accessType == TraceEvent.AccessType.WIDE_WRITE) {
-        writeValidation(masks, traceTensor, traceEvent);
+        writeValidation(layer, masks, traceTensor, traceEvent, narrowDeltas, wideDeltas);
       } else if (accessType == TraceEvent.AccessType.NARROW_READ
           || accessType == TraceEvent.AccessType.WIDE_READ) {
         readValidation(masks, traceTensor, traceEvent);
@@ -425,28 +427,28 @@ public class Validation {
     if (traceAccessType == TraceEvent.AccessType.NARROW_READ) {
       if (instruction.getNarrowReadCount() != 0) {
         AccessTypeTensorList = instruction.getNarrowReadList();
-        tensor = getTensor(AccessTypeTensorList, traceAddress, layerTensorLabelToTensorAllocationNarrow, layer);
+        tensor = getTensor(AccessTypeTensorList, traceAddress, layerTensorLabelToTensorAllocationNarrow, layer, NARROW);
       } else {
         hasAccessType = false;
       }
     } else if (traceAccessType == TraceEvent.AccessType.NARROW_WRITE) {
       if (instruction.getNarrowWriteCount() != 0) {
         AccessTypeTensorList = instruction.getNarrowWriteList();
-        tensor = getTensor(AccessTypeTensorList, traceAddress, layerTensorLabelToTensorAllocationNarrow, layer);
+        tensor = getTensor(AccessTypeTensorList, traceAddress, layerTensorLabelToTensorAllocationNarrow, layer, NARROW);
       } else {
         hasAccessType = false;
       }
     } else if (traceAccessType == TraceEvent.AccessType.WIDE_READ) {
       if (instruction.getWideReadCount() != 0) {
         AccessTypeTensorList = instruction.getWideReadList();
-        tensor = getTensor(AccessTypeTensorList, traceAddress, layerTensorLabelToTensorAllocationWide, layer);
+        tensor = getTensor(AccessTypeTensorList, traceAddress, layerTensorLabelToTensorAllocationWide, layer, WIDE);
       } else {
         hasAccessType = false;
       }
     } else if (traceAccessType == TraceEvent.AccessType.WIDE_WRITE) {
       if (instruction.getWideWriteCount() != 0) {
         AccessTypeTensorList = instruction.getWideWriteList();
-        tensor = getTensor(AccessTypeTensorList, traceAddress, layerTensorLabelToTensorAllocationWide, layer);
+        tensor = getTensor(AccessTypeTensorList, traceAddress, layerTensorLabelToTensorAllocationWide, layer, WIDE);
       } else {
         hasAccessType = false;
       }
@@ -481,8 +483,9 @@ public class Validation {
   private static int getTensor (
       List<Integer> accessTypeTensorList,
       int traceAddress,
-      Map<Integer, TensorAllocation> tensorLabelToTensorAllocationTable,
-      String memoryType) throws Exception{
+      Map<Pair, TensorAllocation> tensorLabelToTensorAllocationTable,
+      String layer,
+      String memoryType) throws Exception {
     int tensor = -1;
 
     if (tensorLabelToTensorAllocationTable.size() == 0){
@@ -533,7 +536,7 @@ public class Validation {
           int endAddress = traceEvent.getBytes() + address;
           for (int currentByte = address; currentByte < endAddress; currentByte++) {
             wide[tile][currentByte] = tensor;
-            wideDeltas.add(new Delta(layer, tile, currentByte, tensor))
+            wideDeltas.add(new Delta(layer, tile, currentByte, tensor));
           }
         }
       }

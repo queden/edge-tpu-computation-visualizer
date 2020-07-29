@@ -1,5 +1,8 @@
 package com.google.sps.results;
 
+import com.google.sps.structures.Delta;
+import java.util.List;
+
 public class ProcessResults {
   public Exception error;
   public String message;
