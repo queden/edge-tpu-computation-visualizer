@@ -12,7 +12,7 @@
     </style>
   </head>
 
-  <body onload="uploadFile()">
+  <body onload="loadMainPage()">
     <div id = "nav-bar"> 
         </div>
     <div id="heading-content"> 
@@ -67,9 +67,10 @@
             <p id="note"> NOTE: </p>
             
             <ul>
-              <li> User name to be used for filtering the number of displayed files </li>
+              <li> Username to be used for filtering the number of displayed files </li>
               <li> If a user name is not selected, 
                 the file will not be attached to a specific user and would only be able to be accessed by displaying the files submitted by "All" </li>
+              <li> Deleting a user will NOT delete that user's files, the attached user will instead be set to the default "All" </li>
             </ul>
           </div>
           <form action="#" onsubmit="selectUser()">
@@ -77,6 +78,7 @@
             <select id="users" name="users">
               <option value="All"></option>
             </select>
+            <button id="delete-user" onclick="deleteUser()"> Delete User </button>
             <label for="new-user"> New user: </label>
             <input name="new-user" id="new-user" type="text"/>
             <input type="submit" value="Submit"/>
@@ -90,7 +92,7 @@
 
             <div id="upload-box">
                 <div id="input-upload-box">
-                    <form action="/visualizer?upload=true&purge=false" method="POST" enctype="multipart/form-data">
+                    <form action="/visualizer?upload=true" method="POST" enctype="multipart/form-data">
                         <input name="file-input" type="file"/>
                         <input type="submit" value="Upload"/>
                     </form>
@@ -98,7 +100,13 @@
 
                 <p id="last-uploaded"> Last uploaded file: </p>
                 <div id="uploaded-file"></div>
-                <p id="scroll"></p>
+
+                <p id="note"> NOTE: </p>
+
+                <ul>
+                  <li> Upper size limit is 5 TB </li>
+                  <li> Compatible files: any text file, .bin files
+                </ul>
             </div>
           </div>
           <div id="body-text-visualizer">
@@ -112,10 +120,11 @@
             <p id="display-user-files"> Displaying files for: All </p>
 
             <form action="#">
-                <label for="uploaded-files">Choose a file to visualize: </label>
+                <label id="choose-file" for="uploaded-files">Choose a file to visualize: </label>
                 <select id="uploaded-files" name="uploaded-files" onchange="displayFile()">
                   <option> No file chosen </option>
                 </select>
+                <button id="delete-file" onclick="deleteFile()"> Delete File </button>
             </form>
 
             <p id="selected-file"> Selected file: No file chosen </p>

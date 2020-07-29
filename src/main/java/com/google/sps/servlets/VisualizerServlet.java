@@ -1,35 +1,39 @@
 package com.google.sps.servlets;
 
-import com.google.appengine.api.datastore.Blob;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.EntityNotFoundException;
+import com.google.appengine.api.datastore.Key;
+import com.google.appengine.api.datastore.KeyFactory.Builder;
 import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.Filter;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
 import com.google.appengine.api.datastore.Query.SortDirection;
-
+import com.google.appengine.tools.cloudstorage.GcsFileOptions;
+import com.google.appengine.tools.cloudstorage.GcsFilename;
+import com.google.appengine.tools.cloudstorage.GcsService;
+import com.google.appengine.tools.cloudstorage.GcsServiceFactory;
 import com.google.common.io.ByteStreams;
 import com.google.gson.Gson;
 import com.google.protobuf.TextFormat;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.sps.data.*;
 import com.google.sps.proto.MemaccessCheckerDataProto.*;
-
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-
+import java.nio.ByteBuffer;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Date;
-
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
@@ -41,19 +45,20 @@ import javax.servlet.http.Part;
 @WebServlet("/visualizer")
 @MultipartConfig()
 public class VisualizerServlet extends HttpServlet {
-  // Variables to hold the information about the last uploaded file, time zone, and current user
+  // Variables to hold the information about the last uploaded file, time zone, and current user.
   private static String timeZone = ZoneOffset.UTC.getId();
   private static String user = "All";
   private static FileJson fileJson = new FileJson();
   private static Entity fileEntity = new Entity("File");
+  private static String errorMessage = "";
 
   @Override 
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     if (request.getParameter("time").equals("false")) {
-      // Does NOT update the time zone
+      // Does NOT update the time zone.
 
       if (request.getParameter("user").equals("false")) {
-        // Does NOT update the current user
+        // Does NOT update the current user.
 
         Query queryFile = new Query("File").addSort("time", SortDirection.DESCENDING);
         Query queryUser = new Query("User").addSort("time", SortDirection.DESCENDING);
@@ -62,42 +67,55 @@ public class VisualizerServlet extends HttpServlet {
 
         PreparedQuery userResults = datastore.prepare(queryUser);
  
-        // Gets the current time zone string
+        // Gets the current time zone string.
         ZonedDateTime dateTime = ZonedDateTime.now(ZoneId.of(timeZone));
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("z");
 
         // Appends the correct time zone to the date and time string and retrieves the JSON string 
-        // containing the file upload information and the total collection of files
+        // containing the file upload information and the total collection of files.
         ReturnJson returnJson = 
             new ReturnJson(
                 getFileJson(timeZone, fileEntity), 
-                getFiles(), getUsers(), 
+                getFiles(), 
+                getUsers(), 
                 user, 
                 timeZone, 
-                dateTime.format(formatter));
+                dateTime.format(formatter),
+                errorMessage);
+        
+        errorMessage = "";
 
         Gson gson = new Gson();
 
         response.setContentType("application/json;");
         response.getWriter().println(gson.toJson(returnJson));
       } else {
-        // Updates the current user
+        // Updates the current user.
         String name = request.getParameter("user-name");
-        user = name;    
+        user = name;  
 
-        // Adds the new user into datastore
+        // Adds the new user into datastore.
         if (request.getParameter("new").equals("true")) {
           DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
-          // Puts the entered user into datastore
-          Entity userEntity = new Entity("User");
-          userEntity.setProperty("user-name", user);
-          userEntity.setProperty("time", new Date());
-          datastore.put(userEntity);
-        }
-      }     
+          // Checks if the user already exists.
+
+          Filter propertyFilter = new FilterPredicate("user-name", FilterOperator.EQUAL, user);
+          Query userCheck = new Query("User").setFilter(propertyFilter);
+
+          if (((PreparedQuery) datastore.prepare(userCheck)).countEntities() == 0) {
+            // Puts the entered user into datastore.
+            Entity userEntity = new Entity("User");
+            userEntity.setProperty("user-name", user);
+            userEntity.setProperty("time", new Date());
+            datastore.put(userEntity);
+          } else {
+            errorMessage = "User already exists.";
+          }
+        }     
+      } 
     } else {
-      // Updates the selected time zone
+      // Updates the selected time zone.
       String zone = request.getParameter("zone");
 
       timeZone = zone; 
@@ -106,89 +124,154 @@ public class VisualizerServlet extends HttpServlet {
 
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response) 
-    throws IOException, ServletException {
+      throws IOException, ServletException{
     String upload = request.getParameter("upload");
 
     if (upload.equals("true")) {
-      // Retrieve the uploaded file
+      // Retrieve the uploaded file.
       Part filePart = request.getPart("file-input");
           
-      // Will not execute if the user failed to select a file after clicking "upload"
+      // Will not execute if the user failed to select a file after clicking "upload".
       if (filePart.getSubmittedFileName().length() > 0) {
         InputStream fileInputStream = filePart.getInputStream();
+        String fileName = filePart.getSubmittedFileName();
 
-        // IF BINARY FILE
-        // byte[] byteArray = ByteStreams.toByteArray(fileInputStream);
-        // MemaccessCheckerData memaccessChecker = MemaccessCheckerData.parseFrom(byteArray);
+        MemaccessCheckerData memaccessChecker = getMessage(fileInputStream, fileName);
 
-        // IF TEXT FILE
-        InputStreamReader reader = new InputStreamReader(fileInputStream, "ASCII");
-        MemaccessCheckerData.Builder builder = MemaccessCheckerData.newBuilder();
-        TextFormat.merge(reader, builder);
-        MemaccessCheckerData memaccessChecker = builder.build();
-
-        // Put the simulation trace proto into datastore
+        // Put the file information into datastore.
         ZonedDateTime dateTime = ZonedDateTime.now(ZoneId.of(ZoneOffset.UTC.getId()));
         DateTimeFormatter formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME;
+
+        String checkerName = 
+            (memaccessChecker.getName().equals("")) 
+                ? filePart.getSubmittedFileName() 
+                : memaccessChecker.getName();
 
         Entity memaccessCheckerUpload = new Entity("File");
         memaccessCheckerUpload.setProperty("date", dateTime.format(formatter));
         memaccessCheckerUpload.setProperty("time", new Date());
-        memaccessCheckerUpload.setProperty(
-            "name",
-            (memaccessChecker.getName().equals("")) 
-                ? filePart.getSubmittedFileName() 
-                : memaccessChecker.getName());
-
+        memaccessCheckerUpload.setProperty("name", checkerName);
         memaccessCheckerUpload.setProperty("user", user);
         memaccessCheckerUpload.setProperty(
-            "memaccess-checker", new Blob(memaccessChecker.toByteArray()));        
+            "memaccess-checker", dateTime.format(formatter) + ":" + checkerName);        
 
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-        datastore.put(memaccessCheckerUpload);
         
-        // Updates the last submitted file
+        datastore.put(memaccessCheckerUpload);
+
+        // Write file to Cloud Storage using the file's upload time and name as its unique id.
+        GcsFileOptions instance = GcsFileOptions.getDefaultInstance();
+        GcsService gcsService = GcsServiceFactory.createGcsService();
+        GcsFilename gcsFile = 
+            new GcsFilename("trace_info_files", dateTime.format(formatter) + ":" + checkerName);
+
+        // Gets the file in its byte array form.
+        byte[] byteArray = memaccessChecker.toByteArray();
+        ByteBuffer buffer = ByteBuffer.wrap(byteArray, 0, byteArray.length);
+
+        // Create and write to the GCS object.
+        gcsService.createOrReplace(gcsFile, instance, buffer);
+
+        // Updates the last submitted file.
         fileEntity = memaccessCheckerUpload;
 
-        // Holds the last uploaded file information
-        String fileName = filePart.getSubmittedFileName();
+        // Holds the last uploaded file information.
         String fileSize = getBytes(filePart.getSize());
         String fileTrace = 
             memaccessChecker.getName().equals("") ? "No name provided" : memaccessChecker.getName();
             
         int fileTiles = memaccessChecker.getNumTiles();
-        int narrowBytes = memaccessChecker.getNarrowMemorySizeBytes();
-        int wideBytes = memaccessChecker.getWideMemorySizeBytes();
+        String narrowBytes = commaFormat(memaccessChecker.getNarrowMemorySizeBytes());
+        String wideBytes = commaFormat(memaccessChecker.getWideMemorySizeBytes());
 
         fileJson =
             new FileJson(fileName, fileSize, fileTrace, fileTiles, narrowBytes, wideBytes, user);
       } else {
-        // Resets the last uploaded file to "null" to help provide feedback to the user
+        // Resets the last uploaded file to "null" to help provide feedback to the user.
 
         fileJson = new FileJson();
         fileEntity = new Entity("File");
       }
     } else {
-      // Purges datastore as specified
-
+      // Purges datastore as specified.
       if (request.getParameter("purge").equals("true")) {
-        // Purge all users
-      
+
+        // Purge all users.
         if (request.getParameter("users").equals("true")) {
-          purgeAll(true, false);
+          purgeAll(true);
+
+          user = "All";
         }
 
-        // Purge all files
+        // Purge all files.
         if (request.getParameter("files").equals("true")) {
-          purgeAll(false, true);
+          purgeAll(false);
+
+          fileJson = new FileJson();
+          fileEntity = new Entity("File");
         }
-      }
-    }    
+      } else {
+        // Deletes a single user.
+        if (request.getParameter("user").equals("true")) {
+          try {
+            purgeEntity(
+              true,
+              Long.parseLong(request.getParameter("user-id")), 
+              request.getParameter("user-name"));
+          } catch(EntityNotFoundException e) {
+            System.out.println("User not found.");
+          }
+
+          user = "All";
+        } else {
+          // Deletes a single file.
+
+          Long id = Long.parseLong(request.getParameter("file-id"));
+          
+          DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+          Query queryFile = new Query("File").addSort("time", SortDirection.DESCENDING);
+
+          Entity lastUploadedFile = 
+              ((PreparedQuery) datastore.prepare(queryFile)).asIterator().next();
+
+          Long lastId = lastUploadedFile.getKey().getId();
+
+          // Resets last uploaded file if the deleted file is the most recent file upload.
+          if (lastId.equals(id)) {
+            fileJson = new FileJson();
+            fileEntity = new Entity("File");
+          }
+
+          try {
+            purgeEntity(false, id, null);
+          } catch(EntityNotFoundException e) {
+            System.out.println("File not found.");
+          }       
+        }
+      } 
+    }  
 
     response.sendRedirect("/index.html");
   }
 
-  // Function to retrieve the file size information in terms of Bytes/KB/MB/GB
+  // Creates a proto message out of the uploaded file's input stream.
+  private static MemaccessCheckerData getMessage(InputStream fileInputStream, String fileName) 
+      throws IOException, InvalidProtocolBufferException, UnsupportedEncodingException {
+    // Checks if the file uploaded is a binary file or a text file.
+    if (fileName.toLowerCase().endsWith(".bin")) {
+      // If binary file
+      byte[] byteArray = ByteStreams.toByteArray(fileInputStream);
+      return MemaccessCheckerData.parseFrom(byteArray);
+    } else {
+      // If text file
+      InputStreamReader reader = new InputStreamReader(fileInputStream, "ASCII");
+      MemaccessCheckerData.Builder builder = MemaccessCheckerData.newBuilder();
+      TextFormat.merge(reader, builder);
+      return builder.build();
+    }
+  }
+
+  // Function to retrieve the file size information in terms of Bytes/KB/MB/GB.
   private static String getBytes(long size) {
     double bytes = (double) size;
     String result = "";
@@ -209,19 +292,50 @@ public class VisualizerServlet extends HttpServlet {
     return result;
   }
 
-  // Determines the appropriate file information to be displayed on the page
+  // Adds a comma for every 3 digits.
+  private static String commaFormat(int input) {
+    Integer value = new Integer(input);
+    String result = value.toString();
+    
+    char[] resultArray = result.toCharArray();
+    List<String> chars = new ArrayList<String>();
+
+    int count = 0;
+    
+    for (int i = resultArray.length - 1; i > -1; i--) {
+      count++;
+
+      chars.add(0, String.valueOf(resultArray[i]));
+
+      // Appends a comma to the front of the string if there are more digits to come.
+      if (count == 3 && i != 0) {
+        chars.add(0, ",");
+        count = 0;
+      }
+    }
+
+    String finalResult = "";
+
+    for (String character : chars) {
+      finalResult += character;
+    }
+
+    return finalResult;
+  }
+
+  // Determines the appropriate file information to be displayed on the page.
   private static FileJson getFileJson(String zone, Entity fileEntity) {
     String dateTimeString = (String) fileEntity.getProperty("date");
 
     if (dateTimeString == null) {
-      // Sends the time zone information only
+      // Sends the time zone information only.
 
       ZonedDateTime dateTime = ZonedDateTime.now(ZoneId.of(zone));
       DateTimeFormatter formatter = DateTimeFormatter.ofPattern("z");
 
       fileJson = new FileJson(dateTime.format(formatter), zone);
     } else {
-      // Sends both file and time information
+      // Sends both file and time information.
 
       fileJson = new FileJson(fileJson, dateTimeString, zone);
     }
@@ -229,7 +343,7 @@ public class VisualizerServlet extends HttpServlet {
     return fileJson;
   }
 
-  // Retrieves the information of all of the uploaded files
+  // Retrieves the information of all of the uploaded files.
   private static List<LoadFile> getFiles() {
     boolean userFilesExist = true;
 
@@ -237,11 +351,11 @@ public class VisualizerServlet extends HttpServlet {
 
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
-    // Filters files to display based on current user
+    // Filters files to display based on current user.
     if (user.equals("All")) {
       queryFile = new Query("File").addSort("time", SortDirection.DESCENDING);
     } else {
-      // Filters files according to current user
+      // Filters files according to current user.
 
       Filter propertyFilter = new FilterPredicate("user", FilterOperator.EQUAL, user);
 
@@ -252,7 +366,7 @@ public class VisualizerServlet extends HttpServlet {
 
       if (((PreparedQuery) datastore.prepare(queryFile)).countEntities() == 0) {
         // Uses default "All" users option if current user has not uploaded files under their
-        // name
+        // name.
 
         queryFile = new Query("File").addSort("time", SortDirection.DESCENDING);
         userFilesExist = false;
@@ -264,7 +378,7 @@ public class VisualizerServlet extends HttpServlet {
       ArrayList<LoadFile> files = new ArrayList<>();
       String dateTimeString;
 
-      // Creates a collection of LoadFile objects with the proper information about their storage
+      // Creates a collection of LoadFile objects with the proper information about their storage.
       for (Entity fileEntity : fileResults.asIterable()) {
         dateTimeString = fileEntity.getProperty("date").toString();
 
@@ -281,7 +395,7 @@ public class VisualizerServlet extends HttpServlet {
       return files;
   }
 
-  // Assembles a collection of all known users
+  // Assembles a collection of all known users.
   private static List<User> getUsers() {
     Query queryUser = new Query("User").addSort("time", SortDirection.DESCENDING);
 
@@ -291,40 +405,80 @@ public class VisualizerServlet extends HttpServlet {
     ArrayList<User> users = new ArrayList<>();
 
     for (Entity entity : userResults.asIterable()) {
-      users.add(
-          new User(
-              entity.getKey().getId(),
-              (String) entity.getProperty("user-name")));
+      users.add(new User(entity.getKey().getId(), (String) entity.getProperty("user-name")));
     }
 
     return users;
   }
 
-  // Clears datastore of users and/or files as specified
-  private static void purgeAll(boolean users, boolean files) {
+  // Clears datastore and/or Cloud Storage of users and/or files as specified.
+  private static void purgeAll(boolean allUsers) throws IOException {
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
-    Query queryFile = new Query("File");
-    Query queryUser = new Query("User");
+    if (!allUsers) {
+      // Deletes all files.
 
-    if (files) {
+      Query queryFile = new Query("File");
+
+      GcsService gcsService = GcsServiceFactory.createGcsService();
+      GcsFilename fileName;
+
       for (Entity entity : ((PreparedQuery) datastore.prepare(queryFile)).asIterable()) {
+        fileName = new GcsFilename("trace_info_files", entity.getProperty("memaccess-checker").toString());
+
+        gcsService.delete(fileName);
         datastore.delete(entity.getKey());
       }
-
-      fileJson = new FileJson();
-      fileEntity = new Entity("File");
     } else {
+      // Deletes all users.
+
+      Query queryUser = new Query("User");
+
       for (Entity entity : ((PreparedQuery) datastore.prepare(queryUser)).asIterable()) {
         datastore.delete(entity.getKey());
       }
 
-      user = "All";
+      // Resets each file's user that previously had the deleted user to the default "All".
+      Query queryFile = new Query("File");
+      PreparedQuery fileResults = datastore.prepare(queryFile);
+      
+      for (Entity entity : fileResults.asIterable()) {
+        entity.setProperty("user", "All");
+      }
+    }
+  }
+
+  // Deletes a single user or file from datastore and/or Cloud Storage.
+  private static void purgeEntity(boolean isUser, Long id, String name) 
+      throws IOException, EntityNotFoundException {
+    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+    Key key = null;
+
+    if (isUser) {
+      // Retrieves the user based on its key.
+      key = new Builder("User", id).getKey();  
+
+      Filter propertyFilter = new FilterPredicate("user", FilterOperator.EQUAL, name);
+      Query queryFile = new Query("File").setFilter(propertyFilter);
+      PreparedQuery fileResults = datastore.prepare(queryFile);
+
+      // Resets each file's user that previously had the deleted user to the default "All".
+      for (Entity entity : fileResults.asIterable()) {
+        entity.setProperty("user", "All");
+      }
+    } else {
+      key = new Builder("File", id).getKey();
+      
+      // Deletes file from Cloud Storage.
+      Entity fileEntity = datastore.get(key);
+
+      GcsService gcsService = GcsServiceFactory.createGcsService();
+      GcsFilename fileName = 
+            new GcsFilename("trace_info_files", fileEntity.getProperty("memaccess-checker").toString());
+          
+      gcsService.delete(fileName);
     }
 
-    // Check if purge/submit actually happened
-    
-    System.out.println(((PreparedQuery) datastore.prepare(queryFile)).countEntities());
-    System.out.println(((PreparedQuery) datastore.prepare(queryUser)).countEntities());
+    datastore.delete(key); 
   }
 }
