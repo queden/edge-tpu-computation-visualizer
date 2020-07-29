@@ -99,7 +99,7 @@ public class Validation {
     tensorLabelToTensorAllocationWide =
         relateTensorLabelToTensorAllocation(tensorLayerAllocationWide);
 
-    return new PreProcessResults(isError, message, traceEvents.size());
+    return new PreProcessResults(isError, message, traceEvents.size(), numTiles, narrowSize, wideSize, tensorLayerAllocationNarrow,tensorLayerAllocationWide );
   }
 
   public static ProcessResults process(long start, long end) {
@@ -250,7 +250,7 @@ public class Validation {
       int address = traceEvent.getAddress();
 
       int traceTensor = getTraceTensor(address, accessType, instruction);
-
+      String layer = instruction.getLayer();
       List<Boolean> masks = instruction.getMaskList();
       if (masks.isEmpty()) {
         throw new InvalidMaskException(traceEvent.getInstructionTag(), traceEvent.getAccessType());
@@ -260,7 +260,7 @@ public class Validation {
       // validation.
       if (accessType == TraceEvent.AccessType.NARROW_WRITE
           || accessType == TraceEvent.AccessType.WIDE_WRITE) {
-        writeValidation(masks, traceTensor, traceEvent);
+        writeValidation(layer, masks, traceTensor, traceEvent, narrowDeltas, wideDeltas);
       } else if (accessType == TraceEvent.AccessType.NARROW_READ
           || accessType == TraceEvent.AccessType.WIDE_READ) {
         readValidation(masks, traceTensor, traceEvent);
@@ -399,7 +399,7 @@ public class Validation {
           int endAddress = traceEvent.getBytes() + address;
           for (int currentByte = address; currentByte < endAddress; currentByte++) {
             wide[tile][currentByte] = tensor;
-            wideDeltas.add(new Delta(layer, tile, currentByte, tensor))
+            wideDeltas.add(new Delta(layer, tile, currentByte, tensor));
           }
         }
       }
