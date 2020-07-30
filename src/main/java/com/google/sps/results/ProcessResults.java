@@ -20,7 +20,7 @@ public class ProcessResults {
       this.error = null;
       this.message = "";
     }
-    
+
     this.narrowDeltas = narrowDeltas;
     this.wideDeltas = wideDeltas;
   }
