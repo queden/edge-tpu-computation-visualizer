@@ -349,7 +349,7 @@ async function runVisualization() {
   const traceBox = document.getElementById("trace-info-box");
   traceBox.innerHTML = '';
 
-  console.log(document.getElementById("chart").title);
+  const stepSize = parseInt(document.getElementById("step-size").value);
 
   /*
     /report -> sends to report servlet
@@ -384,10 +384,10 @@ async function runVisualization() {
   var numTraces = preprocessResponse.numTraces;
 
   if (!preprocessResponse.isError) {
-    for (i = 0; i < numTraces ; i += 1000) {
+    for (i = 0; i < numTraces ; i += stepSize) {
       // Run through the traces, information processing will happen within the function.
 
-      await runTraces(i, numTraces);
+      await runTraces(i, numTraces, stepSize);
     }
   } else {
     // Handle error?
@@ -402,7 +402,7 @@ async function runVisualization() {
   start -> the beginning index of the traces to be processed
   numTraces -> the total number of traces
 */
-async function runTraces(start, numTraces) {
+async function runTraces(start, numTraces, stepSize) {
   // Retrieves box to display error/processing information.
   const traceBox = document.getElementById("trace-info-box");
 
@@ -411,18 +411,27 @@ async function runTraces(start, numTraces) {
     process=post -> runs trace validation algorithm on selected proto
     start=start -> the index of the traces to start processing
   */
-  const traceResponse = await fetch('/report?process=post&start=' + start, {method: 'GET'});
+  const traceResponse = await fetch('/report?process=post&start=' + start + "&step-size=" + stepSize, {method: 'GET'});
   const traceProcess = await traceResponse.json();
 
   // Process json trace information.
   // TODO: Substitute
   var responseMessage = document.createElement("p");
 
-  var end = (start + 999 < numTraces) ? start + 999 : numTraces;
+  var end = (start + (stepSize - 1) < numTraces) ? start + (stepSize - 1) : numTraces;
 
   if (traceProcess.error.stackTrace.length == 0) {
     responseMessage.innerHTML += `Traces ${start}-${end} validated.`;
   } else {
+    // Substitute into an error box maybe?
+    /*
+
+    const errorBox = document.getElementById("errors");
+    const p = document.createElement("p");
+    p.innerHTML = "${traceProcess.message}";
+    errorBox.appendChild(p);
+
+    */
     responseMessage.innerHTML += `Trace Validation Error: ${traceProcess.message}`;
   }
 

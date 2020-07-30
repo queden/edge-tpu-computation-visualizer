@@ -21,6 +21,10 @@
         </ul>
 
         <p id="file-info"> Viewing file: </p>
+        <form action="#">
+          <label for="step-size"> Enter a step size: </label>
+          <input type="number" name="step-size" id="step-size" value="1000"/>
+        </form>
         <button id="run-button" onclick="runVisualization()"> Run! </button>
         
         <h3 id="memory-type"></h3>
@@ -38,11 +42,7 @@
           </select>
         </form>
 
-        <!-- TODO: Substitute with chart info -->
         <div id="chart"></div>
-        <!-- <div id="container">
-            <div id="element"></div>
-        </div> -->
 
         <div id="response-messages">
           <div id="trace-processes">
