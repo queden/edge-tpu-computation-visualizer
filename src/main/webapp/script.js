@@ -440,7 +440,7 @@ async function runTraces(start, numTraces, stepSize) {
     p.innerHTML = traceProcess.message;
     errorBox.appendChild(p);
 
-    // Checks if the user wants to continue or abort the visualization
+    // Checks if the user wants to continue or abort the visualization after an error is found.
     var proceed = confirm("An error was encountered. Would you like to continue the visualization?");
 
     if (proceed) {
