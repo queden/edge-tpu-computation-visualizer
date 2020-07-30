@@ -435,7 +435,7 @@ async function runTraces(start, numTraces, stepSize) {
     return true;
   } else {
     // Appends error information.
-    
+
     const errorBox = document.getElementById("error-box");
     const p = document.createElement("p");
     p.innerHTML = traceProcess.message;
@@ -515,7 +515,7 @@ function loadMemory() {
   extractData(data1);
 }
 
-//Set up the chart
+// Set up the chart if in the visualizer window.
 if (document.getElementById('chart') != null) {
   var obj = document.getElementById('chart');
   var divWidth = obj.offsetWidth;
