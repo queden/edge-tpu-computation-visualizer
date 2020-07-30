@@ -375,7 +375,7 @@ async function runVisualization() {
   init.innerHTML = preprocessResponse.message;
   traceBox.appendChild(init);
 
-  const errorBox = document.getElementById("errors");
+  const errorBox = document.getElementById("error-box");
   errorBox.innerHTML = '';
   const errorInit = document.createElement("p");
   errorInit.innerHTML = 'Errors:'
@@ -387,10 +387,13 @@ async function runVisualization() {
     for (i = 0; i < numTraces ; i += stepSize) {
       // Run through the traces, information processing will happen within the function.
 
-      await runTraces(i, numTraces, stepSize);
+      // Checks if the visualization should continue or be aborted.
+      if (await runTraces(i, numTraces, stepSize) == false) {
+        break;
+      }
     }
   } else {
-    // Handle error?
+    alert("Error occurred in preprocessing, visualization aborted.");
   }
   
   done.style.display = "block";
@@ -416,30 +419,46 @@ async function runTraces(start, numTraces, stepSize) {
 
   // Process json trace information.
   // TODO: Substitute
+
   var responseMessage = document.createElement("p");
 
   var end = (start + (stepSize - 1) < numTraces) ? start + (stepSize - 1) : numTraces;
 
-  if (traceProcess.error.stackTrace.length == 0) {
+  if (!traceProcess.isError) {
     responseMessage.innerHTML += `Traces ${start}-${end} validated.`;
-  } else {
-    // Substitute into an error box maybe?
-    /*
+    traceBox.appendChild(responseMessage);
 
-    const errorBox = document.getElementById("errors");
+    // Update visualizer
+    // extractData(traceProcess);
+
+    // Continue visualization.
+
+    return true;
+  } else {
+    const errorBox = document.getElementById("error-box");
     const p = document.createElement("p");
-    p.innerHTML = "${traceProcess.message}";
+    p.innerHTML = traceProcess.message;
     errorBox.appendChild(p);
 
-    */
-    responseMessage.innerHTML += `Trace Validation Error: ${traceProcess.message}`;
+    // Checks if the user wants to continue or abort the visualization
+    var proceed = confirm("An error was encountered. Would you like to continue the visualization?");
+
+    if (proceed) {
+      // Continue visualization.
+
+      // Update visualizer
+      // extractData(traceProcess);
+
+      return true;
+    } else {
+      // Abort visualization.
+
+      return false;
+    }
   }
-
-  // Update visualizer
-  // extractData(traceProcess);
-
-  traceBox.appendChild(responseMessage);
 }
+
+
 
 // Deletes the specified elements from datastore.
 async function purgeAll(users, files) {
@@ -789,7 +808,6 @@ function displayChart(data) {
     }
 
 }
-
 
 // Cool rectangle easter egg ;D
 var realKonami = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "KeyA", "KeyB"];
