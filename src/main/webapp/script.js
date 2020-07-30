@@ -299,7 +299,6 @@ function openVisualization() {
   } else {
     // Creates and opens the pop-up window.
     const visualizerWindow = window.open("report.html", "Visualizer", "_blank", "toolbar=yes,scrollbars=yes,resizable=yes,width=500,height=400", "true");
-    visualizerWindow.title = "Visualizer";
     visualizerWindow.focus();
 
     // Listener to retrieve information from the main page.
@@ -315,6 +314,15 @@ function openVisualization() {
 
         const fileInfoBox = visualizerWindow.document.getElementById("file-info");
         fileInfoBox.innerHTML += message.data;
+
+        const tiles = visualizerWindow.document.getElementById("tile-select");
+        tiles.innerHTML = '';
+
+        const option = document.createElement("option");
+        option.value = 0;
+        option.text = "Tile 0";
+
+        tiles.appendChild(option);
       }
     });
 
@@ -327,17 +335,8 @@ function openVisualization() {
 
       visualizerWindow.postMessage(file.value, "*"); 
       visualizerWindow.postMessage(file.text, "*");
-
-      const tiles = visualizerWindow.document.getElementById("tile-select");
-      tiles.innerHTML = '';
-
-      const option = document.createElement("option");
-      option.value = 0;
-      option.text = "Tile 0";
-
-      tiles.appendChild(option);
-    }; 
-  }
+    };
+  } 
 }
 
 // Runs the visualization of the chosen simulation trace.
@@ -350,8 +349,7 @@ async function runVisualization() {
   const traceBox = document.getElementById("trace-info-box");
   traceBox.innerHTML = '';
 
-  const errorBox = document.getElementById("errors");
-  errorBox.style.display = "block";
+  console.log(document.getElementById("chart").title);
 
   /*
     /report -> sends to report servlet
@@ -376,6 +374,12 @@ async function runVisualization() {
   const init = document.createElement("p");
   init.innerHTML = preprocessResponse.message;
   traceBox.appendChild(init);
+
+  const errorBox = document.getElementById("errors");
+  errorBox.innerHTML = '';
+  const errorInit = document.createElement("p");
+  errorInit.innerHTML = 'Errors:'
+  errorBox.appendChild(errorInit);
 
   var numTraces = preprocessResponse.numTraces;
 
@@ -458,7 +462,7 @@ async function purgeAll(users, files) {
   }
 }
 
-// Updates the visualizer state.
+// Updates the visualizer state. (dummy)
 var data1 = [];
 var data2 = [];
 var memoryType = "Narrow Memory";
@@ -481,6 +485,45 @@ function loadMemory() {
 
   extractData(data1);
 }
+
+//Set up the chart
+if (document.getElementById('chart') != null) {
+  var obj = document.getElementById('chart');
+  var divWidth = obj.offsetWidth;
+  var margin = {
+      top: 10,
+      right: 10,
+      bottom: 100,
+      left: 40
+  }
+  var margin2 = {
+      top: 430,
+      right: 10,
+      bottom: 20,
+      left: 40
+  },
+  width = divWidth - 25,
+  height = 500 - margin.top - margin.bottom,
+  height2 = 500 - margin2.top - margin2.bottom;
+
+  var x = d3.scale.ordinal().rangeBands([0, width], 0),
+      x2 = d3.scale.ordinal().rangeBands([0, width], 0),
+      y = d3.scale.ordinal().rangeRoundBands([0, height], 0),
+      y2 = d3.scale.linear().domain([1400, 0]).range([height2, 0]);
+  var svg = d3.select("#chart").append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom);
+  var focus = svg.append("g")
+      .attr("class", "focus")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+  var context = svg.append("g")
+      .attr("class", "context")
+      .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
+  var xAxis = d3.svg.axis().scale(x).orient("bottom"),
+      xAxis2 = d3.svg.axis().scale(x2).orient("bottom").tickValues([]),
+      yAxis = d3.svg.axis().scale(y).orient("left");
+}
+        
 
 function addTiles(numTiles) {
   for (var i = 1; i <= numTiles; i += 1) {
@@ -540,53 +583,6 @@ function extractData(rawData) {
     console.log(data);
     displayChart(data);
 }
-
-var obj;
-var divWidth;
-var margin;
-var x;
-var svg;
-var focus;
-var context;
-var xAxis;
-
-if (window.name == "Visualizer") {
-  //Set up the chart
-  obj = document.getElementById('chart');
-  divWidth = obj.offsetWidth;
-  margin = {
-        top: 10,
-        right: 10,
-        bottom: 100,
-        left: 40
-    },
-    margin2 = {
-        top: 430,
-        right: 10,
-        bottom: 20,
-        left: 40
-    },
-    width = divWidth - 25,
-    height = 500 - margin.top - margin.bottom,
-    height2 = 500 - margin2.top - margin2.bottom;
-  x = d3.scale.ordinal().rangeBands([0, width], 0),
-    x2 = d3.scale.ordinal().rangeBands([0, width], 0),
-    y = d3.scale.ordinal().rangeRoundBands([0, height], 0),
-    y2 = d3.scale.linear().domain([1400, 0]).range([height2, 0]);
-  svg = d3.select("#chart").append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom);
-  focus = svg.append("g")
-    .attr("class", "focus")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-  context = svg.append("g")
-    .attr("class", "context")
-    .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
-  xAxis = d3.svg.axis().scale(x).orient("bottom"),
-    xAxis2 = d3.svg.axis().scale(x2).orient("bottom").tickValues([]),
-    yAxis = d3.svg.axis().scale(y).orient("left");
-}
-
 
 //Draws the chart
 function displayChart(data) {
