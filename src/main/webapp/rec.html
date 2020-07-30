@@ -1,24 +1,59 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <head>
+  <title> Funky Rectangle </title>
   <style>
     body {
       background-color: black;
     }
 
-    button {
-      padding: 30px 475px;
-      font-size: 24px;
-      font-size: 20px;
+    #back-button {
+      width: 100%;
+      padding: 45px 475px;
+      font-size: 54px;
       cursor: pointer;
       border-radius: 5px;
       border-color: white;
-      background-color: orange:
-    }
+      -webkit-animation: glowing 1300ms infinite;
+      animation: glowing 1300ms infinite;
+    } 
 
-    #back-buttons {
-      padding-left: 45%;
-    }
+    @-webkit-keyframes glowing {
+        25% {
+          background-color: #008cff;
+          -webkit-box-shadow: 0 0 15px #008cff;
+        }
+        50% {
+          background-color: #d10808;
+          -webkit-box-shadow: 0 0 15px #d10808;
+        }
+        75% {
+          background-color: #ffcc00;
+          -webkit-box-shadow: 0 0 15px #ffcc00;
+        }
+        100% {
+          background-color: #22ad10;
+          -webkit-box-shadow: 0 0 3px #22ad10;
+        }
+      }
+      @keyframes glowing {
+        25% {
+          background-color: #008cff;
+          -webkit-box-shadow: 0 0 15px #008cff;
+        }
+        50% {
+          background-color: #d10808;
+          box-shadow: 0 0 15px #d10808;
+        }
+        75% {
+          background-color: #ffcc00;
+          -webkit-box-shadow: 0 0 15px #ffcc00;
+        }
+        100% {
+          background-color: #22ad10;
+          box-shadow: 0 0 3px #22ad10;
+        }
+      }
 
   </style>
 </head>
@@ -31,7 +66,6 @@
     <div id="rec"></div>
   </div>
 </body>
-<script type="text/javascript" src="script.js"></script>
 <script src="//d3js.org/d3.v3.min.js"></script>
 <script>
   function goVisualizer() {
@@ -48,7 +82,7 @@
 
     var g = svg.selectAll("g")
         .data(d3.range(25))
-      .enter().append("g")
+        .enter().append("g")
         .attr("transform", "translate(" + mouse + ")");
 
     g.append("rect")
@@ -80,4 +114,30 @@
     });
   }
 
+  var real = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "KeyA", "KeyB"];
+  var user = [];
+
+  window.onkeydown = check;
+
+  function check(e) {
+    user.push(e.code);
+
+    if (user.length > 10) {
+      user.shift();
+    }
+
+    let match = true;
+
+    for (i = 0; i < 10; i += 1) {
+      if (user[i] != real[i]) {
+        match = false;
+        break;
+      }
+    }
+
+    if (match) {
+      location.replace("/index.html");
+      alert("YOU SHALL NOT PASS");
+    }
+  }
 </script>
