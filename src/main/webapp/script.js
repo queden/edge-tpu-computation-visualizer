@@ -418,7 +418,6 @@ async function runTraces(start, numTraces, stepSize) {
   const traceProcess = await traceResponse.json();
 
   // Process json trace information.
-  // TODO: Substitute
 
   var responseMessage = document.createElement("p");
 
@@ -431,10 +430,12 @@ async function runTraces(start, numTraces, stepSize) {
     // Update visualizer
     // extractData(traceProcess);
 
-    // Continue visualization.
+    // Continues visualization.
 
     return true;
   } else {
+    // Appends error information.
+    
     const errorBox = document.getElementById("error-box");
     const p = document.createElement("p");
     p.innerHTML = traceProcess.message;
