@@ -149,6 +149,8 @@ public class VisualizerServlet extends HttpServlet {
 
         Entity memaccessCheckerUpload = new Entity("File");
         memaccessCheckerUpload.setProperty("date", dateTime.format(formatter));
+        // ^ Purely for sorting purposes only
+        
         memaccessCheckerUpload.setProperty("time", new Date());
         memaccessCheckerUpload.setProperty("name", checkerName);
         memaccessCheckerUpload.setProperty("user", user);
