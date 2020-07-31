@@ -390,6 +390,8 @@ async function runVisualization() {
 
       // Checks if the visualization should continue or be aborted.
       if (await runTraces(i, numTraces, stepSize) == false) {
+        alert("Visualization aborted.");
+        
         break;
       }
     }

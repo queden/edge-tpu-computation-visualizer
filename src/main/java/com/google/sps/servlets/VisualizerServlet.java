@@ -262,13 +262,17 @@ public class VisualizerServlet extends HttpServlet {
     // Checks if the file uploaded is a binary file or a text file.
     if (fileName.toLowerCase().endsWith(".bin")) {
       // If binary file
+
       byte[] byteArray = ByteStreams.toByteArray(fileInputStream);
+
       return MemaccessCheckerData.parseFrom(byteArray);
     } else {
       // If text file
+
       InputStreamReader reader = new InputStreamReader(fileInputStream, "ASCII");
       MemaccessCheckerData.Builder builder = MemaccessCheckerData.newBuilder();
       TextFormat.merge(reader, builder);
+      
       return builder.build();
     }
   }
