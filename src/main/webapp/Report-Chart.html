@@ -4,7 +4,7 @@
         <link rel="stylesheet" href="style.css">
         <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
     </head>
-    <body onload="test()">
+    <body onload="chart(1)">
     <div id = "nav-bar"> 
         </div>
         <div id="heading-content"> 
@@ -29,8 +29,8 @@
     <h4 id="tile"></h4>
 <script src="https://d3js.org/d3.v3.min.js"></script>
 
-<button type="button" onClick="change(1)">wide</button>
-<button type="button" onClick="change(2)">narrow</button>
+<button type="button" onClick="chart(1)">wide</button>
+<button type="button" onClick="chart(2)">narrow</button>
 <select id="inds">
 		<option value="0" selected="selected">Tile 0</option>
 		<option value="1">Tile 1</option>
@@ -50,4 +50,5 @@
         <option value="15">Tile 15</option>
 </select>
     <script type="text/javascript" src="report.js"></script>
+    <p id="error-report"></p>
 </body>

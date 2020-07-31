@@ -68,6 +68,12 @@ p, li {
   color: red;
 }
 
+#error-report {
+  font-weight: bold;
+  text-decoration: underline;
+  color: red;
+}
+
 #upload-box {
     margin-bottom: 30px;
 }
