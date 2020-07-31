@@ -319,3 +319,10 @@ svg {
 #errors {
   display: none;
 }
+
+#error-encountered {
+  display: none;
+  font-size: 24px;
+  font-weight: bold;
+  color: red;
+}

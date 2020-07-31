@@ -441,25 +441,46 @@ async function runTraces(start, numTraces, stepSize) {
     p.innerHTML = traceProcess.message;
     errorBox.appendChild(p);
 
+    document.getElementById("error-encountereed").style.display = "block";
+
     // Checks if the user wants to continue or abort the visualization after an error is found.
-    var proceed = confirm("An error was encountered. Would you like to continue the visualization?");
+    // var proceed = confirm("An error was encountered. Would you like to continue the visualization?");
+    const errorSelect = document.getElementById("error-proceed");
 
-    if (proceed) {
-      // Continue visualization.
+    return errorSelect.onchange = function() {
+      var proceed = errorSelect.options[errorSelect.selectedIndex].value;
 
-      // Update visualizer
-      // extractData(traceProcess);
+      document.getElementById("error-encountereed").style.display = "none";
 
-      return true;
-    } else {
-      // Abort visualization.
+      if (proceed == "continue") {
+        // Continue visualization.
+          
 
-      return false;
+        // Update visualizer
+        // extractData(traceProcess);
+
+        return true;
+      } else {
+        // Abort visualization.
+
+        return false;
+      }
     }
+
+    // if (proceed) {
+    //   // Continue visualization.
+
+    //   // Update visualizer
+    //   // extractData(traceProcess);
+
+    //   return true;
+    // } else {
+    //   // Abort visualization.
+
+    //   return false;
+    // }
   }
 }
-
-
 
 // Deletes the specified elements from datastore.
 async function purgeAll(users, files) {

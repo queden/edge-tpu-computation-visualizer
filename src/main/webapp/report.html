@@ -42,6 +42,17 @@
           </select>
         </form>
 
+        <div id="error-encountered">
+        <form action="#">
+          <label for="error-proceed"> An error was encountered, please select how to proceed: </label>
+          <select id="error-proceed" name="error-proceed">
+            <option value="none"> No option selected </option>
+            <option value="continue"> Continue visualization </option>
+            <option value="abort"> Abort visualization </option>
+          </select> 
+        </form>
+        </div>
+
         <div id="chart"></div>
 
         <div id="response-messages">
