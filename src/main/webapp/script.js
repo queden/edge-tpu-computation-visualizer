@@ -383,16 +383,18 @@ async function runVisualization() {
 
   var numTraces = preprocessResponse.numTraces;
 
+  var start = 0; 
+
   if (!preprocessResponse.isError) {
-    for (i = 0; i < numTraces ; i += stepSize) {
-      // Run through the traces, information processing will happen within the function.
-
-      // Checks if the visualization should continue or be aborted.
-      if (await runTraces(i, numTraces, stepSize) == false) {
-        alert("Visualization aborted.");
-
+    
+    while (start < numTraces) {
+      var runTracesResults = await runTraces(start, numTraces, stepSize);
+      console.log(runTracesResults)
+      if (!runTracesResults.proceed) {
         break;
       }
+      start = runTracesResults.validationEnd + 1;
+      console.log(start)
     }
   } else {
     alert("Error occurred in preprocessing, visualization aborted.");
@@ -419,11 +421,11 @@ async function runTraces(start, numTraces, stepSize) {
   const traceResponse = await fetch('/report?process=post&start=' + start + "&step-size=" + stepSize, {method: 'GET'});
   const traceProcess = await traceResponse.json();
 
+  var end = traceProcess.validationEnd;
+
   // Process json trace information.
 
   var responseMessage = document.createElement("p");
-
-  var end = (start + (stepSize - 1) < numTraces) ? start + (stepSize - 1) : numTraces;
 
   if (!traceProcess.isError) {
     responseMessage.innerHTML += `Traces ${start}-${end} validated.`;
@@ -434,7 +436,10 @@ async function runTraces(start, numTraces, stepSize) {
 
     // Continues visualization.
 
-    return true;
+    return {
+        "proceed": true,
+        "validationEnd": end
+    };
   } else {
     document.getElementById("error-box").style.display = "block";
 
@@ -445,7 +450,7 @@ async function runTraces(start, numTraces, stepSize) {
 
     const tracesError = document.createElement("p");
     tracesError.className = "trace-error-interval";
-    tracesError.innerHTML = "Traces " + start + "-" + (start + (stepSize - 1));
+    tracesError.innerHTML = "Traces " + start + "-" + end;
     errorMessages.appendChild(tracesError);
 
     const p = document.createElement("p");
@@ -460,12 +465,16 @@ async function runTraces(start, numTraces, stepSize) {
 
       // Update visualizer
       // extractData(traceProcess);
-
-      return true;
+      return {
+          "proceed": true,
+          "validationEnd": end
+      };
     } else {
       // Abort visualization.
-
-      return false;
+      return {
+          "proceed": false,
+          "validationEnd": end
+      };
     }
   }
 }

@@ -7,11 +7,11 @@ public class ProcessResults {
   public Exception error;
   public Boolean isError;
   public String message;
-  public int validationEnd;
+  public long validationEnd;
   public List<Delta> narrowDeltas;
   public List<Delta> wideDeltas;
 
-  public ProcessResults(Exception error, Boolean isError, int validationEnd, List<Delta> narrowDeltas, List<Delta> wideDeltas) {
+  public ProcessResults(Exception error, Boolean isError, long validationEnd, List<Delta> narrowDeltas, List<Delta> wideDeltas) {
     this.isError = isError;
 
     if (isError) {
