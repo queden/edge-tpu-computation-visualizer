@@ -11,14 +11,17 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import java.io.StringWriter;
+import java.io.PrintWriter;
+
 public class Validation {
   private static MemaccessCheckerData memaccessCheckerData;
 
   private static List<TensorLayerAllocationTable> tensorLayerAllocationNarrow;
   private static List<TensorLayerAllocationTable> tensorLayerAllocationWide;
 
-  private static Map<Pair, TensorAllocation> layerTensorLabelToTensorAllocationNarrow;
-  private static Map<Pair, TensorAllocation> layerTensorLabelToTensorAllocationWide;
+  private static Hashtable<Pair, TensorAllocation> layerTensorLabelToTensorAllocationNarrow;
+  private static Hashtable<Pair, TensorAllocation> layerTensorLabelToTensorAllocationWide;
 
   private static ArrayList<Instruction> instructions;
   private static Map<Integer, Instruction> instructionTagtoInstruction;
@@ -113,10 +116,10 @@ public class Validation {
     try {
       validateTraceEvents(start, end, narrowDeltas, wideDeltas);
     } catch (Exception e) {
-      return new ProcessResults(e, narrowDeltas, wideDeltas);
+      return new ProcessResults(e, true, narrowDeltas, wideDeltas);
     }
 
-    return new ProcessResults(null, narrowDeltas, wideDeltas);
+    return new ProcessResults(null, false, narrowDeltas, wideDeltas);
   }
 
   /**
@@ -284,37 +287,6 @@ public class Validation {
     }
 
     return unionTileBuilder.build();
-
-
-    /** TODO: Will have information on what the max size is for each tensor label. Maybe make a set of tensor allocations, then iterate over that set and find out what they're max size is, build that into the tile,
-    * while doing so, adding it to the hashmap as a pair of current layer and tensor, to the tensor allocation object. Nice */
-
-    // TensorTileAllocationTable.Builder tensorTileAllocationBuilder = TensorTileAllocationTable.newBuilder();
-
-    // // Assuming that all tiles have all tensors
-    // int numAllocations = layerTileAllocationTables.get(0).getTensorAllocationCount();
-
-    // // TODO: So will every tile have every tensor even if its blank?
-    // for (int i = 0; i < numAllocations; i++) {
-    //   TensorAllocation firstTileCurTensor = layerTileAllocationTables.get(0).getTensorAllocation(i);
-
-    //   TensorAllocation.Builder tensorBuilder = TensorAllocation.newBuilder();
-    //   tensorBuilder.setTensorLabel(firstTileCurTensor.getTensorLabel())
-    //                .setBaseAddress(firstTileCurTensor.getBaseAddress());
-
-    //   int maxSize = firstTileCurTensor.getSize();
-
-    //   for (int j = 0; j < numTiles; j++) {
-    //     TensorAllocation curTensor = layerTileAllocationTables.get(j).getTensorAllocation(i);
-    //     maxSize = Math.max(maxSize, curTensor.getSize());
-    //   }
-
-    //   tensorBuilder.setSize(maxSize);
-
-    //   tensorTileAllocationBuilder.addTensorAllocation(tensorBuilder.build());
-    // }
-
-    // return tensorTileAllocationBuilder.build();
   }
 
   /** Returns a map of the layer to the corresponding instructions that operate in that layer. */
@@ -392,27 +364,6 @@ public class Validation {
     }
   }
 
-//   /** Creates a map from tensor label to the corresponding tensor allocation information */
-//   private static Map<Integer, TensorAllocation> relateTensorLabelToTensorAllocation(
-//       List<TensorLayerAllocationTable> tensorLayAllocs) {
-//     Hashtable<Integer, TensorAllocation> tensorLabelToTensorAllocation =
-//         new Hashtable<Integer, TensorAllocation>();
-
-//     for (TensorLayerAllocationTable tensorLayAlloc : tensorLayAllocs) {
-//       List<TensorTileAllocationTable> tensorTileAllocs =
-//           tensorLayAlloc.getTensorTileAllocationList();
-
-//       for (TensorTileAllocationTable tensorTileAlloc : tensorTileAllocs) {
-//         List<TensorAllocation> tensorAllocs = tensorTileAlloc.getTensorAllocationList();
-        
-//         for (TensorAllocation tensorAlloc : tensorAllocs) {
-//           tensorLabelToTensorAllocation.put(tensorAlloc.getTensorLabel(), tensorAlloc);
-//         }
-//       }
-//     }
-
-//     return tensorLabelToTensorAllocation;
-//   }
 
   /**
    * Returns the tensor that the trace entry is operating on based on its corresponding instruction.
@@ -472,11 +423,16 @@ public class Validation {
     if (tensor == -1) {
       throw new Exception(
           "Instruction  "
-              + instruction.getName()
-              + " does not have the appropriate tensor associated with it.This may be due to"
+              + instruction
+              + " does not have the appropriate tensor associated with it. This may be due to"
               + " invalid tensor or incorrect tensor event"
               + " address."
-              + " "); // notifying incorrect address error
+              + " Trace info: "
+              + "(trace address: "
+              + traceAddress
+              + " trace access type: "
+              + traceAccessType
+              + ")"); // notifying incorrect address error
     }
     return tensor;
   }
@@ -485,9 +441,10 @@ public class Validation {
   private static int getTensor (
       List<Integer> accessTypeTensorList,
       int traceAddress,
-      Map<Pair, TensorAllocation> tensorLabelToTensorAllocationTable,
+      Hashtable<Pair, TensorAllocation> tensorLabelToTensorAllocationTable,
       String layer,
       String memoryType) throws Exception {
+
     int tensor = -1;
 
     if (tensorLabelToTensorAllocationTable.size() == 0){
@@ -499,8 +456,12 @@ public class Validation {
     }
 
     for (int i = 0; i < accessTypeTensorList.size(); i++) {
+
+      int possibleTensorLabel = accessTypeTensorList.get(i); 
+
+      Pair pair = new Pair(layer, possibleTensorLabel); 
       TensorAllocation tensorAlloc =
-          tensorLabelToTensorAllocationTable.get(new Pair(layer, accessTypeTensorList.get(i)));
+          tensorLabelToTensorAllocationTable.get(pair);
 
       int start = tensorAlloc.getBaseAddress();
       int end = start + tensorAlloc.getSize();
@@ -593,6 +554,23 @@ public class Validation {
 
     public int getTensorLabel() {
       return tensorLabel;
+    }
+
+    @Override
+    public String toString() {
+      return "(layer: "
+            + layer
+            + ", tensor label: "
+            + tensorLabel
+            + ")";
+    }
+
+    @Override
+    public boolean equals(Object other) {
+      if (!(other instanceof Pair)) {
+        return false;
+      }
+      return layer.equals(((Pair) other).layer) && tensorLabel == ((Pair) other).tensorLabel;
     }
 
     @Override

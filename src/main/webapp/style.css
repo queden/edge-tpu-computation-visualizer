@@ -314,15 +314,17 @@ svg {
 
 #trace-info-box {
   margin-right: 75px;
+  width: 50%;
 }
 
-#errors {
+#error-box {
   display: none;
+  width: 50%;
+  overflow: auto;
 }
 
-#error-encountered {
-  display: none;
-  font-size: 24px;
-  font-weight: bold;
+#error-init {
   color: red;
+  font-size: 20px;
+  display: none;
 }

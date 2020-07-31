@@ -298,8 +298,8 @@ function openVisualization() {
     alert("You must choose a file");
   } else {
     // Creates and opens the pop-up window.
-    const visualizerWindow = window.open("report.html", "Visualizer", "_blank", "toolbar=yes,scrollbars=yes,resizable=yes,width=500,height=400", "true");
-    visualizerWindow.focus();
+    const visualizerWindow = window.open("report.html", "Visualizer", "_blank", "toolbar=yes,scrollbars=yes,width=2200,height=10000,resizable=yes");
+    // visualizerWindow.focus();
 
     // Listener to retrieve information from the main page.
     visualizerWindow.addEventListener("message", function(message) {
@@ -346,8 +346,15 @@ async function runVisualization() {
   const done = document.getElementById("done");
   done.style.display = "none";
 
+  const errorInit = document.getElementById("error-init");
+  errorInit.style.display = "block";
+
   const traceBox = document.getElementById("trace-info-box");
   traceBox.innerHTML = '';
+
+  const errorBox = document.getElementById("error-box");
+  errorBox.innerHTML = '';
+  errorBox.style.display = "none";
 
   const stepSize = parseInt(document.getElementById("step-size").value);
 
@@ -374,12 +381,6 @@ async function runVisualization() {
   const init = document.createElement("p");
   init.innerHTML = preprocessResponse.message;
   traceBox.appendChild(init);
-
-  const errorBox = document.getElementById("error-box");
-  errorBox.innerHTML = '';
-  const errorInit = document.createElement("p");
-  errorInit.innerHTML = 'Errors:'
-  errorBox.appendChild(errorInit);
 
   var numTraces = preprocessResponse.numTraces;
 
@@ -437,48 +438,33 @@ async function runTraces(start, numTraces, stepSize) {
     // Appends error information.
 
     const errorBox = document.getElementById("error-box");
+    errorBox.style.display = "block";
+
+    const tracesError = document.createElement("p");
+    tracesError.innerHTML = "Traces " + start + "-" + (start + (stepSize - 1));
+    tracesError.style.fontSize = "18px";
+    tracesError.style.fontWeight = "bold";
+    errorBox.appendChild(tracesError);
+
     const p = document.createElement("p");
     p.innerHTML = traceProcess.message;
     errorBox.appendChild(p);
 
-    document.getElementById("error-encountereed").style.display = "block";
-
     // Checks if the user wants to continue or abort the visualization after an error is found.
-    // var proceed = confirm("An error was encountered. Would you like to continue the visualization?");
-    const errorSelect = document.getElementById("error-proceed");
+    var proceed = confirm("An error was encountered. Would you like to continue the visualization?");
 
-    return errorSelect.onchange = function() {
-      var proceed = errorSelect.options[errorSelect.selectedIndex].value;
+    if (proceed) {
+      // Continue visualization.
 
-      document.getElementById("error-encountereed").style.display = "none";
+      // Update visualizer
+      // extractData(traceProcess);
 
-      if (proceed == "continue") {
-        // Continue visualization.
-          
+      return true;
+    } else {
+      // Abort visualization.
 
-        // Update visualizer
-        // extractData(traceProcess);
-
-        return true;
-      } else {
-        // Abort visualization.
-
-        return false;
-      }
+      return false;
     }
-
-    // if (proceed) {
-    //   // Continue visualization.
-
-    //   // Update visualizer
-    //   // extractData(traceProcess);
-
-    //   return true;
-    // } else {
-    //   // Abort visualization.
-
-    //   return false;
-    // }
   }
 }
 
