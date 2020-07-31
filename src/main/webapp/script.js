@@ -346,15 +346,14 @@ async function runVisualization() {
   const done = document.getElementById("done");
   done.style.display = "none";
 
-  const errorInit = document.getElementById("error-init");
-  errorInit.style.display = "block";
-
   const traceBox = document.getElementById("trace-info-box");
   traceBox.innerHTML = '';
 
   const errorBox = document.getElementById("error-box");
-  errorBox.innerHTML = '';
   errorBox.style.display = "none";
+
+  const errorMessages = document.getElementById("error-messages");
+  errorMessages.innerHTML = '';
 
   const stepSize = parseInt(document.getElementById("step-size").value);
 
@@ -391,7 +390,7 @@ async function runVisualization() {
       // Checks if the visualization should continue or be aborted.
       if (await runTraces(i, numTraces, stepSize) == false) {
         alert("Visualization aborted.");
-        
+
         break;
       }
     }
@@ -437,20 +436,21 @@ async function runTraces(start, numTraces, stepSize) {
 
     return true;
   } else {
+    document.getElementById("error-box").style.display = "block";
+
     // Appends error information.
 
-    const errorBox = document.getElementById("error-box");
-    errorBox.style.display = "block";
+    const errorMessages = document.getElementById("error-messages");
+    errorMessages.style.display = "block";
 
     const tracesError = document.createElement("p");
+    tracesError.className = "trace-error-interval";
     tracesError.innerHTML = "Traces " + start + "-" + (start + (stepSize - 1));
-    tracesError.style.fontSize = "18px";
-    tracesError.style.fontWeight = "bold";
-    errorBox.appendChild(tracesError);
+    errorMessages.appendChild(tracesError);
 
     const p = document.createElement("p");
     p.innerHTML = traceProcess.message;
-    errorBox.appendChild(p);
+    errorMessages.appendChild(p);
 
     // Checks if the user wants to continue or abort the visualization after an error is found.
     var proceed = confirm("An error was encountered. Would you like to continue the visualization?");
