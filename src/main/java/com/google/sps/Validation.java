@@ -147,8 +147,25 @@ public class Validation {
         addressIntervalList.add(new AddressInterval(tensorAllocation));
       }
 
-      IntervalTree<AddressInterval> addressIntervalTree =
+      IntervalTree<AddressInterval> addressIntervalTree = null;
+
+      try {
+        addressIntervalTree =
           new IntervalTree<AddressInterval>(addressIntervalList);
+      } catch (OverlappingIntervalsException e) {
+        AddressInterval firstTensorAllocation = (AddressInterval) e.getFirstInterval();
+        AddressInterval secondTensorAllocation = (AddressInterval) e.getSecondInterval();
+
+        throw new Exception(
+          "Overlapping tensors "
+          + firstTensorAllocation
+          + " and "
+          + secondTensorAllocation
+          + " found on layer "
+          + curLayer
+          + "."
+        );
+      }
 
       // Gets all of the instructions operating on the current layer.
       List<Integer> layerInstructions = layerToInstructionTable.get(curLayer);
@@ -361,7 +378,7 @@ public class Validation {
         writeValidation(layer, masks, traceTensor, traceEvent, narrowDeltas, wideDeltas);
       } else if (accessType == TraceEvent.AccessType.NARROW_READ
           || accessType == TraceEvent.AccessType.WIDE_READ) {
-        readValidation(masks, traceTensor, traceEvent);
+        readValidation(layer, masks, traceTensor, traceEvent);
       }
     }
   }
@@ -535,7 +552,7 @@ public class Validation {
    * Validates that the tensor that the read trace entry is reading has been written before the read
    * occurs.
    */
-  public static void readValidation(List<Boolean> masks, int tensor, TraceEvent traceEvent)
+  public static void readValidation(String layer, List<Boolean> masks, int tensor, TraceEvent traceEvent)
       throws Exception, InvalidTensorReadException {
     int address = traceEvent.getAddress() * traceEvent.getBytes();
     int tile = traceEvent.getTile();
@@ -547,7 +564,7 @@ public class Validation {
         for (int currentByte = address; currentByte < endAddress; currentByte++) {
           if (narrow[tile][currentByte] != tensor) {
             throw new InvalidTensorReadException(
-              tensor, tile, address, narrow[tile][address], "narrow");
+              tensor, layer, instruction, tile, address, narrow[tile][address], "narrow");
           }
         }
       } else {
@@ -567,7 +584,7 @@ public class Validation {
         for (int currentByte = address; currentByte < endAddress; currentByte++) {
           if (wide[tile][currentByte] != tensor) {
             throw new InvalidTensorReadException(
-              tensor, tile, address, wide[tile][currentByte], "wide");
+              tensor, layer, instruction, tile, address, wide[tile][currentByte], "wide");
           }
         }
       } else {
@@ -676,7 +693,7 @@ public class Validation {
     }
     @Override
     public String toString() {
-      return "label: " + label + " start: " + start + " end: " + end;
+      return "(label: " + label + ", start: " + start + ", end: " + end + ")";
     }
     @Override
     public boolean equals(Object other) {

@@ -22,6 +22,8 @@
 
 package com.google.sps.structures;
 
+import com.google.sps.exceptions.*;
+
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -64,7 +66,7 @@ public class IntervalTree<T extends Interval> implements Iterable<T> {
         size = 1;
     }
 
-    public IntervalTree(List<T> list) {
+    public IntervalTree(List<T> list) throws Exception {
         this();
         for(T t : list) {
             this.insert(t);
@@ -241,11 +243,15 @@ public class IntervalTree<T extends Interval> implements Iterable<T> {
      * @return if the value did not already exist, i.e., true if the tree was
      * changed, false if it was not
      */
-    public boolean insert(T t) {
+    public boolean insert(T t) throws Exception {
         
         Node z = new Node(t);
         Node y = nil;
         Node x = root;
+
+        if (!(x.searchOverlaps(t).isNil())) {
+          throw new OverlappingIntervalsException(x.interval(), t);
+        }
 
         while (!x.isNil()) {                         // Traverse the tree down to a leaf.
             y = x;
