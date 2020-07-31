@@ -312,14 +312,13 @@ svg {
   flex-direction: row;
 }
 
-#trace-info-box {
-  margin-right: 75px;
-  width: 50%;
+#trace-processes {
+  width: 30%;
 }
 
 #error-box {
   display: none;
-  width: 50%;
+  width: 60%;
   overflow: auto;
 }
 
