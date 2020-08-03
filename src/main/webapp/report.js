@@ -3,15 +3,12 @@
  * from preprocess and process
  */
 async function getData() {
-    const pre = await fetch('/report?process=pre&fileId=5348024557502464', {
-        method: 'GET'
-    });
+    const pre = await fetch('/report?process=pre&fileId=6227633859723264', {method: 'GET'});
     const preresp = await pre.json();
-
-    const post = await fetch('/report?process=post&start=0', {
-        method: 'GET'
-    });
+    console.log(preresp)
+    const post = await fetch('/report?process=post&start=0&step-size=1000', {method: 'GET'});
     const postresp = await post.json();
+    console.log(postresp)
     return [preresp, postresp];
 }
 
@@ -38,7 +35,7 @@ async function chart(val) {
 
     /**depending on which of the memory types are selected
      fill the array*/
-    function fill(memoryAlloc, size) {
+    function fill(memoryAlloc, memorySize) {
         for (var i = 0; i < memoryAlloc.length; i++) {
             var allocs = memoryAlloc[i]["tensorTileAllocation_"][0]["tensorAllocation_"];
             var tileAllocs = memoryAlloc[i]["tensorTileAllocation_"];
@@ -48,10 +45,17 @@ async function chart(val) {
                     var alloc = allocs[j];
                     var start = 0;
                     var end = 0;
+                    var size;
                     start = alloc["baseAddress_"];
-                    end = start + alloc["size_"];
+                    if (memoryAlloc === wideAlloc){
+                        size = alloc["size_"]/32;
+                    }
+                    else{
+                        size = alloc["size_"]
+                    }
+                    end = start + size;
                     for (var k = start; k < end; k++) {
-                        if (end > size) {
+                        if (end > memorySize) {
                             //Display the Error message
                             const errorMessage = document.getElementById("error-report");
                             errorMessage.innerHTML = "Allocation with label " + alloc["tensorLabel_"] + " has invalid memory address of " + end + ".";
@@ -87,10 +91,10 @@ async function chart(val) {
 
     if (val == 1) {
         fill(wideAlloc, wideSize)
-        addDelta(data1, wideDelta)
+        //addDelta(data1, wideDelta)
     } else {
         fill(narrowAlloc, narrowSize)
-        addDelta(data1, narrowDelta)
+        //addDelta(data1, narrowDelta)
     }
 
     /**filter the data based on the tile selected 
@@ -394,8 +398,12 @@ async function chart(val) {
             }));
             
             var focusHeight = focus.node().getBoundingClientRect().height;
-            var newHeight = focusHeight / layers.size;
-            console.log(newHeight)
+            var size = layers.size
+            if (size === 0){
+                size = 1;
+            }
+            var newHeight = focusHeight / size;
+            console.log(focusHeight, newHeight, layers.size)
             var bars = focus.selectAll('.bar')
                 .data(data)
             bars.enter().append("rect")

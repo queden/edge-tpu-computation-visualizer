@@ -53,6 +53,7 @@ message TraceEvent {
   int32 address = 3;
   int32 bytes = 4;
   int64 cycle = 5;
+  int32 tile = 6;
 }
 
 message MemaccessCheckerData {

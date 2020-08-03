@@ -10,6 +10,7 @@ public class ReturnJson {
   private List<User> users;
   private String currentUser;
   private String zone;
+  private String errorMessage;
 
   public ReturnJson(
       FileJson uploadFile, 
@@ -17,13 +18,15 @@ public class ReturnJson {
       List<User> users, 
       String currentUser, 
       String zone, 
-      String dateTimeString) {
+      String dateTimeString,
+      String errorMessage) {
         
     this.uploadFile = uploadFile;
     this.files = files;
     this.users = users;
     this.currentUser = currentUser;
     this.zone = zone;
+    this.errorMessage = errorMessage;
 
     this.getZone(dateTimeString);
   }
