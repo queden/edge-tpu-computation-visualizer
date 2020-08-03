@@ -35,6 +35,8 @@ public class Validation {
 
   private static int numTiles;
 
+  private static long validationEnd; 
+
   // Memory access types.
   public static final String NARROW_READ = "Narrow Read";
   public static final String NARROW_WRITE = "Narrow Write";
@@ -101,11 +103,6 @@ public class Validation {
       }
     }
 
-    // layerTensorLabelToTensorAllocationNarrow =
-    //     relateTensorLabelToTensorAllocation(tensorLayerAllocationNarrow);
-    // layerTensorLabelToTensorAllocationWide =
-    //     relateTensorLabelToTensorAllocation(tensorLayerAllocationWide);
-
     return new PreProcessResults(isError, message, traceEvents.size(), numTiles, narrowSize, wideSize, tensorLayerAllocationNarrow, tensorLayerAllocationWide);
   }
 
@@ -116,10 +113,10 @@ public class Validation {
     try {
       validateTraceEvents(start, end, narrowDeltas, wideDeltas);
     } catch (Exception e) {
-      return new ProcessResults(e, true, narrowDeltas, wideDeltas);
+      return new ProcessResults(e, true, validationEnd, narrowDeltas, wideDeltas);
     }
 
-    return new ProcessResults(null, false, narrowDeltas, wideDeltas);
+    return new ProcessResults(null, false, validationEnd, narrowDeltas, wideDeltas);
   }
 
   /**
@@ -150,8 +147,25 @@ public class Validation {
         addressIntervalList.add(new AddressInterval(tensorAllocation));
       }
 
-      IntervalTree<AddressInterval> addressIntervalTree =
+      IntervalTree<AddressInterval> addressIntervalTree = null;
+
+      try {
+        addressIntervalTree =
           new IntervalTree<AddressInterval>(addressIntervalList);
+      } catch (OverlappingIntervalsException e) {
+        AddressInterval firstTensorAllocation = (AddressInterval) e.getFirstInterval();
+        AddressInterval secondTensorAllocation = (AddressInterval) e.getSecondInterval();
+
+        throw new Exception(
+          "Overlapping tensors "
+          + firstTensorAllocation
+          + " and "
+          + secondTensorAllocation
+          + " found on layer "
+          + curLayer
+          + "."
+        );
+      }
 
       // Gets all of the instructions operating on the current layer.
       List<Integer> layerInstructions = layerToInstructionTable.get(curLayer);
@@ -324,16 +338,21 @@ public class Validation {
    */
   public static void validateTraceEvents(long start, long end, List<Delta> narrowDeltas, List<Delta> wideDeltas)
       throws Exception, InvalidTensorOperationException, InvalidTensorReadException, MemoryAccessException {
+    validationEnd = start;
+
     if (traceEvents.isEmpty()) {
-      throw new Exception("No trace entry to be validated ");
+      throw new Exception("No trace entry to be validated.");
     }
     // Iterates over each trace entry, ensures that it is operating on the correct tensor and
     // validates based on if it is a write or a read.
     for (long i = start; i < end; i++) {
+      validationEnd = i;
+
       TraceEvent traceEvent = traceEvents.get((int) i);
       // Gets the trace event's corresponding instruction and ensures it exists.
       Instruction instruction = instructionTagtoInstruction.get(traceEvent.getInstructionTag());
       if (instruction == null) {
+
         throw new Exception(
             "Instruction with key "
                 + traceEvent.getInstructionTag()
@@ -341,7 +360,7 @@ public class Validation {
       }
 
       TraceEvent.AccessType accessType = traceEvent.getAccessType();
-      int address = traceEvent.getAddress();
+      int address = traceEvent.getAddress() * traceEvent.getBytes();
 
       int traceTensor = getTraceTensor(address, accessType, instruction);
 
@@ -359,7 +378,7 @@ public class Validation {
         writeValidation(layer, masks, traceTensor, traceEvent, narrowDeltas, wideDeltas);
       } else if (accessType == TraceEvent.AccessType.NARROW_READ
           || accessType == TraceEvent.AccessType.WIDE_READ) {
-        readValidation(masks, traceTensor, traceEvent);
+        readValidation(layer, masks, traceTensor, traceEvent);
       }
     }
   }
@@ -371,7 +390,7 @@ public class Validation {
   private static int getTraceTensor(
       int traceAddress, TraceEvent.AccessType traceAccessType, Instruction instruction)
       throws Exception, MemoryAccessException {
-    List<Integer> AccessTypeTensorList;
+    List<Integer> accessTypeTensorList;
     int tensor = -1;
     // Tracks if the corresponding instruction has the trace entry's access type.
     Boolean hasAccessType = true;
@@ -379,29 +398,29 @@ public class Validation {
 
     if (traceAccessType == TraceEvent.AccessType.NARROW_READ) {
       if (instruction.getNarrowReadCount() != 0) {
-        AccessTypeTensorList = instruction.getNarrowReadList();
-        tensor = getTensor(AccessTypeTensorList, traceAddress, layerTensorLabelToTensorAllocationNarrow, layer, NARROW);
+        accessTypeTensorList = instruction.getNarrowReadList();
+        tensor = getTensor(accessTypeTensorList, traceAddress, layerTensorLabelToTensorAllocationNarrow, layer, NARROW);
       } else {
         hasAccessType = false;
       }
     } else if (traceAccessType == TraceEvent.AccessType.NARROW_WRITE) {
       if (instruction.getNarrowWriteCount() != 0) {
-        AccessTypeTensorList = instruction.getNarrowWriteList();
-        tensor = getTensor(AccessTypeTensorList, traceAddress, layerTensorLabelToTensorAllocationNarrow, layer, NARROW);
+        accessTypeTensorList = instruction.getNarrowWriteList();
+        tensor = getTensor(accessTypeTensorList, traceAddress, layerTensorLabelToTensorAllocationNarrow, layer, NARROW);
       } else {
         hasAccessType = false;
       }
     } else if (traceAccessType == TraceEvent.AccessType.WIDE_READ) {
       if (instruction.getWideReadCount() != 0) {
-        AccessTypeTensorList = instruction.getWideReadList();
-        tensor = getTensor(AccessTypeTensorList, traceAddress, layerTensorLabelToTensorAllocationWide, layer, WIDE);
+        accessTypeTensorList = instruction.getWideReadList();
+        tensor = getTensor(accessTypeTensorList, traceAddress, layerTensorLabelToTensorAllocationWide, layer, WIDE);
       } else {
         hasAccessType = false;
       }
     } else if (traceAccessType == TraceEvent.AccessType.WIDE_WRITE) {
       if (instruction.getWideWriteCount() != 0) {
-        AccessTypeTensorList = instruction.getWideWriteList();
-        tensor = getTensor(AccessTypeTensorList, traceAddress, layerTensorLabelToTensorAllocationWide, layer, WIDE);
+        accessTypeTensorList = instruction.getWideWriteList();
+        tensor = getTensor(accessTypeTensorList, traceAddress, layerTensorLabelToTensorAllocationWide, layer, WIDE);
       } else {
         hasAccessType = false;
       }
@@ -418,6 +437,8 @@ public class Validation {
     if (!hasAccessType) {
       throw new MemoryAccessException(traceAccessType, instruction.getTag());
     }
+
+    System.out.println(tensor);
     // Throws an exception if there is no tensor
     // associated with the correct instruction access type.
     if (tensor == -1) {
@@ -436,8 +457,8 @@ public class Validation {
     }
     return tensor;
   }
-  /** Retrieves the correct tensor depending on the specific access type instruction list. */
 
+  /** Retrieves the correct tensor depending on the specific access type instruction list. */
   private static int getTensor (
       List<Integer> accessTypeTensorList,
       int traceAddress,
@@ -467,6 +488,7 @@ public class Validation {
       int end = start + tensorAlloc.getSize();
 
       if (traceAddress >= start && traceAddress < end) {
+        System.out.println("Trace is within interval!");
         tensor = accessTypeTensorList.get(i);
         break;
       }
@@ -478,30 +500,51 @@ public class Validation {
    * Validates that the write validation has a corresponding tensor and writes it to the correct
    * address in the memory arrays.
    */
-  public static void writeValidation(String layer, List<Boolean> masks, int tensor, TraceEvent traceEvent, List<Delta> narrowDeltas, List<Delta> wideDeltas) {
-    int address = traceEvent.getAddress();
+  private static void writeValidation(String layer, List<Boolean> masks, int tensor, TraceEvent traceEvent, List<Delta> narrowDeltas, List<Delta> wideDeltas) throws Exception {
+    int address = traceEvent.getAddress() * traceEvent.getBytes();
+    int tile = traceEvent.getTile();
+    int instruction = traceEvent.getInstructionTag();
+
     if (traceEvent.getAccessType() == TraceEvent.AccessType.NARROW_WRITE) {
       // Iterate through the tiles.
-      for (int tile = 0; tile < numTiles; tile++) {
-        if (masks.get(tile)) {
-          // Write the tensor name in our replicated memory.
-          int endAddress = traceEvent.getBytes() + address;
-          for (int currentByte = address; currentByte < endAddress; currentByte++) {
-            narrow[tile][currentByte] = tensor;
-            narrowDeltas.add(new Delta(layer, tile, currentByte, tensor));
-          }
+      if (masks.get(tile)) {
+      // Write the tensor name in replicated memory.
+        int endAddress = traceEvent.getBytes() + address;
+        for (int currentByte = address; currentByte < endAddress; currentByte++) {
+          narrow[tile][currentByte] = tensor;
+          narrowDeltas.add(new Delta(layer, tile, currentByte, tensor));
         }
+      } else {
+        throw new Exception(
+          "Trace event writing to address "
+          + address
+          + " operates on tile "
+          + tile 
+          + ", while its corresponding instruction "
+          + instruction
+          + " does not."
+        );
       }
     }
     if (traceEvent.getAccessType() == TraceEvent.AccessType.WIDE_WRITE) {
-      for (int tile = 0; tile < numTiles; tile++) {
-        if (masks.get(tile)) {
-          int endAddress = traceEvent.getBytes() + address;
-          for (int currentByte = address; currentByte < endAddress; currentByte++) {
-            wide[tile][currentByte] = tensor;
-            wideDeltas.add(new Delta(layer, tile, currentByte, tensor));
-          }
+      // Iterate through the tiles.
+      if (masks.get(tile)) {
+      // Write the tensor name in replicated memory.
+        int endAddress = traceEvent.getBytes() + address;
+        for (int currentByte = address; currentByte < endAddress; currentByte++) {
+          wide[tile][currentByte] = tensor;
+          wideDeltas.add(new Delta(layer, tile, currentByte, tensor));
         }
+      } else {
+        throw new Exception(
+          "Trace event writing to address "
+          + address
+          + " operates on tile "
+          + tile 
+          + ", while its corresponding instruction "
+          + instruction
+          + " does not."
+        );
       }
     }
   }
@@ -509,32 +552,51 @@ public class Validation {
    * Validates that the tensor that the read trace entry is reading has been written before the read
    * occurs.
    */
-  public static void readValidation(List<Boolean> masks, int tensor, TraceEvent traceEvent)
-      throws InvalidTensorReadException {
-    int address = traceEvent.getAddress();
+  private static void readValidation(String layer, List<Boolean> masks, int tensor, TraceEvent traceEvent)
+      throws Exception, InvalidTensorReadException {
+    int address = traceEvent.getAddress() * traceEvent.getBytes();
+    int tile = traceEvent.getTile();
+    int instruction = traceEvent.getInstructionTag();
+
     if (traceEvent.getAccessType() == TraceEvent.AccessType.NARROW_READ) {
-      for (int tile = 0; tile < numTiles; tile++) {
-        if (masks.get(tile)) {
-          int endAddress = traceEvent.getBytes() + address;
-          for (int currentByte = address; currentByte < endAddress; currentByte++) {
-            if (narrow[tile][currentByte] != tensor) {
-              throw new InvalidTensorReadException(
-                  tensor, tile, address, narrow[tile][address], "narrow");
-            }
+      if (masks.get(tile)) {
+        int endAddress = traceEvent.getBytes() + address;
+        for (int currentByte = address; currentByte < endAddress; currentByte++) {
+          if (narrow[tile][currentByte] != tensor) {
+            throw new InvalidTensorReadException(
+              tensor, layer, instruction, tile, address, narrow[tile][address], "narrow");
           }
         }
+      } else {
+        throw new Exception(
+          "Trace event reading address "
+          + address
+          + " operates on tile "
+          + tile 
+          + ", while its corresponding instruction "
+          + instruction
+          + " does not."
+        );
       }
     } else if (traceEvent.getAccessType() == TraceEvent.AccessType.WIDE_READ) {
-      for (int tile = 0; tile < numTiles; tile++) {
-        if (masks.get(tile)) {
-          int endAddress = traceEvent.getBytes() + address;
-          for (int currentByte = address; currentByte < endAddress; currentByte++) {
-            if (wide[tile][address] != tensor) {
-              throw new InvalidTensorReadException(
-                  tensor, tile, address, wide[tile][address], "wide");
-            }
+      if (masks.get(tile)) {
+        int endAddress = traceEvent.getBytes() + address;
+        for (int currentByte = address; currentByte < endAddress; currentByte++) {
+          if (wide[tile][currentByte] != tensor) {
+            throw new InvalidTensorReadException(
+              tensor, layer, instruction, tile, address, wide[tile][currentByte], "wide");
           }
         }
+      } else {
+        throw new Exception(
+          "Trace event at reading address "
+          + address
+          + " operates on tile "
+          + tile 
+          + ", while its corresponding instruction "
+          + instruction
+          + " does not."
+        );
       }
     }
   }
@@ -594,7 +656,7 @@ public class Validation {
     public AddressInterval(TensorAllocation tensorAllocation) {
       this.label = tensorAllocation.getTensorLabel();
       this.start = tensorAllocation.getBaseAddress();
-      this.end = tensorAllocation.getBaseAddress() + tensorAllocation.getSize();
+      this.end = tensorAllocation.getBaseAddress() + tensorAllocation.getSize() - 1;
     }
     public AddressInterval(int label, int start, int end) {
       this.label = label;
@@ -631,7 +693,7 @@ public class Validation {
     }
     @Override
     public String toString() {
-      return "label: " + label + " start: " + start + " end: " + end;
+      return "(label: " + label + ", start: " + start + ", end: " + end + ")";
     }
     @Override
     public boolean equals(Object other) {
