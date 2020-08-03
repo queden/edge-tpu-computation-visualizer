@@ -500,7 +500,7 @@ public class Validation {
    * Validates that the write validation has a corresponding tensor and writes it to the correct
    * address in the memory arrays.
    */
-  public static void writeValidation(String layer, List<Boolean> masks, int tensor, TraceEvent traceEvent, List<Delta> narrowDeltas, List<Delta> wideDeltas) throws Exception {
+  private static void writeValidation(String layer, List<Boolean> masks, int tensor, TraceEvent traceEvent, List<Delta> narrowDeltas, List<Delta> wideDeltas) throws Exception {
     int address = traceEvent.getAddress() * traceEvent.getBytes();
     int tile = traceEvent.getTile();
     int instruction = traceEvent.getInstructionTag();
@@ -552,7 +552,7 @@ public class Validation {
    * Validates that the tensor that the read trace entry is reading has been written before the read
    * occurs.
    */
-  public static void readValidation(String layer, List<Boolean> masks, int tensor, TraceEvent traceEvent)
+  private static void readValidation(String layer, List<Boolean> masks, int tensor, TraceEvent traceEvent)
       throws Exception, InvalidTensorReadException {
     int address = traceEvent.getAddress() * traceEvent.getBytes();
     int tile = traceEvent.getTile();

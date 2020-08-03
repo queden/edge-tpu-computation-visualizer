@@ -1,729 +1,729 @@
-// package com.google.sps;
+package com.google.sps;
 
-// import java.util.ArrayList;
-// import java.util.Arrays;
-// import java.util.Map;
-// import java.util.Hashtable;
-// import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Hashtable;
+import java.util.List;
 
-// import java.lang.reflect.Method;
-// import java.lang.reflect.Field;
-// import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 
-// import com.google.sps.exceptions.*;
-// import com.google.sps.proto.MemaccessCheckerDataProto.*;
+import com.google.sps.exceptions.*;
+import com.google.sps.proto.MemaccessCheckerDataProto.*;
 
-// import static org.junit.Assert.*;
-// import org.junit.Before;
-// import org.junit.Test;
-// import org.junit.runner.RunWith;
-// import org.junit.runners.JUnit4;
-// import org.junit.runners.Suite;
-// import org.junit.runners.model.InitializationError;
-// import org.junit.runners.model.RunnerBuilder;
+import static org.junit.Assert.*;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+import org.junit.runners.Suite;
+import org.junit.runners.model.InitializationError;
+import org.junit.runners.model.RunnerBuilder;
 
-// @RunWith(TestsCaden.class)
-// @Suite.SuiteClasses({TestsCaden.TestGetTraceTensor.class, TestsCaden.TestRelateTensorsToInstructions.class, TestsCaden.TestGetLayerToInstructionTable.class})
-// public final class TestsCaden extends Suite {
+@RunWith(TestsCaden.class)
+@Suite.SuiteClasses({TestsCaden.TestGetTraceTensor.class, TestsCaden.TestRelateTensorsToInstructions.class, TestsCaden.TestGetLayerToInstructionTable.class})
+public final class TestsCaden extends Suite {
 
-//     public TestsCaden(Class<?> klass, RunnerBuilder builder) throws InitializationError {
-//         super(klass, builder);
-//     }
+    public TestsCaden(Class<?> klass, RunnerBuilder builder) throws InitializationError {
+        super(klass, builder);
+    }
 
-//     public static class TestGetTraceTensor {
-//         private Validation validation;
-//         private Instruction.Builder instructionBuilder;
-//         private ArrayList<Integer> accessList;
-//         private int traceAddress;
-//         private int expectedTensor;
-//         private int recievedTensor;
-//         private TraceEvent.AccessType traceAccessType;
+    public static class TestGetTraceTensor {
+        private Validation validation;
+        private Instruction.Builder instructionBuilder;
+        private ArrayList<Integer> accessList;
+        private int traceAddress;
+        private int expectedTensor;
+        private int recievedTensor;
+        private TraceEvent.AccessType traceAccessType;
 
-//         private Method mGetTraceTensor;
-//         private Field mTensorLabelToTensorAllocationNarrow;
-//         private Field mTensorLabelToTensorAllocationWide;
+        private Method mGetTraceTensor;
+        private Field mTensorLabelToTensorAllocationNarrow;
+        private Field mTensorLabelToTensorAllocationWide;
 
-//         @Before
-//         public void setUp() throws NoSuchMethodException,
-//         NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
-//             instructionBuilder = Instruction.newBuilder();
-//             accessList = new ArrayList<Integer>();
-//             traceAddress = 0;
+        @Before
+        public void setUp() throws NoSuchMethodException,
+        NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
+            instructionBuilder = Instruction.newBuilder();
+            accessList = new ArrayList<Integer>();
+            traceAddress = 0;
 
-//             MemaccessCheckerData.Builder protoBuilder = MemaccessCheckerData.newBuilder();
+            MemaccessCheckerData.Builder protoBuilder = MemaccessCheckerData.newBuilder();
 
-//             Validation validation = new Validation(protoBuilder.build());
+            Validation validation = new Validation(protoBuilder.build());
 
-//             mGetTraceTensor = Validation.class.getDeclaredMethod("getTraceTensor", int.class, TraceEvent.AccessType.class, Instruction.class);
-//             mGetTraceTensor.setAccessible(true);
+            mGetTraceTensor = Validation.class.getDeclaredMethod("getTraceTensor", int.class, TraceEvent.AccessType.class, Instruction.class);
+            mGetTraceTensor.setAccessible(true);
 
-//             mTensorLabelToTensorAllocationNarrow = Validation.class.getDeclaredField("tensorLabelToTensorAllocationNarrow");
-//             mTensorLabelToTensorAllocationNarrow.setAccessible(true);
+            mTensorLabelToTensorAllocationNarrow = Validation.class.getDeclaredField("tensorLabelToTensorAllocationNarrow");
+            mTensorLabelToTensorAllocationNarrow.setAccessible(true);
 
-//             mTensorLabelToTensorAllocationWide = Validation.class.getDeclaredField("tensorLabelToTensorAllocationWide");
-//             mTensorLabelToTensorAllocationWide.setAccessible(true);
+            mTensorLabelToTensorAllocationWide = Validation.class.getDeclaredField("tensorLabelToTensorAllocationWide");
+            mTensorLabelToTensorAllocationWide.setAccessible(true);
 
-//             Map<Integer, TensorAllocation> narrowMap = new Hashtable<Integer, TensorAllocation>();
-//             Map<Integer, TensorAllocation> wideMap = new Hashtable<Integer, TensorAllocation>();
+            Map<Integer, TensorAllocation> narrowMap = new Hashtable<Integer, TensorAllocation>();
+            Map<Integer, TensorAllocation> wideMap = new Hashtable<Integer, TensorAllocation>();
 
-//             TensorAllocation.Builder tensorBuilder = TensorAllocation.newBuilder();
-//             tensorBuilder.setTensorLabel(2).setBaseAddress(0).setSize(45);
+            TensorAllocation.Builder tensorBuilder = TensorAllocation.newBuilder();
+            tensorBuilder.setTensorLabel(2).setBaseAddress(0).setSize(45);
 
-//             TensorAllocation tensor1 = tensorBuilder.build();
+            TensorAllocation tensor1 = tensorBuilder.build();
 
-//             tensorBuilder = TensorAllocation.newBuilder();
-//             tensorBuilder.setTensorLabel(47).setBaseAddress(45).setSize(45);
+            tensorBuilder = TensorAllocation.newBuilder();
+            tensorBuilder.setTensorLabel(47).setBaseAddress(45).setSize(45);
 
-//             TensorAllocation tensor2 = tensorBuilder.build();
+            TensorAllocation tensor2 = tensorBuilder.build();
 
-//             narrowMap.put(2, tensor1);
-//             narrowMap.put(47, tensor2);
+            narrowMap.put(2, tensor1);
+            narrowMap.put(47, tensor2);
 
-//             wideMap.put(2, tensor1);
-//             wideMap.put(47, tensor2);
+            wideMap.put(2, tensor1);
+            wideMap.put(47, tensor2);
 
-//             mTensorLabelToTensorAllocationNarrow.set(validation, narrowMap);
-//             mTensorLabelToTensorAllocationWide.set(validation, wideMap);
-//         }
+            mTensorLabelToTensorAllocationNarrow.set(validation, narrowMap);
+            mTensorLabelToTensorAllocationWide.set(validation, wideMap);
+        }
 
-//         // Trace is narrow read, instruction has narrow read, confirm returned tensor
-//         @Test
-//         public void testValidNarrowRead() throws Exception, MemoryAccessException {
-//             traceAccessType = TraceEvent.AccessType.NARROW_READ;
+        // Trace is narrow read, instruction has narrow read, confirm returned tensor
+        @Test
+        public void testValidNarrowRead() throws Exception, MemoryAccessException {
+            traceAccessType = TraceEvent.AccessType.NARROW_READ;
 
-//             accessList.addAll(Arrays.asList(2, 47));
+            accessList.addAll(Arrays.asList(2, 47));
 
-//             instructionBuilder
-//                 .addAllNarrowRead(accessList)
-//                 .setTag(0);
+            instructionBuilder
+                .addAllNarrowRead(accessList)
+                .setTag(0);
 
-//             expectedTensor = 2;
+            expectedTensor = 2;
 
 
-//             recievedTensor = (int) mGetTraceTensor.invoke(validation, traceAddress, traceAccessType, instructionBuilder.build());
+            recievedTensor = (int) mGetTraceTensor.invoke(validation, traceAddress, traceAccessType, instructionBuilder.build());
             
-//             assertEquals(expectedTensor, recievedTensor);
-//         }
+            assertEquals(expectedTensor, recievedTensor);
+        }
 
-//         // Trace is narrow write, instruction has narrow write, confirm returned tensor
-//         @Test
-//         public void testValidNarrowWrite() throws Exception, MemoryAccessException {
-//             traceAccessType = TraceEvent.AccessType.NARROW_WRITE;
+        // Trace is narrow write, instruction has narrow write, confirm returned tensor
+        @Test
+        public void testValidNarrowWrite() throws Exception, MemoryAccessException {
+            traceAccessType = TraceEvent.AccessType.NARROW_WRITE;
 
-//             accessList.addAll(Arrays.asList(2, 47));
+            accessList.addAll(Arrays.asList(2, 47));
 
-//             instructionBuilder
-//                 .addAllNarrowWrite(accessList)
-//                 .setTag(0);
+            instructionBuilder
+                .addAllNarrowWrite(accessList)
+                .setTag(0);
 
-//             expectedTensor = 2;
+            expectedTensor = 2;
 
-//             recievedTensor = (int) mGetTraceTensor.invoke(validation, traceAddress, traceAccessType, instructionBuilder.build());
+            recievedTensor = (int) mGetTraceTensor.invoke(validation, traceAddress, traceAccessType, instructionBuilder.build());
             
-//             assertEquals(expectedTensor, recievedTensor);
-//         }
+            assertEquals(expectedTensor, recievedTensor);
+        }
 
-//         // Trace is wide read, instruction has wide read, confirm returned tensor
-//         @Test
-//         public void testValidWideRead() throws Exception, MemoryAccessException {
-//             traceAccessType = TraceEvent.AccessType.WIDE_READ;
+        // Trace is wide read, instruction has wide read, confirm returned tensor
+        @Test
+        public void testValidWideRead() throws Exception, MemoryAccessException {
+            traceAccessType = TraceEvent.AccessType.WIDE_READ;
 
-//             accessList.addAll(Arrays.asList(2, 47));
+            accessList.addAll(Arrays.asList(2, 47));
 
-//             instructionBuilder
-//                 .addAllWideRead(accessList)
-//                 .setTag(0);
-//             expectedTensor = 2;
+            instructionBuilder
+                .addAllWideRead(accessList)
+                .setTag(0);
+            expectedTensor = 2;
 
-//             recievedTensor = (int) mGetTraceTensor.invoke(validation, traceAddress, traceAccessType, instructionBuilder.build());
+            recievedTensor = (int) mGetTraceTensor.invoke(validation, traceAddress, traceAccessType, instructionBuilder.build());
             
-//             assertEquals(expectedTensor, recievedTensor);
-//         }
+            assertEquals(expectedTensor, recievedTensor);
+        }
 
-//         // Trace is wide write, instruction has wide write, confirm returned tensor
-//         @Test
-//         public void testValidWideWrite() throws Exception, MemoryAccessException {
-//             traceAccessType = TraceEvent.AccessType.WIDE_WRITE;
+        // Trace is wide write, instruction has wide write, confirm returned tensor
+        @Test
+        public void testValidWideWrite() throws Exception, MemoryAccessException {
+            traceAccessType = TraceEvent.AccessType.WIDE_WRITE;
 
-//             accessList.addAll(Arrays.asList(2, 47));
+            accessList.addAll(Arrays.asList(2, 47));
 
-//             instructionBuilder
-//                 .addAllWideWrite(accessList)
-//                 .setTag(0);
+            instructionBuilder
+                .addAllWideWrite(accessList)
+                .setTag(0);
 
-//             expectedTensor = 2;
+            expectedTensor = 2;
 
-//             recievedTensor = (int) mGetTraceTensor.invoke(validation, traceAddress, traceAccessType, instructionBuilder.build());
+            recievedTensor = (int) mGetTraceTensor.invoke(validation, traceAddress, traceAccessType, instructionBuilder.build());
             
-//             assertEquals(expectedTensor, recievedTensor);
-//         }
+            assertEquals(expectedTensor, recievedTensor);
+        }
 
-//         // Trace is narrow read, instruction does not have narrow read, catch MAE
-//         @Test(expected = MemoryAccessException.class)
-//         public void testInvalidNarrowRead() throws Exception, MemoryAccessException, Throwable {
-//             traceAccessType = TraceEvent.AccessType.NARROW_READ;
+        // Trace is narrow read, instruction does not have narrow read, catch MAE
+        @Test(expected = MemoryAccessException.class)
+        public void testInvalidNarrowRead() throws Exception, MemoryAccessException, Throwable {
+            traceAccessType = TraceEvent.AccessType.NARROW_READ;
             
-//             accessList.addAll(Arrays.asList(2, 47));
+            accessList.addAll(Arrays.asList(2, 47));
 
-//             instructionBuilder
-//                 .addAllWideRead(accessList)
-//                 .setTag(0);
+            instructionBuilder
+                .addAllWideRead(accessList)
+                .setTag(0);
 
-//             expectedTensor = 2;
+            expectedTensor = 2;
 
-//             try {
-//                 recievedTensor = (int) mGetTraceTensor.invoke(validation, traceAddress, traceAccessType, instructionBuilder.build());
-//             } catch (InvocationTargetException e) {
-//                 throw e.getTargetException();
-//             }
+            try {
+                recievedTensor = (int) mGetTraceTensor.invoke(validation, traceAddress, traceAccessType, instructionBuilder.build());
+            } catch (InvocationTargetException e) {
+                throw e.getTargetException();
+            }
             
-//             assertEquals(expectedTensor, recievedTensor);
-//         }
+            assertEquals(expectedTensor, recievedTensor);
+        }
 
-//         // Trace is narrow write, instruction does not have narrow write, catch MAE
-//         @Test(expected = MemoryAccessException.class)
-//         public void testInvalidNarrowWrite() throws Exception, MemoryAccessException, Throwable {
-//             traceAccessType = TraceEvent.AccessType.NARROW_WRITE;
+        // Trace is narrow write, instruction does not have narrow write, catch MAE
+        @Test(expected = MemoryAccessException.class)
+        public void testInvalidNarrowWrite() throws Exception, MemoryAccessException, Throwable {
+            traceAccessType = TraceEvent.AccessType.NARROW_WRITE;
 
-//             accessList.addAll(Arrays.asList(2, 47));
+            accessList.addAll(Arrays.asList(2, 47));
 
-//             instructionBuilder
-//                 .addAllNarrowRead(accessList)
-//                 .setTag(0);
+            instructionBuilder
+                .addAllNarrowRead(accessList)
+                .setTag(0);
 
-//             expectedTensor = 2;
+            expectedTensor = 2;
 
-//             try {
-//                 recievedTensor = (int) mGetTraceTensor.invoke(validation, traceAddress, traceAccessType, instructionBuilder.build());
-//             } catch (InvocationTargetException e) {
-//                 throw e.getTargetException();
-//             }
+            try {
+                recievedTensor = (int) mGetTraceTensor.invoke(validation, traceAddress, traceAccessType, instructionBuilder.build());
+            } catch (InvocationTargetException e) {
+                throw e.getTargetException();
+            }
 
-//             assertEquals(expectedTensor, recievedTensor);
-//         }
+            assertEquals(expectedTensor, recievedTensor);
+        }
 
-//         // Trace is wide read, instruction does not have wide read, catch MAE
-//         @Test(expected = MemoryAccessException.class)
-//         public void testInvalidWideRead() throws Exception, MemoryAccessException, Throwable {
-//             traceAccessType = TraceEvent.AccessType.WIDE_READ;
+        // Trace is wide read, instruction does not have wide read, catch MAE
+        @Test(expected = MemoryAccessException.class)
+        public void testInvalidWideRead() throws Exception, MemoryAccessException, Throwable {
+            traceAccessType = TraceEvent.AccessType.WIDE_READ;
 
-//             accessList.addAll(Arrays.asList(2, 47));
+            accessList.addAll(Arrays.asList(2, 47));
 
-//             instructionBuilder
-//                 .addAllNarrowRead(accessList)
-//                 .setTag(0);
+            instructionBuilder
+                .addAllNarrowRead(accessList)
+                .setTag(0);
 
-//             expectedTensor = 2;
+            expectedTensor = 2;
 
-//             try {
-//                 recievedTensor = (int) mGetTraceTensor.invoke(validation, traceAddress, traceAccessType, instructionBuilder.build());
-//             } catch (InvocationTargetException e) {
-//                 throw e.getTargetException();
-//             }
+            try {
+                recievedTensor = (int) mGetTraceTensor.invoke(validation, traceAddress, traceAccessType, instructionBuilder.build());
+            } catch (InvocationTargetException e) {
+                throw e.getTargetException();
+            }
 
-//             assertEquals(expectedTensor, recievedTensor);
-//         }
+            assertEquals(expectedTensor, recievedTensor);
+        }
 
-//         // Trace is wide write, instruction does not have wide write, catch MAE
-//         @Test(expected = MemoryAccessException.class)
-//         public void testInvalidWideWrite() throws Exception, MemoryAccessException, Throwable {
-//             traceAccessType = TraceEvent.AccessType.WIDE_WRITE;
+        // Trace is wide write, instruction does not have wide write, catch MAE
+        @Test(expected = MemoryAccessException.class)
+        public void testInvalidWideWrite() throws Exception, MemoryAccessException, Throwable {
+            traceAccessType = TraceEvent.AccessType.WIDE_WRITE;
             
-//             accessList.addAll(Arrays.asList(2, 47));
+            accessList.addAll(Arrays.asList(2, 47));
 
-//             instructionBuilder
-//                 .addAllNarrowWrite(accessList)
-//                 .setTag(0);
+            instructionBuilder
+                .addAllNarrowWrite(accessList)
+                .setTag(0);
 
-//             expectedTensor = 2;
+            expectedTensor = 2;
 
-//             try {
-//                 recievedTensor = (int) mGetTraceTensor.invoke(validation, traceAddress, traceAccessType, instructionBuilder.build());
-//             } catch (InvocationTargetException e) {
-//                 throw e.getTargetException();
-//             }
+            try {
+                recievedTensor = (int) mGetTraceTensor.invoke(validation, traceAddress, traceAccessType, instructionBuilder.build());
+            } catch (InvocationTargetException e) {
+                throw e.getTargetException();
+            }
 
-//             assertEquals(expectedTensor, recievedTensor);
-//         }
+            assertEquals(expectedTensor, recievedTensor);
+        }
 
-//         // Trace has null access type
-//         @Test(expected = Exception.class)
-//         public void testNullAccessTraceEvent() throws Exception, MemoryAccessException, Throwable {
-//             traceAccessType = null;
+        // Trace has null access type
+        @Test(expected = Exception.class)
+        public void testNullAccessTraceEvent() throws Exception, MemoryAccessException, Throwable {
+            traceAccessType = null;
 
-//             accessList.addAll(Arrays.asList(2, 47));
+            accessList.addAll(Arrays.asList(2, 47));
 
-//             instructionBuilder
-//                 .addAllWideRead(accessList)
-//                 .setTag(0);
+            instructionBuilder
+                .addAllWideRead(accessList)
+                .setTag(0);
 
-//             expectedTensor = 2;
+            expectedTensor = 2;
 
-//             try {
-//                 recievedTensor = (int) mGetTraceTensor.invoke(validation, traceAddress, traceAccessType, instructionBuilder.build());
-//             } catch (InvocationTargetException e) {
-//                 throw e.getTargetException();
-//             }
+            try {
+                recievedTensor = (int) mGetTraceTensor.invoke(validation, traceAddress, traceAccessType, instructionBuilder.build());
+            } catch (InvocationTargetException e) {
+                throw e.getTargetException();
+            }
 
-//             assertEquals(expectedTensor, recievedTensor);
-//         }
+            assertEquals(expectedTensor, recievedTensor);
+        }
 
-//         // TODO: This will have a lot to do with tensor allocation table
-//         // // Instruction has the correct access type, but that MemoryAccess does not have 
-//         // // a tensor associated with it.
-//         // @Test(expected = Exception.class)
-//         // public void testValidMemoryAccessWithoutCorrespondingTraceEvent() throws Exception, MemoryAccessException {
-//         //     traceAccessType = TraceEvent.AccessType.READ_NARROW;
+        // TODO: This will have a lot to do with tensor allocation table
+        // // Instruction has the correct access type, but that MemoryAccess does not have 
+        // // a tensor associated with it.
+        // @Test(expected = Exception.class)
+        // public void testValidMemoryAccessWithoutCorrespondingTraceEvent() throws Exception, MemoryAccessException {
+        //     traceAccessType = TraceEvent.AccessType.READ_NARROW;
 
-//         //     instructionBuilder
-//         //         .setNarrowRead(memoryAccessBuilder.setBaseAddress(0))
-//         //         .setTag(0);
+        //     instructionBuilder
+        //         .setNarrowRead(memoryAccessBuilder.setBaseAddress(0))
+        //         .setTag(0);
 
-//         //     expectedTensor = 2;
+        //     expectedTensor = 2;
 
-//         //     recievedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
+        //     recievedTensor = Validation.getTraceTensor(traceAddress, traceAccessType, instructionBuilder.build());
             
-//         //     assertEquals(expectedTensor, recievedTensor);
-//         //}
-//     }
+        //     assertEquals(expectedTensor, recievedTensor);
+        //}
+    }
 
-//     public static class TestRelateTensorsToInstructions {
-//         private Validation validation;
-//         private Instruction.Builder instructionBuilder;
-//         private List<TensorLayerAllocationTable> tensorLayerAllocationTable;
+    public static class TestRelateTensorsToInstructions {
+        private Validation validation;
+        private Instruction.Builder instructionBuilder;
+        private List<TensorLayerAllocationTable> tensorLayerAllocationTable;
 
-//         private Method mRelateTensorsToInstructions;
-//         private Field mInstructions;
-//         private Field mInstructionTagToInstruction;
+        private Method mRelateTensorsToInstructions;
+        private Field mInstructions;
+        private Field mInstructionTagToInstruction;
 
-//         @Before
-//         public void setUp() throws NoSuchMethodException,
-//         NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
-//             instructionBuilder = Instruction.newBuilder();
+        @Before
+        public void setUp() throws NoSuchMethodException,
+        NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
+            instructionBuilder = Instruction.newBuilder();
 
-//             MemaccessCheckerData.Builder protoBuilder = MemaccessCheckerData.newBuilder();
+            MemaccessCheckerData.Builder protoBuilder = MemaccessCheckerData.newBuilder();
 
-//             Validation validation = new Validation(protoBuilder.build());
+            Validation validation = new Validation(protoBuilder.build());
 
-//             mRelateTensorsToInstructions = Validation.class.getDeclaredMethod("relateTensorsToInstructions", List.class, boolean.class);
-//             mRelateTensorsToInstructions.setAccessible(true);
+            mRelateTensorsToInstructions = Validation.class.getDeclaredMethod("relateTensorsToInstructions", List.class, boolean.class);
+            mRelateTensorsToInstructions.setAccessible(true);
 
-//             mInstructions = Validation.class.getDeclaredField("instructions");
-//             mInstructions.setAccessible(true);
+            mInstructions = Validation.class.getDeclaredField("instructions");
+            mInstructions.setAccessible(true);
 
-//             mInstructionTagToInstruction = Validation.class.getDeclaredField("instructionTagtoInstruction");
-//             mInstructionTagToInstruction.setAccessible(true);           
-//         }
+            mInstructionTagToInstruction = Validation.class.getDeclaredField("instructionTagtoInstruction");
+            mInstructionTagToInstruction.setAccessible(true);           
+        }
 
-//         // Empty allocation table, make sure nothing happens
-//         @Test
-//         public void testEmptyAllocationTable() throws InvalidTensorAddressException, IllegalAccessException, InvocationTargetException {
-//             mInstructions.set(validation, new ArrayList<Instruction>());
+        // Empty allocation table, make sure nothing happens
+        @Test
+        public void testEmptyAllocationTable() throws InvalidTensorAddressException, IllegalAccessException, InvocationTargetException {
+            mInstructions.set(validation, new ArrayList<Instruction>());
 
-//             mInstructionTagToInstruction.set(validation, new Hashtable<Integer, Instruction>());
+            mInstructionTagToInstruction.set(validation, new Hashtable<Integer, Instruction>());
 
-//             List<TensorLayerAllocationTable> emptyTable = new ArrayList<TensorLayerAllocationTable>();
+            List<TensorLayerAllocationTable> emptyTable = new ArrayList<TensorLayerAllocationTable>();
 
-//             mRelateTensorsToInstructions.invoke(validation, emptyTable, true);
+            mRelateTensorsToInstructions.invoke(validation, emptyTable, true);
             
-//             // Make sure it runs without doing anything
-//             assertEquals(new Hashtable<Integer, Instruction>(), mInstructionTagToInstruction.get(validation));
-//         }
+            // Make sure it runs without doing anything
+            assertEquals(new Hashtable<Integer, Instruction>(), mInstructionTagToInstruction.get(validation));
+        }
 
-//         // Empty allocation table, make sure nothing happens
-//         @Test
-//         public void testNonEmptyAllocationTableEmptyInstructions() throws InvalidTensorAddressException, IllegalAccessException, InvocationTargetException {
-//             mInstructions.set(validation, new ArrayList<Instruction>());
+        // Empty allocation table, make sure nothing happens
+        @Test
+        public void testNonEmptyAllocationTableEmptyInstructions() throws InvalidTensorAddressException, IllegalAccessException, InvocationTargetException {
+            mInstructions.set(validation, new ArrayList<Instruction>());
 
-//             mInstructionTagToInstruction.set(validation, new Hashtable<Integer, Instruction>());
+            mInstructionTagToInstruction.set(validation, new Hashtable<Integer, Instruction>());
 
-//             List<TensorLayerAllocationTable> table = createTensorLayerAllocationTable(1, 1);
+            List<TensorLayerAllocationTable> table = createTensorLayerAllocationTable(1, 1);
 
-//             mRelateTensorsToInstructions.invoke(validation, table, true);
+            mRelateTensorsToInstructions.invoke(validation, table, true);
             
-//             // Make sure it runs without doing anything
-//             assertEquals(new Hashtable<Integer, Instruction>(), mInstructionTagToInstruction.get(validation));
-//         }        
+            // Make sure it runs without doing anything
+            assertEquals(new Hashtable<Integer, Instruction>(), mInstructionTagToInstruction.get(validation));
+        }        
 
-//         // One layer allocation table with valid instruction
-//         @Test
-//         public void testOneLayerAllocationTable() throws InvalidTensorAddressException, IllegalAccessException, InvocationTargetException {
-//             ArrayList<Instruction> instructions = new ArrayList<Instruction>();
+        // One layer allocation table with valid instruction
+        @Test
+        public void testOneLayerAllocationTable() throws InvalidTensorAddressException, IllegalAccessException, InvocationTargetException {
+            ArrayList<Instruction> instructions = new ArrayList<Instruction>();
 
-//             instructionBuilder.setLayer("0")
-//                               .setTag(1)
-//                               .addNarrowWrite(50);
+            instructionBuilder.setLayer("0")
+                              .setTag(1)
+                              .addNarrowWrite(50);
 
-//             Instruction instruction = instructionBuilder.build();
+            Instruction instruction = instructionBuilder.build();
 
-//             instructions.add(instruction);
+            instructions.add(instruction);
 
-//             Hashtable<Integer, Instruction> tagToInstruction = new Hashtable<Integer, Instruction>();
+            Hashtable<Integer, Instruction> tagToInstruction = new Hashtable<Integer, Instruction>();
 
-//             tagToInstruction.put(1, instruction);
+            tagToInstruction.put(1, instruction);
 
-//             mInstructions.set(validation, instructions);
-//             mInstructionTagToInstruction.set(validation, tagToInstruction);
+            mInstructions.set(validation, instructions);
+            mInstructionTagToInstruction.set(validation, tagToInstruction);
 
-//             List<TensorLayerAllocationTable> table = createTensorLayerAllocationTable(1, 1);
+            List<TensorLayerAllocationTable> table = createTensorLayerAllocationTable(1, 1);
 
-//             mRelateTensorsToInstructions.invoke(validation, table, true);
+            mRelateTensorsToInstructions.invoke(validation, table, true);
             
-//             Hashtable<Integer, Instruction> resultingTable = (Hashtable<Integer, Instruction>) mInstructionTagToInstruction.get(validation);
+            Hashtable<Integer, Instruction> resultingTable = (Hashtable<Integer, Instruction>) mInstructionTagToInstruction.get(validation);
 
-//             Instruction resultingInstruction = resultingTable.get(1);
+            Instruction resultingInstruction = resultingTable.get(1);
 
-//             assertEquals(1, resultingInstruction.getNarrowWrite(0));
-//         }
+            assertEquals(1, resultingInstruction.getNarrowWrite(0));
+        }
 
-//         // Multiple layer allocation table with valid instruction
-//         @Test
-//         public void testMultiLayerAllocationTable() throws InvalidTensorAddressException, IllegalAccessException, InvocationTargetException {
-//             ArrayList<Instruction> instructions = new ArrayList<Instruction>();
+        // Multiple layer allocation table with valid instruction
+        @Test
+        public void testMultiLayerAllocationTable() throws InvalidTensorAddressException, IllegalAccessException, InvocationTargetException {
+            ArrayList<Instruction> instructions = new ArrayList<Instruction>();
 
-//             instructionBuilder.setLayer("0")
-//                               .setTag(1)
-//                               .addNarrowWrite(50);
+            instructionBuilder.setLayer("0")
+                              .setTag(1)
+                              .addNarrowWrite(50);
 
-//             Instruction instruction1 = instructionBuilder.build();
+            Instruction instruction1 = instructionBuilder.build();
 
-//             instructions.add(instruction1);
+            instructions.add(instruction1);
 
-//             instructionBuilder.clear()
-//                               .setLayer("1")
-//                               .setTag(2)
-//                               .addNarrowRead(67);
+            instructionBuilder.clear()
+                              .setLayer("1")
+                              .setTag(2)
+                              .addNarrowRead(67);
 
-//             Instruction instruction2 = instructionBuilder.build();
+            Instruction instruction2 = instructionBuilder.build();
 
-//             instructions.add(instruction2);
+            instructions.add(instruction2);
 
-//             Hashtable<Integer, Instruction> tagToInstruction = new Hashtable<Integer, Instruction>();
+            Hashtable<Integer, Instruction> tagToInstruction = new Hashtable<Integer, Instruction>();
 
-//             tagToInstruction.put(1, instruction1);
-//             tagToInstruction.put(2, instruction2);
+            tagToInstruction.put(1, instruction1);
+            tagToInstruction.put(2, instruction2);
 
-//             mInstructions.set(validation, instructions);
-//             mInstructionTagToInstruction.set(validation, tagToInstruction);
+            mInstructions.set(validation, instructions);
+            mInstructionTagToInstruction.set(validation, tagToInstruction);
 
-//             List<TensorLayerAllocationTable> table = createTensorLayerAllocationTable(2, 1);
+            List<TensorLayerAllocationTable> table = createTensorLayerAllocationTable(2, 1);
 
-//             mRelateTensorsToInstructions.invoke(validation, table, true);
+            mRelateTensorsToInstructions.invoke(validation, table, true);
             
-//             Hashtable<Integer, Instruction> resultingTable = (Hashtable<Integer, Instruction>) mInstructionTagToInstruction.get(validation);
+            Hashtable<Integer, Instruction> resultingTable = (Hashtable<Integer, Instruction>) mInstructionTagToInstruction.get(validation);
 
-//             Instruction resultingInstruction1 = resultingTable.get(1);
-//             Instruction resultingInstruction2 = resultingTable.get(2);
+            Instruction resultingInstruction1 = resultingTable.get(1);
+            Instruction resultingInstruction2 = resultingTable.get(2);
 
-//             assertEquals(1, resultingInstruction1.getNarrowWrite(0));
-//             assertEquals(2, resultingInstruction2.getNarrowRead(0));
-//         }
+            assertEquals(1, resultingInstruction1.getNarrowWrite(0));
+            assertEquals(2, resultingInstruction2.getNarrowRead(0));
+        }
 
-//         // One layer allocation table with multiple tensors allocated
-//         @Test
-//         public void testOneLayerMultipleTensors() throws InvalidTensorAddressException, IllegalAccessException, InvocationTargetException {
-//             ArrayList<Instruction> instructions = new ArrayList<Instruction>();
+        // One layer allocation table with multiple tensors allocated
+        @Test
+        public void testOneLayerMultipleTensors() throws InvalidTensorAddressException, IllegalAccessException, InvocationTargetException {
+            ArrayList<Instruction> instructions = new ArrayList<Instruction>();
 
-//             instructionBuilder.setLayer("0")
-//                               .setTag(1)
-//                               .addNarrowWrite(150);
+            instructionBuilder.setLayer("0")
+                              .setTag(1)
+                              .addNarrowWrite(150);
 
-//             Instruction instruction1 = instructionBuilder.build();
+            Instruction instruction1 = instructionBuilder.build();
 
-//             instructions.add(instruction1);
+            instructions.add(instruction1);
 
-//             Hashtable<Integer, Instruction> tagToInstruction = new Hashtable<Integer, Instruction>();
+            Hashtable<Integer, Instruction> tagToInstruction = new Hashtable<Integer, Instruction>();
 
-//             tagToInstruction.put(1, instruction1);
+            tagToInstruction.put(1, instruction1);
 
-//             mInstructions.set(validation, instructions);
-//             mInstructionTagToInstruction.set(validation, tagToInstruction);
+            mInstructions.set(validation, instructions);
+            mInstructionTagToInstruction.set(validation, tagToInstruction);
 
-//             List<TensorLayerAllocationTable> table = createTensorLayerAllocationTable(1, 3);
+            List<TensorLayerAllocationTable> table = createTensorLayerAllocationTable(1, 3);
 
-//             mRelateTensorsToInstructions.invoke(validation, table, true);
+            mRelateTensorsToInstructions.invoke(validation, table, true);
             
-//             Hashtable<Integer, Instruction> resultingTable = (Hashtable<Integer, Instruction>) mInstructionTagToInstruction.get(validation);
+            Hashtable<Integer, Instruction> resultingTable = (Hashtable<Integer, Instruction>) mInstructionTagToInstruction.get(validation);
 
-//             Instruction resultingInstruction1 = resultingTable.get(1);
+            Instruction resultingInstruction1 = resultingTable.get(1);
 
-//             assertEquals(2, resultingInstruction1.getNarrowWrite(0));
-//         }
+            assertEquals(2, resultingInstruction1.getNarrowWrite(0));
+        }
 
-//         // Multiple layer allocation table with invalid instruction
-//         @Test (expected = InvalidTensorAddressException.class)
-//         public void testMultiLayerAllocationTableWithInvalidInstruction() throws InvalidTensorAddressException, IllegalAccessException, InvocationTargetException, Throwable {
-//             ArrayList<Instruction> instructions = new ArrayList<Instruction>();
+        // Multiple layer allocation table with invalid instruction
+        @Test (expected = InvalidTensorAddressException.class)
+        public void testMultiLayerAllocationTableWithInvalidInstruction() throws InvalidTensorAddressException, IllegalAccessException, InvocationTargetException, Throwable {
+            ArrayList<Instruction> instructions = new ArrayList<Instruction>();
 
-//             instructionBuilder.setLayer("0")
-//                               .setTag(1)
-//                               .addNarrowWrite(267);
+            instructionBuilder.setLayer("0")
+                              .setTag(1)
+                              .addNarrowWrite(267);
 
-//             Instruction instruction1 = instructionBuilder.build();
+            Instruction instruction1 = instructionBuilder.build();
 
-//             instructions.add(instruction1);
+            instructions.add(instruction1);
 
-//             Hashtable<Integer, Instruction> tagToInstruction = new Hashtable<Integer, Instruction>();
+            Hashtable<Integer, Instruction> tagToInstruction = new Hashtable<Integer, Instruction>();
 
-//             tagToInstruction.put(1, instruction1);
+            tagToInstruction.put(1, instruction1);
 
-//             mInstructions.set(validation, instructions);
-//             mInstructionTagToInstruction.set(validation, tagToInstruction);
+            mInstructions.set(validation, instructions);
+            mInstructionTagToInstruction.set(validation, tagToInstruction);
 
-//             List<TensorLayerAllocationTable> table = createTensorLayerAllocationTable(2, 2);
+            List<TensorLayerAllocationTable> table = createTensorLayerAllocationTable(2, 2);
 
-//             try {
-//                 mRelateTensorsToInstructions.invoke(validation, table, true);
-//             } catch (InvocationTargetException e) {
-//                 throw e.getTargetException();
-//             }
+            try {
+                mRelateTensorsToInstructions.invoke(validation, table, true);
+            } catch (InvocationTargetException e) {
+                throw e.getTargetException();
+            }
             
-//             Hashtable<Integer, Instruction> resultingTable = (Hashtable<Integer, Instruction>) mInstructionTagToInstruction.get(validation);
+            Hashtable<Integer, Instruction> resultingTable = (Hashtable<Integer, Instruction>) mInstructionTagToInstruction.get(validation);
 
-//             Instruction resultingInstruction1 = resultingTable.get(1);
+            Instruction resultingInstruction1 = resultingTable.get(1);
 
-//             assertEquals(1, resultingInstruction1.getNarrowWrite(0));
-//         }
+            assertEquals(1, resultingInstruction1.getNarrowWrite(0));
+        }
 
-//         // Multiple layer allocation table with invalid instruction
-//         @Test (expected = InvalidTensorAddressException.class)
-//         public void testMultiLayerAllocationTableWithInstructionInvalidOnCurrentLayer() throws InvalidTensorAddressException, IllegalAccessException, InvocationTargetException, Throwable {
-//             ArrayList<Instruction> instructions = new ArrayList<Instruction>();
+        // Multiple layer allocation table with invalid instruction
+        @Test (expected = InvalidTensorAddressException.class)
+        public void testMultiLayerAllocationTableWithInstructionInvalidOnCurrentLayer() throws InvalidTensorAddressException, IllegalAccessException, InvocationTargetException, Throwable {
+            ArrayList<Instruction> instructions = new ArrayList<Instruction>();
 
-//             instructionBuilder.setLayer("1")
-//                               .setTag(1)
-//                               .addNarrowWrite(150);
+            instructionBuilder.setLayer("1")
+                              .setTag(1)
+                              .addNarrowWrite(150);
 
-//             Instruction instruction1 = instructionBuilder.build();
+            Instruction instruction1 = instructionBuilder.build();
 
-//             instructions.add(instruction1);
+            instructions.add(instruction1);
 
-//             Hashtable<Integer, Instruction> tagToInstruction = new Hashtable<Integer, Instruction>();
+            Hashtable<Integer, Instruction> tagToInstruction = new Hashtable<Integer, Instruction>();
 
-//             tagToInstruction.put(1, instruction1);
+            tagToInstruction.put(1, instruction1);
 
-//             mInstructions.set(validation, instructions);
-//             mInstructionTagToInstruction.set(validation, tagToInstruction);
+            mInstructions.set(validation, instructions);
+            mInstructionTagToInstruction.set(validation, tagToInstruction);
 
-//             int[] dist = {2, 1, 2};
+            int[] dist = {2, 1, 2};
 
-//             List<TensorLayerAllocationTable> table = createTensorLayerAllocationTable(dist);
+            List<TensorLayerAllocationTable> table = createTensorLayerAllocationTable(dist);
 
-//             try {
-//                 mRelateTensorsToInstructions.invoke(validation, table, true);
-//             } catch (InvocationTargetException e) {
-//                 throw e.getTargetException();
-//             }
+            try {
+                mRelateTensorsToInstructions.invoke(validation, table, true);
+            } catch (InvocationTargetException e) {
+                throw e.getTargetException();
+            }
             
-//             Hashtable<Integer, Instruction> resultingTable = (Hashtable<Integer, Instruction>) mInstructionTagToInstruction.get(validation);
+            Hashtable<Integer, Instruction> resultingTable = (Hashtable<Integer, Instruction>) mInstructionTagToInstruction.get(validation);
 
-//             Instruction resultingInstruction1 = resultingTable.get(1);
+            Instruction resultingInstruction1 = resultingTable.get(1);
 
-//             assertEquals(1, resultingInstruction1.getNarrowWrite(0));
-//         }
+            assertEquals(1, resultingInstruction1.getNarrowWrite(0));
+        }
 
-//         /** 
-//         * Helper method that creates a tensor layer allocation table for a specified number of layers and tensors.
-//         * Input array's length is number of layers, each entry is tensors on that layer
-//         */
-//         public static List<TensorLayerAllocationTable> createTensorLayerAllocationTable(int[] distribution) {
-//             List<TensorLayerAllocationTable> table = new ArrayList<TensorLayerAllocationTable>();
+        /** 
+        * Helper method that creates a tensor layer allocation table for a specified number of layers and tensors.
+        * Input array's length is number of layers, each entry is tensors on that layer
+        */
+        public static List<TensorLayerAllocationTable> createTensorLayerAllocationTable(int[] distribution) {
+            List<TensorLayerAllocationTable> table = new ArrayList<TensorLayerAllocationTable>();
 
-//             TensorLayerAllocationTable.Builder tlatBuilder = TensorLayerAllocationTable.newBuilder();
-//             TensorTileAllocationTable.Builder ttatBuilder = TensorTileAllocationTable.newBuilder();
-//             TensorAllocation.Builder taBuilder = TensorAllocation.newBuilder();
+            TensorLayerAllocationTable.Builder tlatBuilder = TensorLayerAllocationTable.newBuilder();
+            TensorTileAllocationTable.Builder ttatBuilder = TensorTileAllocationTable.newBuilder();
+            TensorAllocation.Builder taBuilder = TensorAllocation.newBuilder();
 
-//             int tensorLabel = 1;
+            int tensorLabel = 1;
 
-//             for (int i = 0; i < distribution.length; i++) {
-//                 for (int j = 0; j < distribution[i]; j++) {
-//                     taBuilder.setTensorLabel(tensorLabel);
-//                     taBuilder.setBaseAddress(j * 100);
-//                     taBuilder.setSize(100);
+            for (int i = 0; i < distribution.length; i++) {
+                for (int j = 0; j < distribution[i]; j++) {
+                    taBuilder.setTensorLabel(tensorLabel);
+                    taBuilder.setBaseAddress(j * 100);
+                    taBuilder.setSize(100);
 
-//                     ttatBuilder.addTensorAllocation(0, taBuilder.build());
+                    ttatBuilder.addTensorAllocation(0, taBuilder.build());
 
-//                     tensorLabel++;
+                    tensorLabel++;
 
-//                     taBuilder.clear();
-//                 }
-//                 tlatBuilder.setLayer(String.valueOf(i)).addTensorTileAllocation(ttatBuilder.build());
+                    taBuilder.clear();
+                }
+                tlatBuilder.setLayer(String.valueOf(i)).addTensorTileAllocation(ttatBuilder.build());
 
-//                 ttatBuilder.clear();
+                ttatBuilder.clear();
 
-//                 table.add(tlatBuilder.build());
+                table.add(tlatBuilder.build());
 
-//                 tlatBuilder.clear();
-//             }
+                tlatBuilder.clear();
+            }
 
-//             return table;
-//         }
+            return table;
+        }
 
-//         /**
-//         * Creates a tensor layer allocation table with a specified number of layers, each with that number of tensors.
-//         */
-//         public static List<TensorLayerAllocationTable> createTensorLayerAllocationTable(int numLayers, int numTensors) {
-//             int[] dist = new int[numLayers];
+        /**
+        * Creates a tensor layer allocation table with a specified number of layers, each with that number of tensors.
+        */
+        public static List<TensorLayerAllocationTable> createTensorLayerAllocationTable(int numLayers, int numTensors) {
+            int[] dist = new int[numLayers];
 
-//             for (int i = 0; i < numLayers; i++) {
-//                 dist[i] = numTensors;
-//             }
+            for (int i = 0; i < numLayers; i++) {
+                dist[i] = numTensors;
+            }
 
-//             return createTensorLayerAllocationTable(dist);
-//         }
-//     }
+            return createTensorLayerAllocationTable(dist);
+        }
+    }
 
-//     public static class TestGetLayerToInstructionTable {
-//         private Validation validation;
-//         private Instruction.Builder instructionBuilder;
-//         private Hashtable<String, List<Integer>> expected;
+    public static class TestGetLayerToInstructionTable {
+        private Validation validation;
+        private Instruction.Builder instructionBuilder;
+        private Hashtable<String, List<Integer>> expected;
 
-//         private Method mGetLayerToInstructionTable;
-//         private Field mInstructions;
+        private Method mGetLayerToInstructionTable;
+        private Field mInstructions;
 
-//         @Before
-//         public void setUp() throws NoSuchMethodException,
-//         NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
-//             instructionBuilder = Instruction.newBuilder();
+        @Before
+        public void setUp() throws NoSuchMethodException,
+        NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
+            instructionBuilder = Instruction.newBuilder();
 
-//             expected = new Hashtable<String, List<Integer>>();
+            expected = new Hashtable<String, List<Integer>>();
 
-//             MemaccessCheckerData.Builder protoBuilder = MemaccessCheckerData.newBuilder();
+            MemaccessCheckerData.Builder protoBuilder = MemaccessCheckerData.newBuilder();
 
-//             Validation validation = new Validation(protoBuilder.build());
+            Validation validation = new Validation(protoBuilder.build());
 
-//             mGetLayerToInstructionTable = Validation.class.getDeclaredMethod("getLayerToInstructionTable");
-//             mGetLayerToInstructionTable.setAccessible(true);
+            mGetLayerToInstructionTable = Validation.class.getDeclaredMethod("getLayerToInstructionTable");
+            mGetLayerToInstructionTable.setAccessible(true);
 
-//             mInstructions = Validation.class.getDeclaredField("instructions");
-//             mInstructions.setAccessible(true);
-//         }
+            mInstructions = Validation.class.getDeclaredField("instructions");
+            mInstructions.setAccessible(true);
+        }
 
-//         // No instructions
-//         @Test
-//         public void testEmptyInstructionList() throws IllegalAccessException, InvocationTargetException {
-//             List<Instruction> instructionList = new ArrayList<Instruction>();
+        // No instructions
+        @Test
+        public void testEmptyInstructionList() throws IllegalAccessException, InvocationTargetException {
+            List<Instruction> instructionList = new ArrayList<Instruction>();
 
-//             mInstructions.set(validation, instructionList);
+            mInstructions.set(validation, instructionList);
 
-//             Hashtable<String, List<Integer>> result = (Hashtable<String, List<Integer>>) mGetLayerToInstructionTable.invoke(validation);
+            Hashtable<String, List<Integer>> result = (Hashtable<String, List<Integer>>) mGetLayerToInstructionTable.invoke(validation);
 
-//             assertEquals(expected, result);
-//         }
+            assertEquals(expected, result);
+        }
 
-//         // One instruction
-//         @Test
-//         public void testOneInstructionList() throws IllegalAccessException, InvocationTargetException {
-//             List<Instruction> instructionList = new ArrayList<Instruction>();
+        // One instruction
+        @Test
+        public void testOneInstructionList() throws IllegalAccessException, InvocationTargetException {
+            List<Instruction> instructionList = new ArrayList<Instruction>();
 
-//             List<Integer> instructionTagList = new ArrayList<Integer>();
+            List<Integer> instructionTagList = new ArrayList<Integer>();
 
-//             instructionBuilder.setTag(1)
-//                               .setLayer("1")
-//                               .addNarrowRead(50);
+            instructionBuilder.setTag(1)
+                              .setLayer("1")
+                              .addNarrowRead(50);
 
-//             instructionList.add(instructionBuilder.build());
-//             instructionTagList.add(1);
+            instructionList.add(instructionBuilder.build());
+            instructionTagList.add(1);
 
-//             instructionBuilder.clear();
+            instructionBuilder.clear();
 
-//             mInstructions.set(validation, instructionList);
+            mInstructions.set(validation, instructionList);
 
-//             expected.put("1", instructionTagList);
+            expected.put("1", instructionTagList);
 
-//             Hashtable<String, List<Integer>> result = (Hashtable<String, List<Integer>>) mGetLayerToInstructionTable.invoke(validation);
+            Hashtable<String, List<Integer>> result = (Hashtable<String, List<Integer>>) mGetLayerToInstructionTable.invoke(validation);
 
-//             assertEquals(expected, result);
-//         }
+            assertEquals(expected, result);
+        }
 
-//         // Multiple instructions on the same layer
-//         @Test
-//         public void testMultipleInstructionListSameLayer() throws IllegalAccessException, InvocationTargetException {
-//             List<Instruction> instructionList = new ArrayList<Instruction>();
+        // Multiple instructions on the same layer
+        @Test
+        public void testMultipleInstructionListSameLayer() throws IllegalAccessException, InvocationTargetException {
+            List<Instruction> instructionList = new ArrayList<Instruction>();
 
-//             List<Integer> instructionTagList = new ArrayList<Integer>();
+            List<Integer> instructionTagList = new ArrayList<Integer>();
 
-//             instructionBuilder.setTag(1)
-//                               .setLayer("1")
-//                               .addNarrowRead(50);
+            instructionBuilder.setTag(1)
+                              .setLayer("1")
+                              .addNarrowRead(50);
 
-//             instructionList.add(instructionBuilder.build());
-//             instructionTagList.add(1);
+            instructionList.add(instructionBuilder.build());
+            instructionTagList.add(1);
 
-//             instructionBuilder.clear();
+            instructionBuilder.clear();
 
-//             instructionBuilder.setTag(2)
-//                               .setLayer("1")
-//                               .addNarrowRead(100);
+            instructionBuilder.setTag(2)
+                              .setLayer("1")
+                              .addNarrowRead(100);
 
-//             instructionList.add(instructionBuilder.build());
-//             instructionTagList.add(2);
+            instructionList.add(instructionBuilder.build());
+            instructionTagList.add(2);
 
-//             instructionBuilder.clear();
+            instructionBuilder.clear();
 
-//             instructionBuilder.setTag(3)
-//                               .setLayer("1")
-//                               .addNarrowRead(150);
+            instructionBuilder.setTag(3)
+                              .setLayer("1")
+                              .addNarrowRead(150);
 
-//             instructionList.add(instructionBuilder.build());
-//             instructionTagList.add(3);
+            instructionList.add(instructionBuilder.build());
+            instructionTagList.add(3);
 
-//             instructionBuilder.clear();
+            instructionBuilder.clear();
 
-//             mInstructions.set(validation, instructionList);
+            mInstructions.set(validation, instructionList);
 
-//             expected.put("1", instructionTagList);
+            expected.put("1", instructionTagList);
 
-//             Hashtable<String, List<Integer>> result = (Hashtable<String, List<Integer>>) mGetLayerToInstructionTable.invoke(validation);
+            Hashtable<String, List<Integer>> result = (Hashtable<String, List<Integer>>) mGetLayerToInstructionTable.invoke(validation);
 
-//             assertEquals(expected, result);
-//         }
+            assertEquals(expected, result);
+        }
 
-//         // Multiple Instructions each on different layers
-//         @Test
-//         public void testMultipleInstructionListDifferentLayers() throws IllegalAccessException, InvocationTargetException {
-//             List<Instruction> instructionList = new ArrayList<Instruction>();
+        // Multiple Instructions each on different layers
+        @Test
+        public void testMultipleInstructionListDifferentLayers() throws IllegalAccessException, InvocationTargetException {
+            List<Instruction> instructionList = new ArrayList<Instruction>();
 
-//             List<Integer> instructionTagList1 = new ArrayList<Integer>();
-//             List<Integer> instructionTagList2 = new ArrayList<Integer>();
-//             List<Integer> instructionTagList3 = new ArrayList<Integer>();
+            List<Integer> instructionTagList1 = new ArrayList<Integer>();
+            List<Integer> instructionTagList2 = new ArrayList<Integer>();
+            List<Integer> instructionTagList3 = new ArrayList<Integer>();
 
-//             instructionBuilder.setTag(1)
-//                               .setLayer("1")
-//                               .addNarrowRead(50);
+            instructionBuilder.setTag(1)
+                              .setLayer("1")
+                              .addNarrowRead(50);
 
-//             instructionList.add(instructionBuilder.build());
-//             instructionTagList1.add(1);
+            instructionList.add(instructionBuilder.build());
+            instructionTagList1.add(1);
 
-//             instructionBuilder.clear();
+            instructionBuilder.clear();
 
-//             instructionBuilder.setTag(2)
-//                               .setLayer("2")
-//                               .addNarrowRead(100);
+            instructionBuilder.setTag(2)
+                              .setLayer("2")
+                              .addNarrowRead(100);
 
-//             instructionList.add(instructionBuilder.build());
-//             instructionTagList2.add(2);
+            instructionList.add(instructionBuilder.build());
+            instructionTagList2.add(2);
 
-//             instructionBuilder.clear();
+            instructionBuilder.clear();
 
-//             instructionBuilder.setTag(3)
-//                               .setLayer("3")
-//                               .addNarrowRead(150);
+            instructionBuilder.setTag(3)
+                              .setLayer("3")
+                              .addNarrowRead(150);
 
-//             instructionList.add(instructionBuilder.build());
-//             instructionTagList3.add(3);
+            instructionList.add(instructionBuilder.build());
+            instructionTagList3.add(3);
 
-//             instructionBuilder.clear();
+            instructionBuilder.clear();
 
-//             mInstructions.set(validation, instructionList);
+            mInstructions.set(validation, instructionList);
 
-//             expected.put("1", instructionTagList1);
-//             expected.put("2", instructionTagList2);
-//             expected.put("3", instructionTagList3);
+            expected.put("1", instructionTagList1);
+            expected.put("2", instructionTagList2);
+            expected.put("3", instructionTagList3);
 
-//             Hashtable<String, List<Integer>> result = (Hashtable<String, List<Integer>>) mGetLayerToInstructionTable.invoke(validation);
+            Hashtable<String, List<Integer>> result = (Hashtable<String, List<Integer>>) mGetLayerToInstructionTable.invoke(validation);
 
-//             assertEquals(expected, result);
-//         }
-//     }
-// }
+            assertEquals(expected, result);
+        }
+    }
+}
