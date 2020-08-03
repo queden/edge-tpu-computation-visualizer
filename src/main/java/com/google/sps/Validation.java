@@ -309,7 +309,7 @@ public class Validation {
         new Hashtable<String, List<Integer>>();
 
     // Loops over the instructions, finds the instruction's layer corresponding instruction list
-    // and adds the instruciton to that list
+    // and adds the instruction to that list
     for (Instruction instruction : instructions) {
       String instructionLayer = instruction.getLayer();
       List<Integer> layerInstructions = layerToInstructionTable.get(instructionLayer);
@@ -336,7 +336,7 @@ public class Validation {
    * Given a list of trace entries, validates that trace entries proceeded in the right order and
    * operated on the correct traces.
    */
-  public static void validateTraceEvents(long start, long end, List<Delta> narrowDeltas, List<Delta> wideDeltas)
+  private static void validateTraceEvents(long start, long end, List<Delta> narrowDeltas, List<Delta> wideDeltas)
       throws Exception, InvalidTensorOperationException, InvalidTensorReadException, MemoryAccessException {
     validationEnd = start;
 
@@ -354,7 +354,7 @@ public class Validation {
       if (instruction == null) {
 
         throw new Exception(
-            "Instruction with key "
+            "Instruction with tag "
                 + traceEvent.getInstructionTag()
                 + " does not exist."); // TODO: May need to write custom exception
       }
@@ -444,7 +444,11 @@ public class Validation {
     if (tensor == -1) {
       throw new Exception(
           "Instruction  "
-              + instruction
+              + instruction.getName()
+              + "(tag: "
+              + instruction.getTag()
+              + ", layer: "
+              + instruction.getLayer()
               + " does not have the appropriate tensor associated with it. This may be due to"
               + " invalid tensor or incorrect tensor event"
               + " address."
