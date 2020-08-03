@@ -9,9 +9,10 @@
 // // import java.lang.reflect.Method;
 // // import java.lang.reflect.Field;
 // // import java.lang.reflect.InvocationTargetException;
+// import java.lang.reflect.Constructor;
 
-// // import com.google.sps.exceptions.*;
-// // import com.google.sps.proto.MemaccessCheckerDataProto.*;
+// import com.google.sps.exceptions.*;
+// import com.google.sps.proto.MemaccessCheckerDataProto.*;
 
 // // import static org.junit.Assert.*;
 // // import org.junit.Before;
@@ -39,16 +40,18 @@
 // //         private int recievedTensor;
 // //         private TraceEvent.AccessType traceAccessType;
 
-// //         private Method mGetTraceTensor;
-// //         private Field mTensorLabelToTensorAllocationNarrow;
-// //         private Field mTensorLabelToTensorAllocationWide;
+//         private Method mGetTraceTensor;
+//         private Field mLayerTensorLabelToTensorAllocationNarrow;
+//         private Field mLayerTensorLabelToTensorAllocationWide;
+//         private Field mNumTiles;
 
-// //         @Before
-// //         public void setUp() throws NoSuchMethodException,
-// //         NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
-// //             instructionBuilder = Instruction.newBuilder();
-// //             accessList = new ArrayList<Integer>();
-// //             traceAddress = 0;
+//         @Before
+//         public void setUp() throws NoSuchMethodException,
+//         NoSuchFieldException, IllegalArgumentException, IllegalAccessException,
+//         ClassNotFoundException, InstantiationException, InvocationTargetException {
+//             instructionBuilder = Instruction.newBuilder();
+//             accessList = new ArrayList<Integer>();
+//             traceAddress = 0;
 
 // //             MemaccessCheckerData.Builder protoBuilder = MemaccessCheckerData.newBuilder();
 
@@ -57,14 +60,27 @@
 // //             mGetTraceTensor = Validation.class.getDeclaredMethod("getTraceTensor", int.class, TraceEvent.AccessType.class, Instruction.class);
 // //             mGetTraceTensor.setAccessible(true);
 
-// //             mTensorLabelToTensorAllocationNarrow = Validation.class.getDeclaredField("tensorLabelToTensorAllocationNarrow");
-// //             mTensorLabelToTensorAllocationNarrow.setAccessible(true);
+//             mLayerTensorLabelToTensorAllocationNarrow = Validation.class.getDeclaredField("layerTensorLabelToTensorAllocationNarrow");
+//             mLayerTensorLabelToTensorAllocationNarrow.setAccessible(true);
 
-// //             mTensorLabelToTensorAllocationWide = Validation.class.getDeclaredField("tensorLabelToTensorAllocationWide");
-// //             mTensorLabelToTensorAllocationWide.setAccessible(true);
+//             mLayerTensorLabelToTensorAllocationWide = Validation.class.getDeclaredField("layerTensorLabelToTensorAllocationWide");
+//             mLayerTensorLabelToTensorAllocationWide.setAccessible(true);
 
-// //             Map<Integer, TensorAllocation> narrowMap = new Hashtable<Integer, TensorAllocation>();
-// //             Map<Integer, TensorAllocation> wideMap = new Hashtable<Integer, TensorAllocation>();
+//             mNumTiles = Validation.class.getDeclaredField("numTiles");
+//             mNumTiles.setAccessible(true);
+
+//             mNumTiles.set(validation, 1);
+
+//             Class<?> enclosingClass = Class.forName("com.google.sps.Validation");
+//             Object enclosingInstance = enclosingClass.newInstance(encolosingprotoBuilder.build());
+
+//             Class<?> innerClass = Class.forName("com.google.sps.Validation$Pair");
+//             Constructor<?> ctor = innerClass.getDeclaredConstructor(enclosingClass);
+
+//             ctor.setAccessible(true);
+
+//             Map<Object, TensorAllocation> narrowMap = new Hashtable<Object, TensorAllocation>();
+//             Map<Object, TensorAllocation> wideMap = new Hashtable<Object, TensorAllocation>();
 
 // //             TensorAllocation.Builder tensorBuilder = TensorAllocation.newBuilder();
 // //             tensorBuilder.setTensorLabel(2).setBaseAddress(0).setSize(45);
@@ -76,31 +92,32 @@
 
 // //             TensorAllocation tensor2 = tensorBuilder.build();
 
-// //             narrowMap.put(2, tensor1);
-// //             narrowMap.put(47, tensor2);
+//             Object innerInstance = ctor.newInstance(enclosingInstance);
 
-// //             wideMap.put(2, tensor1);
-// //             wideMap.put(47, tensor2);
+//             narrowMap.put(ctor.newInstance(enclosingInstance, "input", 2), tensor1);
+//             narrowMap.put(ctor.newInstance(enclosingInstance, "layer2", 47), tensor2);
 
-// //             mTensorLabelToTensorAllocationNarrow.set(validation, narrowMap);
-// //             mTensorLabelToTensorAllocationWide.set(validation, wideMap);
-// //         }
+//             wideMap.put(ctor.newInstance(enclosingInstance, "input", 2), tensor1);
+//             wideMap.put(ctor.newInstance(enclosingInstance, "layer2", 47), tensor2);
+
+//             mLayerTensorLabelToTensorAllocationNarrow.set(validation, narrowMap);
+//             mLayerTensorLabelToTensorAllocationWide.set(validation, wideMap);
+//         }
 
 // //         // Trace is narrow read, instruction has narrow read, confirm returned tensor
 // //         @Test
 // //         public void testValidNarrowRead() throws Exception, MemoryAccessException {
 // //             traceAccessType = TraceEvent.AccessType.NARROW_READ;
 
-// //             accessList.addAll(Arrays.asList(2, 47));
+//             accessList.addAll(Arrays.asList(2));
 
-// //             instructionBuilder
-// //                 .addAllNarrowRead(accessList)
-// //                 .setTag(0);
+//             instructionBuilder
+//                 .addAllNarrowRead(accessList)
+//                 .setTag(0)
+//                 .setLayer("input");
 
-// //             expectedTensor = 2;
-
-
-// //             recievedTensor = (int) mGetTraceTensor.invoke(validation, traceAddress, traceAccessType, instructionBuilder.build());
+//             expectedTensor = 2;
+//             recievedTensor = (int) mGetTraceTensor.invoke(validation, traceAddress, traceAccessType, instructionBuilder.build());
             
 // //             assertEquals(expectedTensor, recievedTensor);
 // //         }
@@ -110,11 +127,12 @@
 // //         public void testValidNarrowWrite() throws Exception, MemoryAccessException {
 // //             traceAccessType = TraceEvent.AccessType.NARROW_WRITE;
 
-// //             accessList.addAll(Arrays.asList(2, 47));
+//             accessList.addAll(Arrays.asList(2));
 
-// //             instructionBuilder
-// //                 .addAllNarrowWrite(accessList)
-// //                 .setTag(0);
+//             instructionBuilder
+//                 .addAllNarrowWrite(accessList)
+//                 .setTag(0)
+//                 .setLayer("input");
 
 // //             expectedTensor = 2;
 
@@ -128,12 +146,14 @@
 // //         public void testValidWideRead() throws Exception, MemoryAccessException {
 // //             traceAccessType = TraceEvent.AccessType.WIDE_READ;
 
-// //             accessList.addAll(Arrays.asList(2, 47));
+//             accessList.addAll(Arrays.asList(2));
 
-// //             instructionBuilder
-// //                 .addAllWideRead(accessList)
-// //                 .setTag(0);
-// //             expectedTensor = 2;
+//             instructionBuilder
+//                 .addAllWideRead(accessList)
+//                 .setTag(0)
+//                 .setLayer("input");
+
+//             expectedTensor = 2;
 
 // //             recievedTensor = (int) mGetTraceTensor.invoke(validation, traceAddress, traceAccessType, instructionBuilder.build());
             
@@ -145,11 +165,12 @@
 // //         public void testValidWideWrite() throws Exception, MemoryAccessException {
 // //             traceAccessType = TraceEvent.AccessType.WIDE_WRITE;
 
-// //             accessList.addAll(Arrays.asList(2, 47));
+//             accessList.addAll(Arrays.asList(2));
 
-// //             instructionBuilder
-// //                 .addAllWideWrite(accessList)
-// //                 .setTag(0);
+//             instructionBuilder
+//                 .addAllWideWrite(accessList)
+//                 .setTag(0)
+//                 .setLayer("input");
 
 // //             expectedTensor = 2;
 
@@ -163,11 +184,12 @@
 // //         public void testInvalidNarrowRead() throws Exception, MemoryAccessException, Throwable {
 // //             traceAccessType = TraceEvent.AccessType.NARROW_READ;
             
-// //             accessList.addAll(Arrays.asList(2, 47));
+//             accessList.addAll(Arrays.asList(2));
 
-// //             instructionBuilder
-// //                 .addAllWideRead(accessList)
-// //                 .setTag(0);
+//             instructionBuilder
+//                 .addAllWideRead(accessList)
+//                 .setTag(0)
+//                 .setLayer("input");
 
 // //             expectedTensor = 2;
 
@@ -185,11 +207,12 @@
 // //         public void testInvalidNarrowWrite() throws Exception, MemoryAccessException, Throwable {
 // //             traceAccessType = TraceEvent.AccessType.NARROW_WRITE;
 
-// //             accessList.addAll(Arrays.asList(2, 47));
+//             accessList.addAll(Arrays.asList(2));
 
-// //             instructionBuilder
-// //                 .addAllNarrowRead(accessList)
-// //                 .setTag(0);
+//             instructionBuilder
+//                 .addAllNarrowRead(accessList)
+//                 .setTag(0)
+//                 .setLayer("input");
 
 // //             expectedTensor = 2;
 
@@ -207,11 +230,12 @@
 // //         public void testInvalidWideRead() throws Exception, MemoryAccessException, Throwable {
 // //             traceAccessType = TraceEvent.AccessType.WIDE_READ;
 
-// //             accessList.addAll(Arrays.asList(2, 47));
+//             accessList.addAll(Arrays.asList(2));
 
-// //             instructionBuilder
-// //                 .addAllNarrowRead(accessList)
-// //                 .setTag(0);
+//             instructionBuilder
+//                 .addAllNarrowRead(accessList)
+//                 .setTag(0)
+//                 .setLayer("input");
 
 // //             expectedTensor = 2;
 
@@ -229,11 +253,12 @@
 // //         public void testInvalidWideWrite() throws Exception, MemoryAccessException, Throwable {
 // //             traceAccessType = TraceEvent.AccessType.WIDE_WRITE;
             
-// //             accessList.addAll(Arrays.asList(2, 47));
+//             accessList.addAll(Arrays.asList(2));
 
-// //             instructionBuilder
-// //                 .addAllNarrowWrite(accessList)
-// //                 .setTag(0);
+//             instructionBuilder
+//                 .addAllNarrowWrite(accessList)
+//                 .setTag(0)
+//                 .setLayer("input");
 
 // //             expectedTensor = 2;
 
@@ -251,11 +276,12 @@
 // //         public void testNullAccessTraceEvent() throws Exception, MemoryAccessException, Throwable {
 // //             traceAccessType = null;
 
-// //             accessList.addAll(Arrays.asList(2, 47));
+//             accessList.addAll(Arrays.asList(2));
 
-// //             instructionBuilder
-// //                 .addAllWideRead(accessList)
-// //                 .setTag(0);
+//             instructionBuilder
+//                 .addAllWideRead(accessList)
+//                 .setTag(0)
+//                 .setLayer("input");
 
 // //             expectedTensor = 2;
 
@@ -515,15 +541,6 @@
 // //                 throw e.getTargetException();
 // //             }
             
-// <<<<<<< HEAD
-// // <<<<<<< HEAD
-// // //             assertEquals(expectedTensor, recievedTensor);
-// // //         }
-// // //     }
-// // // }
-// // =======
-// =======
-// >>>>>>> edd53d645970778968b4f0814d7f623b1eb03f05
 // //             Hashtable<Integer, Instruction> resultingTable = (Hashtable<Integer, Instruction>) mInstructionTagToInstruction.get(validation);
 
 // //             Instruction resultingInstruction1 = resultingTable.get(1);
