@@ -75,10 +75,11 @@ public class ReportServlet extends HttpServlet {
         // Executes the trace processing of the memaccess checker.
 
         long start = Long.parseLong(request.getParameter("start"));
+        long step = Long.parseLong(request.getParameter("step-size"));
 
         // System.out.println("Start is " + start);
 
-        ProcessResults processResults = validation.process(start, start + 1000);
+        ProcessResults processResults = validation.process(start, start + step);
         
         json = gson.toJson(processResults);
     }

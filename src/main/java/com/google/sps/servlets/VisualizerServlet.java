@@ -149,6 +149,8 @@ public class VisualizerServlet extends HttpServlet {
 
         Entity memaccessCheckerUpload = new Entity("File");
         memaccessCheckerUpload.setProperty("date", dateTime.format(formatter));
+        // ^ Purely for sorting purposes only
+        
         memaccessCheckerUpload.setProperty("time", new Date());
         memaccessCheckerUpload.setProperty("name", checkerName);
         memaccessCheckerUpload.setProperty("user", user);
@@ -260,13 +262,17 @@ public class VisualizerServlet extends HttpServlet {
     // Checks if the file uploaded is a binary file or a text file.
     if (fileName.toLowerCase().endsWith(".bin")) {
       // If binary file
+
       byte[] byteArray = ByteStreams.toByteArray(fileInputStream);
+
       return MemaccessCheckerData.parseFrom(byteArray);
     } else {
       // If text file
+
       InputStreamReader reader = new InputStreamReader(fileInputStream, "ASCII");
       MemaccessCheckerData.Builder builder = MemaccessCheckerData.newBuilder();
       TextFormat.merge(reader, builder);
+      
       return builder.build();
     }
   }

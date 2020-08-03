@@ -56,7 +56,7 @@ function extractData(rawData) {
 
     // generate initial graph
     data = filterJSON(rawData, 'tile', '0');
-    console.log(data)
+    console.log(data);
     displayChart(data);
 }
 
@@ -291,4 +291,15 @@ function displayChart(data) {
     }
 
 }
-extractData(data1)
+extractData(data1);
+
+async function test() {
+  console.log("enter");
+  const pre = await fetch('/report?process=pre&fileId=5897780371390464', {method: 'GET'});
+  const preresp = await pre.json();
+
+  const post = await fetch('/report?process=post&start=0', {method: 'GET'});
+  const postresp = await post.json();
+
+  console.log(postresp);
+}

@@ -5,6 +5,8 @@
         <link rel="stylesheet" href="style.css">
         <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
         <script type="text/javascript" src="script.js"></script>
+        <script src="https://d3js.org/d3.v3.min.js"></script>
+        <title> Computation Visualizer </title>
     </head>
     <body>
       <div id = "nav-bar"> 
@@ -14,18 +16,49 @@
 
         <ul>
           <li> Please close this window before selecting another file to run </li>
+          <li> You must run the visualization before attempting to switch tiles or memory types </li>
           <li> You can run the visualization as many times as you want by clicking the "Run" button </li>
         </ul>
 
         <p id="file-info"> Viewing file: </p>
+        <form action="#">
+          <label for="step-size"> Enter a step size: </label>
+          <input type="number" name="step-size" id="step-size" value="1000"/>
+        </form>
         <button id="run-button" onclick="runVisualization()"> Run! </button>
+        
+        <h3 id="memory-type"></h3>
 
-        <!-- TODO: Substitute with chart info -->
-        <p id="chart" style="color: blue; font-size: 48px;"> Viz go here </p>
+        <div id="memory-switch">
+          Switch between narrow and wide memory:
+          <button class="memory" type="button" onclick="change(1)"> Wide </button>
+          <button class="memory" type="button" onclick="change(2)"> Narrow </button>
+        </div>
 
-        <div id="trace-info-box"></div>
-        <p id="done"> Validation finished </p>
+        <form action="#">
+          <label for="tile-select"> Choose a tile: </label>
+          <select id="tile-select" name="tile-select">
+              <option value="0" selected="selected">Tile 0</option>
+          </select>
+        </form>
+
+        <div id="chart"></div>
+
+        <div id="response-messages">
+          <div id="trace-processes">
+            <div id="trace-info-box"></div>
+            <p id="done"> Validation finished </p>
+          </div>
+        
+          <div id="error-box">
+            <p id="error-init"> Errors: </p>
+            <div id="error-messages"></div>
+          </div>
+        </div>
+
+        
     </body>
-    <script src="//d3js.org/d3.v4.min.js"></script>
-    <script type="text/javascript" src="script.js" onload="loadMemory()"></script>
+    <!-- <script type="text/javascript" src="report.js"></script> -->
+     
+    <script type="text/javascript" src="script.js"></script>
 </html>
