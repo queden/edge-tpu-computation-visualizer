@@ -3,7 +3,7 @@
  * from preprocess and process
  */
 async function getData() {
-    const pre = await fetch('/report?process=pre&fileId=6227633859723264', {method: 'GET'});
+    const pre = await fetch('/report?process=pre&fileId=4820258976169984', {method: 'GET'});
     const preresp = await pre.json();
     console.log(preresp)
     const post = await fetch('/report?process=post&start=0&step-size=1000', {method: 'GET'});
