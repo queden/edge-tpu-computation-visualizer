@@ -143,7 +143,7 @@ public class Validation {
    * @param start is the starting index of traceEvents
    * @param end is the ending index of traceEvents
    * @return the processing results of the specified chunk of traces up to 
-   *         the point at which an error was encountered
+   *         end, or the point at which an error was encountered
    */
   public static ProcessResults process(long start, long end) {
     List<Delta> narrowDeltas = new ArrayList<Delta>();
