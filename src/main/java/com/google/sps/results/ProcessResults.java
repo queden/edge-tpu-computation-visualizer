@@ -1,4 +1,6 @@
 package com.google.sps.results;
+import java.util.List;
+import com.google.sps.structures.Delta;
 
 import com.google.sps.structures.Delta;
 import java.util.List;
@@ -23,8 +25,5 @@ public class ProcessResults {
     }
 
     this.validationEnd = validationEnd;
-    
-    this.narrowDeltas = narrowDeltas;
-    this.wideDeltas = wideDeltas;
   }
 }
