@@ -339,6 +339,12 @@ function openVisualization() {
   } 
 }
 
+// Variable to hold how the visualization should continue:
+// -"a" to continue past all errors
+// -"d" to continue as is with prompts after each error
+// -"s" to abort the visualization
+var proceed = "";
+
 // Runs the visualization of the chosen simulation trace.
 async function runVisualization() {
   alert("Visualization begun");
@@ -390,7 +396,7 @@ async function runVisualization() {
     while (start < numTraces) {
       var runTracesResults = await runTraces(start, numTraces, stepSize);
       console.log(runTracesResults)
-      if (!runTracesResults.proceed) {
+      if (runTracesResults.proceed == "s") {
         break;
       }
       start = runTracesResults.validationEnd + 1;
@@ -458,9 +464,17 @@ async function runTraces(start, numTraces, stepSize) {
     errorMessages.appendChild(p);
 
     // Checks if the user wants to continue or abort the visualization after an error is found.
-    var proceed = confirm("An error was encountered. Would you like to continue the visualization?");
+    // var proceed = confirm("An error was encountered. Would you like to continue the visualization?");
 
-    if (proceed) {
+    if (proceed != "a") {
+      proceed = prompt("An error was encountered. Please choose how to continue: \n\"a\": continue through all errors with no prompts \n\"d\": continue with prompts \n\"s\": abort visualization \nDefault is \"d\"");
+
+      if (!(proceed != "d" || proceed != "a" || proceed != "s")) {
+        proceed = "d";
+      }
+    }
+
+    if (proceed != "s") {
       // Continue visualization.
 
       // Update visualizer

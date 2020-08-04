@@ -31,9 +31,9 @@ public class InvalidTensorReadException extends Exception {
                 memory +
                 " memory location (layer: "
                 + layer
-                + " tile: " +
+                + ", tile: " +
                 tile +
-                " address: " +
+                ", address: " +
                 address +
                 ") but memory location was not allocated";
         }
