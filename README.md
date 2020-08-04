@@ -75,3 +75,17 @@ Project components:
       ```
       src/main/webapp/style.css
       ```
+
+Possible errors caught by the algorithm:
+  - Lack of mask(s) assigned to a given instruction and trace event
+  - Lack of tensor assigned to a base address in narrow/wide memory
+  - Attempting to read from a memory location that has not yet been allocated
+  - Attempting to perform a memory access operation from an instruction that does not contain its trace event
+  - A layer does not have the same number of tiles as expected by the proto
+  - A complete lack of provided trace events
+  - A non-existent instruction corresponding to an existing trace event
+  - A present trace event with an access type that is not narrow/wide read/write
+  - A lack of a tensor associated to an instruction
+  - An empty narrow/wide memory allocation table
+  - Attempting to read/write from/to a memory location on a tile that is 
+    in the operating trace event but not its corresponding instruction
