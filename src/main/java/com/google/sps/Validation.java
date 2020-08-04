@@ -553,9 +553,9 @@ public class Validation {
     // associated with the correct instruction access type.
     if (tensor == -1) {
       throw new Exception(
-          "Instruction  "
+          "Instruction "
               + instruction.getName()
-              + "(tag: "
+              + " (tag: "
               + instruction.getTag()
               + ", layer: "
               + instruction.getLayer()

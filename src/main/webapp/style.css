@@ -284,3 +284,12 @@ svg {
   font-size: 18px;
   font-weight: bold;
 }
+
+#selection-info {
+  display: flex;
+  flex-direction: row;
+}
+
+.selection {
+  margin-right: 5%;
+}

@@ -742,13 +742,12 @@ async function chart(val, process, json) {
       // const displayMemoryType = document.getElementById("memory-type");
       // displayMemoryType.innerHTML = memoryType;
 
-      memoryBox.innerHTML += memoryType;
+      memoryBox.innerHTML = "Memory: " + memoryType;
 
       //Display tile 
       // const displayTile = document.getElementById("tile");
       // displayTile.innerHTML = "Tile " + section;
-      tile = section;
-      tileBox.innerHTML += tile;
+      tileBox.innerHTML = "Viewing information for Tile: " + section;
 
       //Define color scales
       colorScale = d3.scale.ordinal().domain([0, d3.max(data, function(d) {
@@ -909,7 +908,7 @@ async function chart(val, process, json) {
         var focusHeight = focus.node().getBoundingClientRect().height;
         var size = layers.size;
 
-        if (size === 0){
+        if (size === 0) {
           size = 1;
         }
 
@@ -953,28 +952,23 @@ async function chart(val, process, json) {
               //     .style("display", "inline-block");
               //     .html((d.layer) + "<br>" + (d.location));
 
-              layerName = d.layer;
-              curLocation = d.location;
+              layerBox.innerHTML = "Layer: " + d.layer;
+              locationBox.innerHTML = "Location: " + d.location;
 
-              layerBox.innerHTML += layerName;
-              locationBox += curLocation;
             })
             .on("mouseout", function(d) {
                 // tooltip.style("display", "none");
 
-              layerName = "";
-              curLocation = "";
-
-              layerBox.innerHTML += layerName;
-              locationBox += curLocation;
+              layerBox.innerHTML = "Layer: ";
+              locationBox.innerHTML = "Location: ";
             });
       }
 
       /** remove data values  
       */
       function exit(data) {
-        var bars = focus.selectAll('.bar').data(data)
-        bars.exit().remove()
+        var bars = focus.selectAll('.bar').data(data);
+        bars.exit().remove();
       }
 
 
@@ -983,11 +977,11 @@ async function chart(val, process, json) {
         */
       function enter(data, focus) {    
         x.domain(data.map(function(d) {
-          return d.location
+          return d.location;
         }));
                 
         y.domain(data.map(function(d) {
-          return d.layer
+          return d.layer;
         }));
                 
         var focusHeight = focus.node().getBoundingClientRect().height;
@@ -1038,20 +1032,14 @@ async function chart(val, process, json) {
               //     .style("top", d3.event.pageY - 70 + "px")
               //     .style("display", "inline-block")
               //     .html((d.layer) + "<br>" + (d.location));
-              layerName = d.layer;
-              curLocation = d.location;
-
-              layerBox.innerHTML += layerName;
-              locationBox += curLocation;
+              layerBox.innerHTML = "Layer: " + d.layer;
+              locationBox.innerHTML = "Location: " + d.location;
             })
             .on("mouseout", function(d) {
                 // tooltip.style("display", "none");
 
-              layerName = "";
-              curLocation = "";
-
-              layerBox.innerHTML += layerName;
-              locationBox += curLocation;
+              layerBox.innerHTML = "Layer: ";
+              locationBox.innerHTML = "Location: ";
             });
       }
     }
