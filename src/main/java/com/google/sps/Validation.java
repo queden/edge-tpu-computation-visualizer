@@ -482,6 +482,13 @@ public class Validation {
     Boolean hasAccessType = true;
     String layer = instruction.getLayer();
 
+    if (layer.isEmpty()) {
+      throw new Exception("Instruction "
+            + instruction.getTag()
+            + " is not associated with a layer."
+      );
+    }
+
     if (traceAccessType == TraceEvent.AccessType.NARROW_READ) {
       if (instruction.getNarrowReadCount() != 0) {
         accessTypeTensorList = instruction.getNarrowReadList();
@@ -710,7 +717,7 @@ public class Validation {
         for (int currentByte = address; currentByte < endAddress; currentByte++) {
           if (narrow[tile][currentByte] != tensor) {
             throw new InvalidTensorReadException(
-              tensor, layer, instruction, tile, address, narrow[tile][address], "narrow");
+              tensor, layer, instruction, tile, address, narrow[tile][currentByte], "narrow");
           }
         }
       } else {
