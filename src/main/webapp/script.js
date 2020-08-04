@@ -222,7 +222,6 @@ function displayFile() {
     selectedFileBox.innerHTML = "Selected file: " + file;
     selectedFileBox.style.color = "limegreen";
   } 
-  console.log(select.options[select.selectedIndex].value);
 }
 
 // Deletes a single file.
@@ -390,12 +389,10 @@ async function runVisualization() {
     
     while (start < numTraces) {
       var runTracesResults = await runTraces(start, numTraces, stepSize);
-      console.log(runTracesResults)
       if (!runTracesResults.proceed) {
         break;
       }
       start = runTracesResults.validationEnd + 1;
-      console.log(start)
     }
   } else {
     alert("Error occurred in preprocessing, visualization aborted.");
@@ -421,7 +418,6 @@ async function runTraces(start, numTraces, stepSize) {
   */
   const traceResponse = await fetch('/report?process=post&start=' + start + "&step-size=" + stepSize, {method: 'GET'});
   const traceProcess = await traceResponse.json();
-    console.log("nothing" + traceProcess)
   var end = traceProcess.validationEnd;
 
   // Process json trace information.
@@ -535,13 +531,15 @@ function createTile(numTile) {
  */
 async function getData() {
     const traceBox = document.getElementById("trace-info-box");
-    traceBox.innerHTML = '';
+    //traceBox.innerHTML = '';
     const pre = await fetch('/report?process=pre&fileId=' + traceBox.title , {method: 'GET'});
     const preresp = await pre.json();
 
     const stepSize = parseInt(document.getElementById("step-size").value);
     const post = await fetch('/report?process=post&start=0&step-size=' + stepSize , {method: 'GET'});
     const postresp = await post.json();
+    console.log(postresp)
+    console.log(stepSize)
     return [preresp, postresp];
 }
 
@@ -565,6 +563,7 @@ async function chart(val) {
 
     var data1 = new Array();
     var layers = new Set()
+    var longestLayerName = 0
 
     /**depending on which of the memory types are selected
      fill the array*/
@@ -597,17 +596,22 @@ async function chart(val) {
                         var datum = {}
                         datum.location = k;
                         datum.layer = memoryAlloc[i]["layer_"];
-                        layers.add(memoryAlloc[i]["layer_"])
                         datum.tile = tile;
                         datum.filled = false;
                         datum.label = alloc["tensorLabel_"]
                         data1.push(datum)
+
+                        layers.add(memoryAlloc[i]["layer_"])
+                        if (longestLayerName < memoryAlloc[i]["layer_"].length){
+                            longestLayerName = memoryAlloc[i]["layer_"].length
+                        }
                     }
                 }
             }
         }
     }
-
+console.log(layers)
+console.log(longestLayerName)
     /**add changes made by the deltas
     */
     function addDelta(data1, deltas) {
@@ -624,10 +628,14 @@ async function chart(val) {
 
     if (val == 1) {
         fill(wideAlloc, wideSize)
-        //addDelta(data1, wideDelta)
+        if (wideDelta != undefined){
+            addDelta(data1, wideDelta)
+        }
     } else {
         fill(narrowAlloc, narrowSize)
-        //addDelta(data1, narrowDelta)
+        if (narrowDelta != undefined){
+            addDelta(data1, narrowDelta)
+        }
     }
 
     /**filter the data based on the tile selected 
@@ -650,16 +658,13 @@ async function chart(val) {
             .on("change", function() {
                 var sect = document.getElementById("inds");
                 var section = sect.options[sect.selectedIndex].value;
-                console.log(section)
                 data = filterJSON(rawData, 'tile', section);
                 var sortedData = data.slice().sort((a, b) => d3.ascending(a.location, b.location))
-                console.log(sortedData[0]);
                 displayChart(sortedData, memoryType, section);
             });
 
         // generate initial graph
         data = filterJSON(rawData, 'tile', '0');
-        console.log(data[0])
         var sortedData = data.slice().sort((a, b) => d3.ascending(a.location, b.location))
         displayChart(sortedData, memoryType, '0');
     }
@@ -671,13 +676,13 @@ async function chart(val) {
             top: 10,
             right: 10,
             bottom: 100,
-            left: 40
+            left: 10 + 2*longestLayerName
         },
         margin2 = {
             top: 430,
             right: 10,
             bottom: 20,
-            left: 40
+            left: 10 + 2*longestLayerName
         },
         width = divWidth - 25,
         height = 500 - margin.top - margin.bottom,
@@ -690,11 +695,11 @@ async function chart(val) {
 
     d3.select("svg").remove();
 
-    var svg = d3.select("body").append("svg")
+    var svg = d3.select("#chart").append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom);
 
-    var tooltip = d3.select("body").append("div").attr("class", "toolTip");
+    var tooltip = d3.select("#tooltip").append("div").attr("class", "toolTip");
 
     var focus = svg.append("g")
         .attr("class", "focus")
@@ -760,6 +765,12 @@ async function chart(val) {
             .attr("class", "y axis")
             .call(yAxis);
 
+        var maxw = 0;
+        focus.selectAll("text").each(function() {
+            if(this.getBBox().width > maxw) maxw = this.getBBox().width;
+        });
+        svg.attr("transform", "translate(" + maxw + ",0)");
+        console.log(maxw)
         //add brush
         var brush = d3.svg.brush()
             .x(x2)
@@ -843,7 +854,6 @@ async function chart(val) {
             }
         
             var tickValueMultiplier = Math.ceil(Math.abs(tickScale(brushValue)));
-            console.log(brushValue, tickScale(brushValue), tickValueMultiplier)
 
             var filteredTickValues = data.filter(function(d, i) {
                 return i % tickValueMultiplier === 0
@@ -866,7 +876,11 @@ async function chart(val) {
             }));
 
             var focusHeight = focus.node().getBoundingClientRect().height;
-            var newHeight = focusHeight / layers.size;
+            var size = layers.size
+            if (size === 0){
+                size = 1;
+            }
+            var newHeight = focusHeight / size;
 
             var bars = focus.selectAll('.bar')
                 .data(data)
@@ -936,7 +950,7 @@ async function chart(val) {
                 size = 1;
             }
             var newHeight = focusHeight / size;
-            console.log(focusHeight, newHeight, layers.size)
+
             var bars = focus.selectAll('.bar')
                 .data(data)
             bars.enter().append("rect")
