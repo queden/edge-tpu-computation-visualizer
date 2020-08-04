@@ -563,6 +563,7 @@ async function chart(val, process, json) {
     preResult = json;
   } else {
     postResult = json;
+    console.log(postResult["narrowDeltas"]);
 
     var narrowDelta = postResult["narrowDeltas"];
     var narrowSize = preResult["narrowSize"];
@@ -635,6 +636,7 @@ async function chart(val, process, json) {
     function addDelta(data1, deltas) {
       for (var i = 0; i < deltas.length; i++) {
         var delta = deltas[i];
+        console.log(deltas[i])
                 
         for (var j = 0; j < data1.length; j++) {
           var entry = data1[j];
@@ -734,7 +736,7 @@ async function chart(val, process, json) {
 
     var xAxis = d3.svg.axis().scale(x).orient("bottom"),
         xAxis2 = d3.svg.axis().scale(x2).orient("bottom").tickValues([]),
-        yAxis = d3.svg.axis().scale(y).orient("left");
+        yAxis = d3.svg.axis().scale(y).orient("left")
 
     //Draw the chart
     function displayChart(data, memoryType, section) {          
@@ -751,17 +753,17 @@ async function chart(val, process, json) {
 
       //Define color scales
       colorScale = d3.scale.ordinal().domain([0, d3.max(data, function(d) {
-        return d.label;
+        return d.label
       })]).range(['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', '#008080',
           '#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075'
       ]);
       grayColorScale = d3.scale.ordinal().domain([0, d3.max(data, function(d) {
-        return d.label;
+        return d.label
       })]).range(['#DCDCDC', '#D3D3D3', '#C0C0C0', '#BEBEBE', '#989898', '#808080', '#696969', '#555555', '#E5E4E2',
           '#727472', '#928E85', '#708090', '#A9A9A9', '#acacac'
       ]);
       layerPosition = d3.scale.ordinal().domain(d3.map(data, function(d) {
-        return d.layer;
+        return d.layer
       })).range([22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]);
 
       // remove predrawn structures
@@ -796,8 +798,8 @@ async function chart(val, process, json) {
         if(this.getBBox().width > maxw) maxw = this.getBBox().width;
       });
 
-      svg.attr("transform", "translate(" + maxw + ",0)");
-      console.log(maxw)
+      // svg.attr("transform", "translate(" + maxw + ",0)");
+      // console.log(maxw)
       //add brush
       var brush = d3.svg.brush()
           .x(x2)
@@ -808,23 +810,23 @@ async function chart(val, process, json) {
 
       // draw the subbars
       var subBars = context.selectAll('.subBar')
-          .data(data)
+          .data(data);
       subBars.enter().append("rect")
           .classed('subBar', true)
           .attr({
               height: function(d) {
-                return 10;
+                return 10
               },
               width: function(d) {
                 return x.rangeBand()
               },
               x: function(d) {
-                return x2(d.location);
+                return x2(d.location)
               },
               y: function(d) {
                 return 10
               }
-            });
+          });
       context.append("g")
           .attr("class", "x axis")
           .attr("transform", "translate(0," + height2 + ")")
@@ -869,7 +871,7 @@ async function chart(val, process, json) {
         update(updatedData);
         enter(updatedData, focus);
         exit(updatedData);
-        updateScale(updatedData)
+        updateScale(updatedData);
       }
 
       /** Update scale based on number of 
@@ -886,9 +888,9 @@ async function chart(val, process, json) {
         var tickValueMultiplier = Math.ceil(Math.abs(tickScale(brushValue)));
 
         var filteredTickValues = data.filter(function(d, i) {
-          return i % tickValueMultiplier === 0;
+          return i % tickValueMultiplier === 0
         }).map(function(d) {
-          return d.location;
+          return d.location
         })
         focus.select(".x.axis").call(xAxis.tickValues(filteredTickValues));
       }
@@ -898,11 +900,11 @@ async function chart(val, process, json) {
         */
       function update(data) {
         x.domain(data.map(function(d) {
-          return d.location;
+          return d.location
         }));
 
         y.domain(data.map(function(d) {
-          return d.layer;
+          return d.layer
         }));
 
         var focusHeight = focus.node().getBoundingClientRect().height;
@@ -915,7 +917,7 @@ async function chart(val, process, json) {
         var newHeight = focusHeight / size;
 
         var bars = focus.selectAll('.bar')
-          data(data);
+          .data(data);
         bars
             .attr({
               height: function(d, i) {
@@ -1041,13 +1043,14 @@ async function chart(val, process, json) {
               layerBox.innerHTML = "Layer: ";
               locationBox.innerHTML = "Location: ";
             });
-      }
-    }
 
-    if (val == 2) {
-      extractData(data1, narrow)
-    } else {
-      extractData(data1, wide)
+      }
+
+      if (val == 2) {
+          extractData(data1, narrow)
+        } else {
+          extractData(data1, wide)
+        }
     }
   }
 }
