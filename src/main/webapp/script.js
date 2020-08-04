@@ -345,6 +345,10 @@ function openVisualization() {
 // -"s" to abort the visualization
 var proceed = "";
 
+var tile = 0;
+var layerName = "";
+var curLocation = "";
+
 // Runs the visualization of the chosen simulation trace.
 async function runVisualization() {
   alert("Visualization begun");
@@ -394,17 +398,19 @@ async function runVisualization() {
   if (!preprocessResponse.isError) {
     
     while (start < numTraces) {
-      var runTracesResults = await runTraces(start, numTraces, stepSize);
-      console.log(runTracesResults)
-      if (runTracesResults.proceed == "s") {
+      var runTracesEnd = await runTraces(start, numTraces, stepSize);
+      console.log(runTracesEnd);
+      if (proceed == "s") {
         break;
       }
-      start = runTracesResults.validationEnd + 1;
+
+      start = runTracesEnd + 1;
     }
   } else {
     alert("Error occurred in preprocessing, visualization aborted.");
   }
   
+  proceed = "";
   done.style.display = "block";
 }
 
@@ -440,10 +446,7 @@ async function runTraces(start, numTraces, stepSize) {
 
     // Continues visualization.
 
-    return {
-        "proceed": true,
-        "validationEnd": end
-    };
+    return end;
   } else {
     document.getElementById("error-box").style.display = "block";
 
@@ -465,7 +468,14 @@ async function runTraces(start, numTraces, stepSize) {
     // var proceed = confirm("An error was encountered. Would you like to continue the visualization?");
 
     if (proceed != "a") {
-      proceed = prompt("An error was encountered. Please choose how to continue: \n\"a\": continue through all errors with no prompts \n\"d\": continue with prompts \n\"s\": abort visualization \nDefault is \"d\"");
+      var promptString = 
+          "An error was encountered. Please choose how to continue:" +
+          "\n\"a\": continue through all errors with no prompts" +
+          "\n\"s\": abort visualization" +
+          "\n\"d\": continue with prompts" +
+          "\n\n*Default is \"d\" if invalid/no selection made";
+
+      proceed = prompt(promptString, "d");
 
       if (!(proceed != "d" || proceed != "a" || proceed != "s")) {
         proceed = "d";
@@ -479,16 +489,10 @@ async function runTraces(start, numTraces, stepSize) {
       // extractData(traceProcess);
       chart(1, "post", traceProcess);
 
-      return {
-          "proceed": true,
-          "validationEnd": end
-      };
+      return end;
     } else {
       // Abort visualization.
-      return {
-          "proceed": false,
-          "validationEnd": end
-      };
+      return end;
     }
   }
 }
@@ -546,10 +550,14 @@ function createTile(numTile) {
  */
 var preResult;
 var postResult;
+var layerBox = document.getElementById("layer-name");
+var locationBox = document.getElementById("location");
+var tileBox = document.getElementById("viewing-box");
+var memoryBox = document.getElementById("memory");
 
 async function chart(val, process, json) {
-  var narrow = "Narrow Memory";
-  var wide = "Wide Memory";
+  var narrow = "Narrow";
+  var wide = "Wide";
 
   if (process == "pre") {
     preResult = json;
@@ -564,8 +572,8 @@ async function chart(val, process, json) {
     var wideAlloc = preResult['tensorAllocationWide'];
 
     var data1 = new Array();
-    var layers = new Set()
-    var longestLayerName = 0
+    var layers = new Set();
+    var longestLayerName = 0;
 
     /**depending on which of the memory types are selected
     fill the array*/
@@ -669,9 +677,9 @@ async function chart(val, process, json) {
     */
     function extractData(rawData, memoryType) {
       var data;
-      d3.select('#inds')
+      d3.select('#tile-select')
       .on("change", function() {
-        var sect = document.getElementById("inds");
+        var sect = document.getElementById("tile-select");
         var section = sect.options[sect.selectedIndex].value;
         data = filterJSON(rawData, 'tile', section);
         var sortedData = data.slice().sort((a, b) => d3.ascending(a.location, b.location))
@@ -714,7 +722,7 @@ async function chart(val, process, json) {
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom);
 
-    var tooltip = d3.select("#tooltip").append("div").attr("class", "toolTip");
+    // var tooltip = d3.select("#tooltip").append("div").attr("class", "toolTip");
 
     var focus = svg.append("g")
         .attr("class", "focus")
@@ -731,12 +739,16 @@ async function chart(val, process, json) {
     //Draw the chart
     function displayChart(data, memoryType, section) {          
       //Display the memory type
-      const displayMemoryType = document.getElementById("memory-type");
-      displayMemoryType.innerHTML = memoryType;
+      // const displayMemoryType = document.getElementById("memory-type");
+      // displayMemoryType.innerHTML = memoryType;
+
+      memoryBox.innerHTML += memoryType;
 
       //Display tile 
-      const displayTile = document.getElementById("tile");
-      displayTile.innerHTML = "Tile " + section;
+      // const displayTile = document.getElementById("tile");
+      // displayTile.innerHTML = "Tile " + section;
+      tile = section;
+      tileBox.innerHTML += tile;
 
       //Define color scales
       colorScale = d3.scale.ordinal().domain([0, d3.max(data, function(d) {
@@ -935,14 +947,26 @@ async function chart(val, process, json) {
               }
             })
             .on("mousemove", function(d) {
-              tooltip
-                  .style("left", d3.event.pageX - 50 + "px")
-                  .style("top", d3.event.pageY - 70 + "px")
-                  .style("display", "inline-block")
-                  .html((d.layer) + "<br>" + (d.location));
+              // tooltip
+              //     .style("left", d3.event.pageX - 50 + "px")
+              //     .style("top", d3.event.pageY - 70 + "px")
+              //     .style("display", "inline-block");
+              //     .html((d.layer) + "<br>" + (d.location));
+
+              layerName = d.layer;
+              curLocation = d.location;
+
+              layerBox.innerHTML += layerName;
+              locationBox += curLocation;
             })
             .on("mouseout", function(d) {
-              tooltip.style("display", "none");
+                // tooltip.style("display", "none");
+
+              layerName = "";
+              curLocation = "";
+
+              layerBox.innerHTML += layerName;
+              locationBox += curLocation;
             });
       }
 
@@ -1009,14 +1033,25 @@ async function chart(val, process, json) {
               }
             })
             .on("mousemove", function(d) {
-              tooltip
-                  .style("left", d3.event.pageX - 50 + "px")
-                  .style("top", d3.event.pageY - 70 + "px")
-                  .style("display", "inline-block")
-                  .html((d.layer) + "<br>" + (d.location));
+              // tooltip
+              //     .style("left", d3.event.pageX - 50 + "px")
+              //     .style("top", d3.event.pageY - 70 + "px")
+              //     .style("display", "inline-block")
+              //     .html((d.layer) + "<br>" + (d.location));
+              layerName = d.layer;
+              curLocation = d.location;
+
+              layerBox.innerHTML += layerName;
+              locationBox += curLocation;
             })
             .on("mouseout", function(d) {
-                tooltip.style("display", "none");
+                // tooltip.style("display", "none");
+
+              layerName = "";
+              curLocation = "";
+
+              layerBox.innerHTML += layerName;
+              locationBox += curLocation;
             });
       }
     }
