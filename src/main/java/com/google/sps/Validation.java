@@ -308,6 +308,8 @@ public class Validation {
    *
    * @param tensorLayerAllocation is the per tile tensor allocations within this layer
    * @param isNarrow dictates whether the tensor allocations are narrow or wide
+   * @throws Exception if the layer does not have the same number of tiles as expected by the proto
+   * @return the merged tensor allocations within each tile on this layer
    */
   private static TensorTileAllocationTable getTileUnion(
       TensorLayerAllocationTable tensorLayerAllocation, boolean isNarrow) throws Exception {
@@ -377,7 +379,10 @@ public class Validation {
     return unionTileBuilder.build();
   }
 
-  /** Returns a map of the layer to the corresponding instructions that operate in that layer. */
+  /** Returns a map of the layer to the corresponding instructions that operate in that layer.
+   *
+   * @return the table to relating each instruction to the layer it operates on
+   */
   private static Hashtable<String, List<Integer>> getLayerToInstructionTable() {
     Hashtable<String, List<Integer>> layerToInstructionTable =
         new Hashtable<String, List<Integer>>();
@@ -409,6 +414,19 @@ public class Validation {
   /**
    * Given a list of trace entries, validates that trace entries proceeded in the right order and
    * operated on the correct traces.
+   * 
+   * @param start is the beginning index of the traceEvents to validate
+   * @param end is the ending index of the traceEvents to validate
+   * @param narrowDeltas is the list of altered narrow memory locations after processing the traceEvents
+   * @param wideDeltas is the list of altered wide memory locations after processing the traceEvents
+   * @throws Exception if there is a complete lack of provided trace events in an instruction or 
+   *                   there is a non-existent instruction corresponding to an existing trace event
+   * @throws InvalidTensorOperationException if there is a lack of a tensor assigned to a specified 
+   *                                         base address in narrow/wide memory
+   * @throws InvalidTensorReadException if a traceEvent is attempting to read from 
+   *                                    a memory location that has not yet been allocated
+   * @throws MemoryAccessException if attempting to perform a memory access operation from an instruction
+   *                               that does not contain its trace event
    */
   private static void validateTraceEvents(long start, long end, List<Delta> narrowDeltas, List<Delta> wideDeltas)
       throws Exception, InvalidTensorOperationException, InvalidTensorReadException, 
@@ -416,9 +434,9 @@ public class Validation {
     validationEnd = start;
 
     if (traceEvents.isEmpty()) {
-      throw new Exception("No trace entry to be validated.");
+      throw new Exception("No trace event to be validated.");
     }
-    // Iterates over each trace entry, ensures that it is operating on the correct tensor and
+    // Iterates over each trace event, ensures that it is operating on the correct tensor and
     // validates based on if it is a write or a read.
     for (long i = start; i < end; i++) {
       validationEnd = i;
@@ -446,7 +464,7 @@ public class Validation {
 
       String layer = instruction.getLayer();
 
-      // If the trace entry is a write, performs a write validation. If it a read, performs a read
+      // If the trace event is a write, performs a write validation. If it a read, performs a read
       // validation.
       if (accessType == TraceEvent.AccessType.NARROW_WRITE
           || accessType == TraceEvent.AccessType.WIDE_WRITE) {
@@ -460,14 +478,23 @@ public class Validation {
 
 
   /**
-   * Returns the tensor that the trace entry is operating on based on its corresponding instruction.
+   * Returns the tensor that the trace event is operating on based on its corresponding instruction.
+   *
+   * @param traceAddress is the base address of the traceEvent
+   * @param traceAccessType is the access type of the traceEvent (narrow/wide read/write)
+   * @param instruction is the instruction that the traceEvent belongs to
+   * @throws Exception if the traceEvent has an access type that is not narrow/wide read/write or if
+                       there is a lack of a tensor associated to an instruction
+   * @throws MemoryAccessException if attempting to perform a memory access operation from an instruction
+   *                               that does not contain its trace event
+   * @return the tensor operated on by this traceEvent
    */
   private static int getTraceTensor(
       int traceAddress, TraceEvent.AccessType traceAccessType, Instruction instruction)
       throws Exception, MemoryAccessException {
     List<Integer> accessTypeTensorList;
     int tensor = -1;
-    // Tracks if the corresponding instruction has the trace entry's access type.
+    // Tracks if the corresponding instruction has the trace event's access type.
     Boolean hasAccessType = true;
     String layer = instruction.getLayer();
 
@@ -561,7 +588,16 @@ public class Validation {
     return tensor;
   }
 
-  /** Retrieves the correct tensor depending on the specific access type instruction list. */
+  /** Retrieves the correct tensor depending on the specific access type instruction list.
+   *
+   * @param accessTypeTensorList is the list of narrow/wide read/write traceEvents contained in this instruction
+   * @param traceAddress is the base address of this traceEvent
+   * @param tensorLabelToTensorAllocationTable is the relation of layer and tensor label to narrow/wide tensor allocations
+   * @param layer is the layer this traceEvent is operating on
+   * @param memoryType dictates whether this traceEvent is dealing with narrow or wide memory
+   * @throws Exception if the narrow/wide memory allocation table is empty
+   * @return the tensor associated with this traceEvent
+   */
   private static int getTensor (
       List<Integer> accessTypeTensorList,
       int traceAddress,
@@ -602,6 +638,15 @@ public class Validation {
   /**
    * Validates that the write validation has a corresponding tensor and writes it to the correct
    * address in the memory arrays.
+   *
+   * @param layer is the layer this traceEvent is operating on
+   * @param masks is the mask list of this traceEvent's instruction
+   * @param tensor is the tensor this traceEvent is operating on
+   * @param traceEvent is the traceEvent currently being validated
+   * @param narrowDeltas is the list of narrow memory locations altered in this chunk of traceEvent processing
+   * @param wideDeltas is the list of wide memory locations altered in this chunk of traceEvent processing
+   * @throws Exception if attempting to write to a memory location on a tile that is in this 
+   *                   traceEvent but not its corresponding instruction
    */
   private static void writeValidation(
       String layer, 
@@ -659,8 +704,19 @@ public class Validation {
     }
   }
   /**
-   * Validates that the tensor that the read trace entry is reading has been written before the read
+   * Validates that the tensor that the read trace event is reading has been written before the read
    * occurs.
+   * 
+   * @param layer is the layer this traceEvent is operating on
+   * @param masks is the mask list of this traceEvent's instruction
+   * @param tensor is the tensor this traceEvent is operating on
+   * @param traceEvent is the traceEvent currently being validated
+   * @param narrowDeltas is the list of narrow memory locations altered in this chunk of traceEvent processing
+   * @param wideDeltas is the list of wide memory locations altered in this chunk of traceEvent processing
+   * @throws Exception if attempting to read from a memory location on a tile that is in this 
+   *                   traceEvent but not its corresponding instruction
+   * @throws InvalidTensorReadException if a traceEvent is attempting to read from 
+   *                                    a memory location that has not yet been allocated
    */
   private static void readValidation(String layer, List<Boolean> masks, int tensor, TraceEvent traceEvent)
       throws Exception, InvalidTensorReadException {
@@ -711,19 +767,31 @@ public class Validation {
     }
   }
 
+  /**
+   * Object to group a tensor and the layer it operates on.
+   */
   private static class Pair {
     private String layer;
     private int tensorLabel;
 
+    /**
+     * Creates a Pair out of the specified layer and tensor.
+     */
     public Pair(String layer, int tensorLabel) {
       this.layer = layer;
       this.tensorLabel = tensorLabel;
     }
 
+    /**
+     * Returns the layer name of this Pair object's layer
+     */
     public String getLayer() {
       return layer;
     }
 
+    /**
+     * Returns the tensor label of this Pair object's layer
+     */
     public int getTensorLabel() {
       return tensorLabel;
     }
