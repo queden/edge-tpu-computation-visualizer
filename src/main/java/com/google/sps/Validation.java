@@ -15,18 +15,24 @@ import java.io.StringWriter;
 import java.io.PrintWriter;
 
 public class Validation {
+  // Proto message of the selected file
   private static MemaccessCheckerData memaccessCheckerData;
 
+  // Tile allocations across layers
   private static List<TensorLayerAllocationTable> tensorLayerAllocationNarrow;
   private static List<TensorLayerAllocationTable> tensorLayerAllocationWide;
 
+  // Relation of layer and tensor label to narrow/wide tensor allocations
   private static Hashtable<Pair, TensorAllocation> layerTensorLabelToTensorAllocationNarrow;
   private static Hashtable<Pair, TensorAllocation> layerTensorLabelToTensorAllocationWide;
 
+  // Instruction structures for quick lookup
   private static ArrayList<Instruction> instructions;
   private static Map<Integer, Instruction> instructionTagtoInstruction;
+  
   private static List<TraceEvent> traceEvents;
 
+  // Narrow/wide memory allocation state representations
   private static int[][] narrow;
   private static int[][] wide;
 
@@ -35,6 +41,7 @@ public class Validation {
 
   private static int numTiles;
 
+  // Index at which an error in validating a traceEvent was encountered
   private static long validationEnd; 
 
   // Memory access types.
@@ -45,6 +52,11 @@ public class Validation {
   public static final String NARROW = "Narrow";
   public static final String WIDE = "Wide";
 
+  /**
+   * Constructs a validation object to be used for validation
+   *
+   * @param memaccessCheckerData proto message of the selected file
+   */
   public Validation(MemaccessCheckerData memaccessCheckerData) {
     this.memaccessCheckerData = memaccessCheckerData;
 
@@ -67,15 +79,23 @@ public class Validation {
     instructionTagtoInstruction = new Hashtable<Integer, Instruction>();
   }
 
+  /**
+   * Preprocesses the validation object and its instructions
+   *
+   * @return information about the object's preprocessing, 
+   *         more specifically whether or not there was an error with the instructions themselves
+   */
   public static PreProcessResults preProcess() {
     boolean isError = false;
     String message = "Preprocessing completed successfully.";
 
     instructions.addAll(memaccessCheckerData.getInstructionList());
 
+    // Generates a HashMap relating instruction tags to their instructions
     relateInstructionTagtoInstructionTable();
 
     try {
+      // Generates a Hastable relating each layer's tensors to their tensor allocations (narrow)
       relateTensorsToInstructions(tensorLayerAllocationNarrow, true);
     } catch (InvalidTensorAddressException e) {
       if (!isError) {
@@ -83,6 +103,7 @@ public class Validation {
         isError = true;
       }
     } catch (Exception e) {
+      // Overlapping tensor memory allocations on a specific layer
       if (!isError) {
         message = e.getMessage();
         isError = true;
@@ -90,6 +111,7 @@ public class Validation {
     }
 
     try {
+      // Generates a Hastable relating each layer's tensors to their tensor allocations (wide)
       relateTensorsToInstructions(tensorLayerAllocationWide, false);
     } catch (InvalidTensorAddressException e) {
       if (!isError) {
@@ -97,15 +119,32 @@ public class Validation {
         isError = true;
       }
     } catch (Exception e) {
+      // Overlapping tensor memory allocations on a specific layer
       if (!isError) {
         message = e.getMessage();
         isError = true;
       }
     }
 
-    return new PreProcessResults(isError, message, traceEvents.size(), numTiles, narrowSize, wideSize, tensorLayerAllocationNarrow, tensorLayerAllocationWide);
+    return new PreProcessResults(
+        isError, 
+        message, 
+        traceEvents.size(), 
+        numTiles, 
+        narrowSize, 
+        wideSize, 
+        tensorLayerAllocationNarrow, 
+        tensorLayerAllocationWide);
   }
 
+  /**
+   * Processes and attempts to validate the specified chunk of traces
+   *
+   * @param start is the starting index of traceEvents
+   * @param end is the ending index of traceEvents
+   * @return the processing results of the specified chunk of traces up to 
+   *         the point at which an error was encountered
+   */
   public static ProcessResults process(long start, long end) {
     List<Delta> narrowDeltas = new ArrayList<Delta>();
     List<Delta> wideDeltas = new ArrayList<Delta>();
@@ -113,6 +152,21 @@ public class Validation {
     try {
       validateTraceEvents(start, end, narrowDeltas, wideDeltas);
     } catch (Exception e) {
+      /*
+        Possible errors:
+          - Lack of mask(s) assigned to a given instruction and trace event
+          - Lack of tensor assigned to a base address in narrow/wide memory
+          - Attempting to read from a memory location that has not yet been allocated
+          - Attempting to perform a memory access operation from an instruction that does not contain its trace event
+          - A layer does not have the same number of tiles as expected by the proto
+          - A complete lack of provided trace events
+          - A non-existent instruction corresponding to an existing trace event
+          - A present trace event with an access type that is not narrow/wide read/write
+          - A lack of a tensor associated to an instruction
+          - An empty narrow/wide memory allocation table
+          - Attempting to read/write from/to a memory location on a tile that is 
+            in the operating trace event but not its corresponding instruction
+       */
       return new ProcessResults(e, true, validationEnd, narrowDeltas, wideDeltas);
     }
 
@@ -123,6 +177,11 @@ public class Validation {
    * Given an array showing the narrow and wide tensor allocations in memory, populates each
    * instruction with the tensor that they operate on. Throws a InvalidTensorAddressException if the
    * instruction operates on a memory address that does not hold a tensor.
+   *
+   * @param tensorLayerAllocationTable is the collection of tensor allocations per layer and per tile
+   * @param isNarrow dictates whether the allocations being processed are narrow or wide
+   * @throws Exception if there are overlapping tensor memory allocations on a specific layer
+   * @throws InvalidTensorAddressException if  there is a lack of a tensor assigned to a base address in narrow/wide memory
    */
   private static void relateTensorsToInstructions(
       List<TensorLayerAllocationTable> tensorLayerAllocationTable, boolean isNarrow)
@@ -135,7 +194,8 @@ public class Validation {
       String curLayer = tensorLayerAllocation.getLayer();
 
       // Gets first tileAllocation, this could change if allocations are different across tile.
-      TensorTileAllocationTable tensorTileAllocationTable = getTileUnion(tensorLayerAllocation, isNarrow);
+      TensorTileAllocationTable tensorTileAllocationTable = 
+          getTileUnion(tensorLayerAllocation, isNarrow);
 
       // Get the list of tensors allocated on the tile.
       ArrayList<TensorAllocation> tensorAllocationList = new ArrayList<TensorAllocation>();
@@ -199,7 +259,8 @@ public class Validation {
                 AddressInterval tensorAddressInterval = addressIntervalTree.containsAddress(address);
 
                 if (tensorAddressInterval == null) {
-                    throw new InvalidTensorAddressException(address.start(), layerInstructionTag, isNarrow);
+                    throw new InvalidTensorAddressException(
+                        address.start(), layerInstructionTag, isNarrow);
                 }
                 int tensorLabel = tensorAddressInterval.label();
                 reads.set(i, tensorLabel);
@@ -209,7 +270,8 @@ public class Validation {
                 AddressInterval address = new AddressInterval(writes.get(i));
                 AddressInterval tensorAddressInterval = addressIntervalTree.containsAddress(address);
                 if (tensorAddressInterval == null) {
-                    throw new InvalidTensorAddressException(address.start(), layerInstructionTag, isNarrow);
+                    throw new InvalidTensorAddressException(
+                        address.start(), layerInstructionTag, isNarrow);
                 }
                 int tensorLabel = tensorAddressInterval.label();
                 writes.set(i, tensorLabel);
@@ -240,7 +302,15 @@ public class Validation {
     }
   }
 
-  private static TensorTileAllocationTable getTileUnion(TensorLayerAllocationTable tensorLayerAllocation, boolean isNarrow) throws Exception {
+  /**
+   * Goes over all tiles, finds all tensor allocations, and makes a union tile that 
+   * has all tensor allocations with a size of the max size found across all tiles.
+   *
+   * @param tensorLayerAllocation is the per tile tensor allocations within this layer
+   * @param isNarrow dictates whether the tensor allocations are narrow or wide
+   */
+  private static TensorTileAllocationTable getTileUnion(
+      TensorLayerAllocationTable tensorLayerAllocation, boolean isNarrow) throws Exception {
     List<TensorTileAllocationTable> layerTileAllocationTables = tensorLayerAllocation.getTensorTileAllocationList();
 
     // Assuming all tiles need to be there 
@@ -341,7 +411,8 @@ public class Validation {
    * operated on the correct traces.
    */
   private static void validateTraceEvents(long start, long end, List<Delta> narrowDeltas, List<Delta> wideDeltas)
-      throws Exception, InvalidTensorOperationException, InvalidTensorReadException, MemoryAccessException {
+      throws Exception, InvalidTensorOperationException, InvalidTensorReadException, 
+          MemoryAccessException {
     validationEnd = start;
 
     if (traceEvents.isEmpty()) {
@@ -403,28 +474,52 @@ public class Validation {
     if (traceAccessType == TraceEvent.AccessType.NARROW_READ) {
       if (instruction.getNarrowReadCount() != 0) {
         accessTypeTensorList = instruction.getNarrowReadList();
-        tensor = getTensor(accessTypeTensorList, traceAddress, layerTensorLabelToTensorAllocationNarrow, layer, NARROW);
+        tensor = 
+          getTensor(
+              accessTypeTensorList, 
+              traceAddress, 
+              layerTensorLabelToTensorAllocationNarrow, 
+              layer, 
+              NARROW);
       } else {
         hasAccessType = false;
       }
     } else if (traceAccessType == TraceEvent.AccessType.NARROW_WRITE) {
       if (instruction.getNarrowWriteCount() != 0) {
         accessTypeTensorList = instruction.getNarrowWriteList();
-        tensor = getTensor(accessTypeTensorList, traceAddress, layerTensorLabelToTensorAllocationNarrow, layer, NARROW);
+        tensor = 
+            getTensor(
+                accessTypeTensorList, 
+                traceAddress, 
+                layerTensorLabelToTensorAllocationNarrow, 
+                layer, 
+                NARROW);
       } else {
         hasAccessType = false;
       }
     } else if (traceAccessType == TraceEvent.AccessType.WIDE_READ) {
       if (instruction.getWideReadCount() != 0) {
         accessTypeTensorList = instruction.getWideReadList();
-        tensor = getTensor(accessTypeTensorList, traceAddress, layerTensorLabelToTensorAllocationWide, layer, WIDE);
+        tensor = 
+            getTensor(
+                accessTypeTensorList, 
+                traceAddress, 
+                layerTensorLabelToTensorAllocationWide, 
+                layer, 
+                WIDE);
       } else {
         hasAccessType = false;
       }
     } else if (traceAccessType == TraceEvent.AccessType.WIDE_WRITE) {
       if (instruction.getWideWriteCount() != 0) {
         accessTypeTensorList = instruction.getWideWriteList();
-        tensor = getTensor(accessTypeTensorList, traceAddress, layerTensorLabelToTensorAllocationWide, layer, WIDE);
+        tensor = 
+            getTensor(
+                accessTypeTensorList, 
+                traceAddress, 
+                layerTensorLabelToTensorAllocationWide, 
+                layer, 
+                WIDE);
       } else {
         hasAccessType = false;
       }
@@ -453,7 +548,7 @@ public class Validation {
               + instruction.getTag()
               + ", layer: "
               + instruction.getLayer()
-              + " does not have the appropriate tensor associated with it. This may be due to"
+              + ") does not have the appropriate tensor associated with it. This may be due to"
               + " invalid tensor or incorrect tensor event"
               + " address."
               + " Trace info: "
@@ -508,7 +603,14 @@ public class Validation {
    * Validates that the write validation has a corresponding tensor and writes it to the correct
    * address in the memory arrays.
    */
-  private static void writeValidation(String layer, List<Boolean> masks, int tensor, TraceEvent traceEvent, List<Delta> narrowDeltas, List<Delta> wideDeltas) throws Exception {
+  private static void writeValidation(
+      String layer, 
+      List<Boolean> masks, 
+      int tensor, 
+      TraceEvent traceEvent, 
+      List<Delta> narrowDeltas, 
+      List<Delta> wideDeltas) 
+      throws Exception {
     int address = traceEvent.getAddress() * traceEvent.getBytes();
     int tile = traceEvent.getTile();
     int instruction = traceEvent.getInstructionTag();
