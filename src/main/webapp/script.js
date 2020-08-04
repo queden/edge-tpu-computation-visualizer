@@ -375,7 +375,7 @@ async function runVisualization() {
   // extractData(preprocessResponse);
 
   // Dummy data load
-  chart(1, "pre", preprocessResponse);
+  chart(1);
 
   const init = document.createElement("p");
   init.innerHTML = preprocessResponse.message;
@@ -389,7 +389,6 @@ async function runVisualization() {
     
     while (start < numTraces) {
       var runTracesResults = await runTraces(start, numTraces, stepSize);
-
       if (!runTracesResults.proceed) {
         break;
       }
@@ -430,7 +429,7 @@ async function runTraces(start, numTraces, stepSize) {
     traceBox.appendChild(responseMessage);
 
     // Update visualizer
-    chart(1, "post", traceProcess);
+    // extractData(traceProcess);
 
     // Continues visualization.
 
@@ -463,8 +462,6 @@ async function runTraces(start, numTraces, stepSize) {
 
       // Update visualizer
       // extractData(traceProcess);
-      chart(1, "post", traceProcess);
-
       return {
           "proceed": true,
           "validationEnd": end
@@ -509,14 +506,15 @@ async function purgeAll(users, files) {
   }
 }
 
-// Adds the number of tiles in the selected file to the tile dropdown menu
+
+        
+
 function addTiles(numTiles) {
   for (var i = 1; i <= numTiles; i += 1) {
     createTile(i);
   }
 }
 
-// Creates a tile option and its specified number
 function createTile(numTile) {
   const tiles = document.getElementById("tile-select");
   const option = document.createElement("option");
@@ -528,20 +526,34 @@ function createTile(numTile) {
 }
 
 /**
- * chart() hosts the general setup of the visualizer
+ * getData() retrieves all of the necessary data 
+ * from preprocess and process
  */
-var preResult;
-var postResult;
+async function getData() {
+    const traceBox = document.getElementById("trace-info-box");
+    //traceBox.innerHTML = '';
+    const pre = await fetch('/report?process=pre&fileId=' + traceBox.title , {method: 'GET'});
+    const preresp = await pre.json();
 
-async function chart(val, process, json) {
-  var narrow = "Narrow Memory";
-  var wide = "Wide Memory";
+    const stepSize = parseInt(document.getElementById("step-size").value);
+    const post = await fetch('/report?process=post&start=0&step-size=' + stepSize , {method: 'GET'});
+    const postresp = await post.json();
+    console.log(postresp)
+    console.log(preresp)
+    return [preresp, postresp];
+}
 
-  if (process == "pre") {
-    preResult = json;
-  } else {
-    postResult = json;
-
+/**
+ * chart() hosts the general setup of the 
+ * visulaizer
+ */
+async function chart(val) {
+    var narrow = "Narrow Memory";
+    var wide = "Wide Memory";
+    //fetch all of the data from getData
+    const result = await getData()
+    var preResult = result[0];
+    var postResult = result[1];
     var narrowDelta = postResult["narrowDeltas"];
     var narrowSize = preResult["narrowSize"];
     var wideDelta = postResult["wideDeltas"];
@@ -554,144 +566,132 @@ async function chart(val, process, json) {
     var longestLayerName = 0
 
     /**depending on which of the memory types are selected
-    fill the array*/
+     fill the array*/
     function fill(memoryAlloc, memorySize) {
-      for (var i = 0; i < memoryAlloc.length; i++) {
-        var allocs = memoryAlloc[i]["tensorTileAllocation_"][0]["tensorAllocation_"];
-        var tileAllocs = memoryAlloc[i]["tensorTileAllocation_"];
+        for (var i = 0; i < memoryAlloc.length; i++) {
+            var allocs = memoryAlloc[i]["tensorTileAllocation_"][0]["tensorAllocation_"];
+            var tileAllocs = memoryAlloc[i]["tensorTileAllocation_"];
+            for (var tile = 0; tile < tileAllocs.length; tile++) {
+                allocs = tileAllocs[tile]["tensorAllocation_"]
+                for (var j = 0; j < allocs.length; j++) {
+                    var alloc = allocs[j];
+                    var start = 0;
+                    var end = 0;
+                    var size;
+                    start = alloc["baseAddress_"];
+                    if (memoryAlloc === wideAlloc){
+                        size = alloc["size_"]/32;
+                    }
+                    else{
+                        size = alloc["size_"]
+                    }
+                    end = start + size;
+                    for (var k = start; k < end; k++) {
+                        if (end > memorySize) {
+                            //Display the Error message
+                            const errorMessage = document.getElementById("error-report");
+                            errorMessage.innerHTML = "Allocation with label " + alloc["tensorLabel_"] + " has invalid memory address of " + end + ".";
+                            break;
+                        }
+                        var datum = {}
+                        datum.location = k;
+                        datum.layer = memoryAlloc[i]["layer_"];
+                        datum.tile = tile;
+                        datum.filled = false;
+                        datum.label = alloc["tensorLabel_"]
+                        data1.push(datum)
 
-        for (var tile = 0; tile < tileAllocs.length; tile++) {
-          allocs = tileAllocs[tile]["tensorAllocation_"];
-
-          for (var j = 0; j < allocs.length; j++) {
-            var alloc = allocs[j];
-            var start = 0;
-            var end = 0;
-            var size;
-            start = alloc["baseAddress_"];
-
-            if (memoryAlloc === wideAlloc){
-              size = alloc["size_"]/32;
-            } else {
-              size = alloc["size_"];
+                        layers.add(memoryAlloc[i]["layer_"])
+                        if (longestLayerName < memoryAlloc[i]["layer_"].length){
+                            longestLayerName = memoryAlloc[i]["layer_"].length
+                        }
+                    }
+                }
             }
-
-            end = start + size;
-
-            for (var k = start; k < end; k++) {
-              if (end > memorySize) {
-                //Display the Error message
-                const errorMessage = document.getElementById("error-report");
-                errorMessage.innerHTML = "Allocation with label " + alloc["tensorLabel_"] + " has invalid memory address of " + end + ".";
-                break;
-              }
-
-              var datum = {}
-              datum.location = k;
-              datum.layer = memoryAlloc[i]["layer_"];
-              datum.tile = tile;
-              datum.filled = false;
-              datum.label = alloc["tensorLabel_"];
-              data1.push(datum);
-
-              layers.add(memoryAlloc[i]["layer_"]);
-
-              if (longestLayerName < memoryAlloc[i]["layer_"].length){
-                longestLayerName = memoryAlloc[i]["layer_"].length
-              }
-            }
-          }
         }
-      }
     }
-
-    console.log(layers);
-    console.log(longestLayerName);
 
     /**add changes made by the deltas
     */
     function addDelta(data1, deltas) {
-      for (var i = 0; i < deltas.length; i++) {
-        var delta = deltas[i];
-                
-        for (var j = 0; j < data1.length; j++) {
-          var entry = data1[j];
-          
-          if (entry.location === delta.memoryAddress && entry.tile == delta.tile && entry.location == delta.memoryAddress && entry.label == delta.tensor) {
-            entry.filled = true;
-          }
+        for (var i = 0; i < deltas.length; i++) {
+            var delta = deltas[i];
+            for (var j = 0; j < data1.length; j++) {
+                var entry = data1[j];
+                if (entry.layer === delta.layer && entry.tile === delta.tile && entry.location === delta.memoryAddressChanged && entry.label === delta.tensor) {
+                    entry.filled = true;
+                }
+            }
         }
-      }
     }
 
     if (val == 1) {
-      fill(wideAlloc, wideSize);
-
-      if (wideDelta != undefined) {
-        addDelta(data1, wideDelta)
-      }
+        fill(wideAlloc, wideSize)
+        //addDelta(data1, wideDelta)
+        if (wideDelta != undefined){
+            addDelta(data1, wideDelta)
+        }
     } else {
-      fill(narrowAlloc, narrowSize);
-
-      if (narrowDelta != undefined){
-        addDelta(data1, narrowDelta)
-      }
+        fill(narrowAlloc, narrowSize)
+        if (narrowDelta != undefined){
+            addDelta(data1, narrowDelta)
+        }
     }
 
     /**filter the data based on the tile selected 
     */
     function filterJSON(json, key, value) {
-      var result = [];
-      json.forEach(function(val, idx, arr) {
-        if (val[key] == value) {
-          result.push(val)
-        }
-      });
-
-      return result;
+        var result = [];
+        json.forEach(function(val, idx, arr) {
+            if (val[key] == value) {
+                result.push(val)
+            }
+        })
+        return result;
     }
 
     /**Get the data for the specific tile
     */
     function extractData(rawData, memoryType) {
-      var data;
-      d3.select('#inds')
-      .on("change", function() {
-        var sect = document.getElementById("inds");
-        var section = sect.options[sect.selectedIndex].value;
-        data = filterJSON(rawData, 'tile', section);
-        var sortedData = data.slice().sort((a, b) => d3.ascending(a.location, b.location))
-        displayChart(sortedData, memoryType, section);
-      });
+        var data;
+        d3.select('#tile-select')
+            .on("change", function() {
+                var sect = document.getElementById("tile-select");
+                var section = sect.options[sect.selectedIndex].value;
+                data = filterJSON(rawData, 'tile', section);
+                var sortedData = data.slice().sort((a, b) => d3.ascending(a.location, b.location))
+                displayChart(sortedData, memoryType, section);
+            });
 
-      // generate initial graph
-      data = filterJSON(rawData, 'tile', '0');
-      var sortedData = data.slice().sort((a, b) => d3.ascending(a.location, b.location))
-      displayChart(sortedData, memoryType, '0');
+        // generate initial graph
+        data = filterJSON(rawData, 'tile', '0');
+        var sortedData = data.slice().sort((a, b) => d3.ascending(a.location, b.location))
+        displayChart(sortedData, memoryType, '0');
     }
 
     //Set up the chart
     var obj = document.getElementById('chart');
     var divWidth = obj.offsetWidth;
     var margin = {
-        top: 10,
-        right: 10,
-        bottom: 100,
-        left: 10 + 2*longestLayerName
-    },
-    margin2 = {
-        top: 430,
-        right: 10,
-        bottom: 20,
-        left: 10 + 2*longestLayerName
-    },
-    width = divWidth - 25,
-    height = 500 - margin.top - margin.bottom,
-    height2 = 500 - margin2.top - margin2.bottom;
+            top: 10,
+            right: 10,
+            bottom: 100,
+            left: 10 + 2*longestLayerName
+        },
+        margin2 = {
+            top: 430,
+            right: 10,
+            bottom: 20,
+            left: 10 + 2*longestLayerName
+        },
+        width = divWidth - 25,
+        height = 500 - margin.top - margin.bottom,
+        height2 = 500 - margin2.top - margin2.bottom;
 
     var x = d3.scale.ordinal().rangeBands([0, width], 0),
         x2 = d3.scale.ordinal().rangeBands([0, width], 0),
         y = d3.scale.ordinal().rangeRoundBands([0, height], 0),
+        y1 = d3.scale.ordinal().rangeRoundBands([0, height], 0),
         y2 = d3.scale.linear().domain([narrowSize, 0]).range([height2, 0]);
 
     d3.select("svg").remove();
@@ -705,7 +705,7 @@ async function chart(val, process, json) {
     var focus = svg.append("g")
         .attr("class", "focus")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-        
+    
     var context = svg.append("g")
         .attr("class", "context")
         .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
@@ -715,304 +715,320 @@ async function chart(val, process, json) {
         yAxis = d3.svg.axis().scale(y).orient("left");
 
     //Draw the chart
-    function displayChart(data, memoryType, section) {          
-      //Display the memory type
-      const displayMemoryType = document.getElementById("memory-type");
-      displayMemoryType.innerHTML = memoryType;
+    function displayChart(data, memoryType, section) {
+        
+        //Display the memory type
+        const displayMemoryType = document.getElementById("memory-type");
+        displayMemoryType.innerHTML = memoryType;
 
-      //Display tile 
-      const displayTile = document.getElementById("tile");
-      displayTile.innerHTML = "Tile " + section;
+        //Display tile 
+        const displayTile = document.getElementById("tile");
+        displayTile.innerHTML = "Tile " + section;
 
-      //Define color scales
-      colorScale = d3.scale.ordinal().domain([0, d3.max(data, function(d) {
-        return d.label;
-      })]).range(['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', '#008080',
-          '#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075'
-      ]);
-      grayColorScale = d3.scale.ordinal().domain([0, d3.max(data, function(d) {
-        return d.label;
-      })]).range(['#DCDCDC', '#D3D3D3', '#C0C0C0', '#BEBEBE', '#989898', '#808080', '#696969', '#555555', '#E5E4E2',
-          '#727472', '#928E85', '#708090', '#A9A9A9', '#acacac'
-      ]);
-      layerPosition = d3.scale.ordinal().domain(d3.map(data, function(d) {
-        return d.layer;
-      })).range([22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]);
+        //Define color scales
+        colorScale = d3.scale.ordinal().domain([0, d3.max(data, function(d) {
+            return d.label;
+        })]).range(['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', '#008080',
+            '#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075'
+        ]);
+        grayColorScale = d3.scale.ordinal().domain([0, d3.max(data, function(d) {
+            return d.label;
+        })]).range(['#DCDCDC', '#D3D3D3', '#C0C0C0', '#BEBEBE', '#989898', '#808080', '#696969', '#555555', '#E5E4E2',
+            '#727472', '#928E85', '#708090', '#A9A9A9', '#acacac'
+        ]);
+        layerPosition = d3.scale.ordinal().domain(d3.map(data, function(d) {
+            return d.layer;
+        })).range([22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]);
 
-      // remove predrawn structures
-      var bars = focus.selectAll('.bar').remove();
-      focus.select(".x.axis").remove();
-      focus.select(".y.axis").remove();
-            
-      //update scales
-      x.domain(data.map(function(d) {
-        return d.location
-      }));
-      y.domain(data.map(function(d) {
-        return d.layer
-      }));
-      x2.domain(data.map(function(d) {
-        return d.location
-      }));
+        // remove predrawn structures
+        var bars = focus.selectAll('.bar').remove();
+        focus.select(".x.axis").remove();
+        focus.select(".y.axis").remove();
+        
+        //update scales
+        x.domain(data.map(function(d) {
+            return d.location
+        }));
+       
+        
+        const layersArray = [...layers]
+        console.log(layersArray)
+        // y1.domain(layers.forEach(function(d){
+        //     console.log(d)
+        //     return d
+        // }));
+        y.domain(layersArray.map(function(d){
+            console.log(d)
+            return d
+        }));
+        // y.domain(data.map(function(d) {
+        //     //console.log(d.layer)
+        //     return d.layer
+        // }));
+        
 
-      //draw axis
-      focus.append("g")
-          .attr("class", "x axis")
-          .attr("transform", "translate(0," + height + ")")
-          .call(xAxis);
+        //console.log(y, y1, y.domain, y1.domain)
+        x2.domain(data.map(function(d) {
+            return d.location
+        }));
 
-      focus.append("g")
-          .attr("class", "y axis")
-          .call(yAxis);
+        //draw axis
+        focus.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + height + ")")
+            .call(xAxis);
 
-      var maxw = 0;
+        focus.append("g")
+            .attr("class", "y axis")
+            .call(yAxis);
 
-      focus.selectAll("text").each(function() {
-        if(this.getBBox().width > maxw) maxw = this.getBBox().width;
-      });
+        var maxw = 0;
+        focus.selectAll("text").each(function() {
+            if(this.getBBox().width > maxw) maxw = this.getBBox().width;
+        });
+        svg.attr("transform", "translate(" + maxw + ",0)");
+        console.log(maxw)
+        //add brush
+        var brush = d3.svg.brush()
+            .x(x2)
+            .on("brush", brushed);
 
-      svg.attr("transform", "translate(" + maxw + ",0)");
-      console.log(maxw)
-      //add brush
-      var brush = d3.svg.brush()
-          .x(x2)
-          .on("brush", brushed);
+        enter(data, focus)
+        updateScale(data)
 
-      enter(data, focus);
-      updateScale(data);
+        // draw the subbars
+        var subBars = context.selectAll('.subBar')
+            .data(data)
+        subBars.enter().append("rect")
+            .classed('subBar', true)
+            .attr({
+                height: function(d) {
+                    return 10;
+                },
+                width: function(d) {
+                    return x.rangeBand()
+                },
+                x: function(d) {
+                    return x2(d.location);
+                },
+                y: function(d) {
+                    return 10
+                }
+            })
+        context.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + height2 + ")")
+            .call(xAxis2);
 
-      // draw the subbars
-      var subBars = context.selectAll('.subBar')
-          .data(data)
-      subBars.enter().append("rect")
-          .classed('subBar', true)
-          .attr({
-              height: function(d) {
-                return 10;
-              },
-              width: function(d) {
-                return x.rangeBand()
-              },
-              x: function(d) {
-                return x2(d.location);
-              },
-              y: function(d) {
-                return 10
-              }
-            });
-      context.append("g")
-          .attr("class", "x axis")
-          .attr("transform", "translate(0," + height2 + ")")
-          .call(xAxis2);
-
-      context.append("g")
-          .attr("class", "x brush")
-          .call(brush)
-          .selectAll("rect")
-          .attr("y", -10)
-          .attr("height", 50);
-    
-      /**function to update the chart based on the 
+        context.append("g")
+            .attr("class", "x brush")
+            .call(brush)
+            .selectAll("rect")
+            .attr("y", -10)
+            .attr("height", 50);
+ 
+        /**function to update the chart based on the 
         * portion of the graph zoomed into 
         */
-      function brushed() {
-        var selected = null;
-        selected = x2.domain()
-            .filter(function(d) {
-              return (brush.extent()[0] <= x2(d)) && (x2(d) <= brush.extent()[1]);
-            });
+        function brushed() {
+            var selected = null;
+            selected = x2.domain()
+                .filter(function(d) {
+                    return (brush.extent()[0] <= x2(d)) && (x2(d) <= brush.extent()[1]);
+                });
 
-        var start;
-        var end;
+            var start;
+            var end;
 
-        if (brush.extent()[0] != brush.extent()[1]) {
-          start = selected[0];
-          end = selected[selected.length - 1] + 1;
-        } else {
-          start = 0;
-          end = data.length;
+            if (brush.extent()[0] != brush.extent()[1]) {
+                start = selected[0];
+                end = selected[selected.length - 1] + 1;
+            } else {
+                start = 0;
+                end = data.length;
+            }
+
+            var updatedData = new Array();
+            for (var i = 0; i < data.length; i++) {
+                if (data[i].location <= end && data[i].location >= start) {
+                    updatedData.push(data[i]);
+                }
+            }
+            update(updatedData);
+            enter(updatedData, focus);
+            exit(updatedData);
+            updateScale(updatedData)
         }
 
-        var updatedData = new Array();
-
-        for (var i = 0; i < data.length; i++) {
-          if (data[i].location <= end && data[i].location >= start) {
-            updatedData.push(data[i]);
-          }
-        }
-
-        update(updatedData);
-        enter(updatedData, focus);
-        exit(updatedData);
-        updateScale(updatedData)
-      }
-
-      /** Update scale based on number of 
+         /** Update scale based on number of 
         * data values
         */
-      function updateScale(data) {
-        var tickScale = d3.scale.pow().range([data.length / 2, 0]).domain([data.length, 0]).exponent(.5);
-        var brushValue = brush.extent()[1] - brush.extent()[0];
+        function updateScale(data) {
+            var tickScale = d3.scale.pow().range([data.length / 2, 0]).domain([data.length, 0]).exponent(.5)
+            var brushValue = brush.extent()[1] - brush.extent()[0];
+            if (brushValue === 0) {
+                brushValue = width;
+            }
+        
+            var tickValueMultiplier = Math.ceil(Math.abs(tickScale(brushValue)));
 
-        if (brushValue === 0) {
-          brushValue = width;
+            var filteredTickValues = data.filter(function(d, i) {
+                return i % tickValueMultiplier === 0
+            }).map(function(d) {
+                return d.location
+            })
+            focus.select(".x.axis").call(xAxis.tickValues(filteredTickValues));
         }
-            
-        var tickValueMultiplier = Math.ceil(Math.abs(tickScale(brushValue)));
 
-        var filteredTickValues = data.filter(function(d, i) {
-          return i % tickValueMultiplier === 0;
-        }).map(function(d) {
-          return d.location;
-        })
-        focus.select(".x.axis").call(xAxis.tickValues(filteredTickValues));
-      }
-
-      /** Build the bars based on  
+        /** Build the bars based on  
         * updated data values
         */
-      function update(data) {
-        x.domain(data.map(function(d) {
-          return d.location;
+        function update(data) {
+            x.domain(data.map(function(d) {
+                return d.location
+            }));
+
+            // y.domain(data.map(function(d) {
+            //     return d.layer
+            // }));
+            y.domain(layersArray.map(function(d){
+            return d
         }));
 
-        y.domain(data.map(function(d) {
-          return d.layer;
-        }));
+            var focusHeight = focus.node().getBoundingClientRect().height;
+            var size = layers.size
+            if (size === 0){
+                size = 1;
+            }
+            var newHeight = focusHeight / size;
 
-        var focusHeight = focus.node().getBoundingClientRect().height;
-        var size = layers.size;
-
-        if (size === 0){
-          size = 1;
+            var bars = focus.selectAll('.bar')
+                .data(data)
+            bars
+                .attr({
+                    height: function(d, i) {
+                        return newHeight;
+                    },
+                    width: function(d) {
+                        return x.rangeBand()
+                    },
+                    x: function(d) {
+                        return x(d.location);
+                    },
+                    y: function(d) {
+                        if (d.layer === "input"){
+                            console.log(9 + y(d.layer))
+                        }
+                        return 9 + y(d.layer)
+                    },
+                    fill: function(d) {
+                        if (d.filled) {
+                            return colorScale(d.label);
+                        }
+                        return grayColorScale(d.label);
+                    },
+                    stroke: function(d) {
+                        if (d.filled) {
+                            return colorScale(d.label);
+                        }
+                        return grayColorScale(d.label);
+                    }
+                })
+                .on("mousemove", function(d) {
+                    tooltip
+                        .style("left", d3.event.pageX - 50 + "px")
+                        .style("top", d3.event.pageY - 70 + "px")
+                        .style("display", "inline-block")
+                        .html((d.layer) + "<br>" + (d.location) + "<br>" + (d.label));
+                })
+                // .on("mouseout", function(d) {
+                //     tooltip.style("display", "none");
+                // });
         }
 
-        var newHeight = focusHeight / size;
-
-        var bars = focus.selectAll('.bar')
-          data(data);
-        bars
-            .attr({
-              height: function(d, i) {
-                return newHeight;
-              },
-              width: function(d) {
-                return x.rangeBand();
-              },
-              x: function(d) {
-                return x(d.location);
-              },
-              y: function(d) {
-                return 9 + y(d.layer);
-              },
-              fill: function(d) {
-                if (d.filled) {
-                  return colorScale(d.label);
-                  }
-
-                return grayColorScale(d.label);
-              },
-              stroke: function(d) {
-                if (d.filled) {
-                  return colorScale(d.label);
-                }
-
-                return grayColorScale(d.label);
-              }
-            })
-            .on("mousemove", function(d) {
-              tooltip
-                  .style("left", d3.event.pageX - 50 + "px")
-                  .style("top", d3.event.pageY - 70 + "px")
-                  .style("display", "inline-block")
-                  .html((d.layer) + "<br>" + (d.location));
-            })
-            .on("mouseout", function(d) {
-              tooltip.style("display", "none");
-            });
-      }
-
-      /** remove data values  
-      */
-      function exit(data) {
-        var bars = focus.selectAll('.bar').data(data)
-        bars.exit().remove()
-      }
+        /** remove data values  
+        */
+        function exit(data) {
+            var bars = focus.selectAll('.bar').data(data)
+            bars.exit().remove()
+        }
 
 
-      /** Build the bars based on  
+        /** Build the bars based on  
         * initial data values
         */
-      function enter(data, focus) {    
-        x.domain(data.map(function(d) {
-          return d.location
+        function enter(data, focus) {
+           
+            x.domain(data.map(function(d) {
+                return d.location
+            }));
+            
+            // y.domain(data.map(function(d) {
+            //     return d.layer
+            // }));
+            y.domain(layersArray.map(function(d){
+            return d
         }));
-                
-        y.domain(data.map(function(d) {
-          return d.layer
-        }));
-                
-        var focusHeight = focus.node().getBoundingClientRect().height;
-        var size = layers.size;
+            
+            var focusHeight = focus.node().getBoundingClientRect().height;
+            var size = layers.size
+            if (size === 0){
+                size = 1;
+            }
+            var newHeight = focusHeight / size;
 
-        if (size === 0){
-          size = 1;
+            var bars = focus.selectAll('.bar')
+                .data(data)
+            bars.enter().append("rect")
+                .style("stroke-linejoin", "round")
+                .classed('bar', true)
+                .attr({
+                    height: function(d, i) {
+                        return newHeight;
+                    },
+                    width: function(d) {
+                        return x.rangeBand()
+                    },
+                    x: function(d) {
+                        return x(d.location);
+                    },
+                    y: function(d) {
+                        if (d.layer === "input"){
+                            console.log(9 + y(d.layer)) 
+                        }
+                        return 9 + y(d.layer)
+                    },
+                    fill: function(d) {
+                        if (d.filled) {
+                            return colorScale(d.label);
+                        }
+                        return grayColorScale(d.label);
+                    },
+                    stroke: function(d) {
+                        if (d.filled) {
+                            return colorScale(d.label);
+                        }
+                        return grayColorScale(d.label);
+                    }
+                })
+                .on("mousemove", function(d) {
+                    tooltip
+                        .style("left", d3.event.pageX - 50 + "px")
+                        .style("top", d3.event.pageY - 70 + "px")
+                        .style("display", "inline-block")
+                        .html((d.layer) + "<br>" + (d.location) + "<br>" + (d.label));
+                })
+                // .on("mouseout", function(d) {
+                //     tooltip.style("display", "none");
+                // });
         }
-
-        var newHeight = focusHeight / size;
-
-        var bars = focus.selectAll('.bar')
-            .data(data)
-        bars.enter().append("rect")
-            .style("stroke-linejoin", "round")
-            .classed('bar', true)
-            .attr({
-              height: function(d, i) {
-                return newHeight;
-              },
-              width: function(d) {
-                return x.rangeBand()
-              },
-              x: function(d) {
-                return x(d.location);
-              },
-              y: function(d) {
-                return 9 + y(d.layer)
-              },
-              fill: function(d) {
-                if (d.filled) {
-                  return colorScale(d.label);
-                }
-
-                return grayColorScale(d.label);
-              },
-              stroke: function(d) {
-                if (d.filled) {
-                  return colorScale(d.label);
-                }
-
-                return grayColorScale(d.label);
-              }
-            })
-            .on("mousemove", function(d) {
-              tooltip
-                  .style("left", d3.event.pageX - 50 + "px")
-                  .style("top", d3.event.pageY - 70 + "px")
-                  .style("display", "inline-block")
-                  .html((d.layer) + "<br>" + (d.location));
-            })
-            .on("mouseout", function(d) {
-                tooltip.style("display", "none");
-            });
-      }
     }
 
     if (val == 2) {
-      extractData(data1, narrow)
+        extractData(data1, narrow)
     } else {
-      extractData(data1, wide)
+        extractData(data1, wide)
     }
-  }
 }
 
 
