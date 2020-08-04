@@ -375,7 +375,7 @@ async function runVisualization() {
   // extractData(preprocessResponse);
 
   // Dummy data load
-  chart(1);
+  await chart(1, "pre", preprocessResponse);
 
   const init = document.createElement("p");
   init.innerHTML = preprocessResponse.message;
@@ -433,6 +433,8 @@ async function runTraces(start, numTraces, stepSize) {
 
     // Continues visualization.
 
+    await chart(1, "post", traceProcess);
+
     return {
         "proceed": true,
         "validationEnd": end
@@ -462,6 +464,8 @@ async function runTraces(start, numTraces, stepSize) {
 
       // Update visualizer
       // extractData(traceProcess);
+      await chart(1, "post", traceProcess);
+
       return {
           "proceed": true,
           "validationEnd": end
@@ -529,31 +533,49 @@ function createTile(numTile) {
  * getData() retrieves all of the necessary data 
  * from preprocess and process
  */
-async function getData() {
-    const traceBox = document.getElementById("trace-info-box");
-    //traceBox.innerHTML = '';
-    const pre = await fetch('/report?process=pre&fileId=' + traceBox.title , {method: 'GET'});
-    const preresp = await pre.json();
+// async function getData() {
+//     const traceBox = document.getElementById("trace-info-box");
+//     //traceBox.innerHTML = '';
+//     const pre = await fetch('/report?process=pre&fileId=' + traceBox.title , {method: 'GET'});
+//     const preresp = await pre.json();
 
-    const stepSize = parseInt(document.getElementById("step-size").value);
-    const post = await fetch('/report?process=post&start=0&step-size=' + stepSize , {method: 'GET'});
-    const postresp = await post.json();
-    console.log(postresp)
-    console.log(preresp)
-    return [preresp, postresp];
-}
+//     const stepSize = parseInt(document.getElementById("step-size").value);
+//     const post = await fetch('/report?process=post&start=0&step-size=' + stepSize , {method: 'GET'});
+//     const postresp = await post.json();
+//     console.log(postresp)
+//     console.log(preresp)
+//     return [preresp, postresp];
+// }
 
 /**
  * chart() hosts the general setup of the 
  * visulaizer
  */
-async function chart(val) {
+var narrowFilled = false;
+var wideFilled = false;
+
+var preResult;
+var postResult;
+
+function changeMemory(memory) {
+  if (memory == 1) {
+    chart(memory, "post", postResult)
+  }
+}
+
+async function chart(val, process, json) {
     var narrow = "Narrow Memory";
     var wide = "Wide Memory";
+
+    if (process == "pre") {
+      preResult = json;
+    } else {
+      postResult = json;
+
     //fetch all of the data from getData
-    const result = await getData()
-    var preResult = result[0];
-    var postResult = result[1];
+    // const result = await getData()
+    // var preResult = result[0];
+    // var postResult = result[1];
     var narrowDelta = postResult["narrowDeltas"];
     var narrowSize = preResult["narrowSize"];
     var wideDelta = postResult["wideDeltas"];
@@ -626,13 +648,21 @@ async function chart(val) {
     }
 
     if (val == 1) {
+      if (!wideFilled) {
         fill(wideAlloc, wideSize)
+        wideFilled = true;
+      }
+        
         //addDelta(data1, wideDelta)
         if (wideDelta != undefined){
             addDelta(data1, wideDelta)
         }
     } else {
+      if (!narrowFilled) {
         fill(narrowAlloc, narrowSize)
+        narrowFilled = true;
+      }
+        
         if (narrowDelta != undefined){
             addDelta(data1, narrowDelta)
         }
@@ -716,7 +746,7 @@ async function chart(val) {
 
     //Draw the chart
     function displayChart(data, memoryType, section) {
-        
+        console.log(data);
         //Display the memory type
         const displayMemoryType = document.getElementById("memory-type");
         displayMemoryType.innerHTML = memoryType;
@@ -741,7 +771,7 @@ async function chart(val) {
         })).range([22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]);
 
         // remove predrawn structures
-        var bars = focus.selectAll('.bar').remove();
+        // var bars = focus.selectAll('.bar').remove();
         focus.select(".x.axis").remove();
         focus.select(".y.axis").remove();
         
@@ -1028,6 +1058,7 @@ async function chart(val) {
         extractData(data1, narrow)
     } else {
         extractData(data1, wide)
+    }
     }
 }
 
