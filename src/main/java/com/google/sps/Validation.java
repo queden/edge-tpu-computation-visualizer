@@ -143,7 +143,7 @@ public class Validation {
    * @param start is the starting index of traceEvents
    * @param end is the ending index of traceEvents
    * @return the processing results of the specified chunk of traces up to 
-   *         the point at which an error was encountered
+   *         end, or the point at which an error was encountered
    */
   public static ProcessResults process(long start, long end) {
     List<Delta> narrowDeltas = new ArrayList<Delta>();
@@ -482,6 +482,13 @@ public class Validation {
     Boolean hasAccessType = true;
     String layer = instruction.getLayer();
 
+    if (layer.isEmpty()) {
+      throw new Exception("Instruction "
+            + instruction.getTag()
+            + " is not associated with a layer."
+      );
+    }
+
     if (traceAccessType == TraceEvent.AccessType.NARROW_READ) {
       if (instruction.getNarrowReadCount() != 0) {
         accessTypeTensorList = instruction.getNarrowReadList();
@@ -710,7 +717,7 @@ public class Validation {
         for (int currentByte = address; currentByte < endAddress; currentByte++) {
           if (narrow[tile][currentByte] != tensor) {
             throw new InvalidTensorReadException(
-              tensor, layer, instruction, tile, address, narrow[tile][address], "narrow");
+              tensor, layer, instruction, tile, address, narrow[tile][currentByte], "narrow");
           }
         }
       } else {
