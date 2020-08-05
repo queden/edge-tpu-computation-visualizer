@@ -361,14 +361,11 @@ function openVisualization() {
                     var alloc = allocs[j];
                     var start = 0;
                     var end = 0;
-                    // uncomment the next line for faster rendering
                     var size = alloc["size_"]/32;
-                    //uncomment the next line for slow rendering 
-                    //var size = alloc["size_"];
                     start = alloc["baseAddress_"];
-                      if (size === 262144){
-                        size = size/32;
-                     }
+                    //   if (size === 262144){
+                    //     size = size/32;
+                    //  }
                     end = start + size;
                     for (var k = start; k < end; k++) {
                         if (end > memorySize) {
@@ -414,7 +411,8 @@ function openVisualization() {
          }
          
          if (deltas.length != 0){
-             await chart(1, data1, true)
+             //console.log(deltas)
+            await chart(1, data1, true)
          }
         
     }
@@ -654,6 +652,7 @@ function changeMemory(memory) {
      var narrow = "Narrow Memory";
      var wide = "Wide Memory";
      const layersArray = [...layers]
+     
     // if (process == "pre") {
     //   preResult = json;
     // } else {
@@ -789,9 +788,10 @@ function changeMemory(memory) {
     }
 
     //Set up the chart
+    
     var obj = document.getElementById('chart');
    // var divWidth = obj.offsetWidth;
-    var divWidth = 900;
+    var divWidth = 1200;
     var margin = {
             top: 10,
             right: 10,
@@ -814,6 +814,7 @@ function changeMemory(memory) {
         y1 = d3.scale.ordinal().rangeRoundBands([0, height], 0);
        // y2 = d3.scale.linear().domain([narrowSize, 0]).range([height2, 0]);
 
+    
     d3.select("svg").remove();
 
     var svg = d3.select("#chart").append("svg")
@@ -833,9 +834,12 @@ function changeMemory(memory) {
     var xAxis = d3.svg.axis().scale(x).orient("bottom"),
         xAxis2 = d3.svg.axis().scale(x2).orient("bottom").tickValues([]),
         yAxis = d3.svg.axis().scale(y).orient("left");
+    
 
     //Draw the chart
+
     function displayChart(data, memoryType, section) {
+        
         console.log(data);
         //Display the memory type
         const displayMemoryType = document.getElementById("memory-type");
@@ -861,7 +865,7 @@ function changeMemory(memory) {
         })).range([22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]);
 
         // remove predrawn structures
-         var bars = focus.selectAll('.bar').remove();
+         //var bars = focus.selectAll('.bar').remove();
         focus.select(".x.axis").remove();
         focus.select(".y.axis").remove();
         
@@ -870,13 +874,6 @@ function changeMemory(memory) {
             return d.location
         }));
        
-        
-        
-        console.log(layersArray)
-        // y1.domain(layers.forEach(function(d){
-        //     console.log(d)
-        //     return d
-        // }));
         y.domain(layersArray.map(function(d){
             console.log(d)
             return d
@@ -984,7 +981,7 @@ function changeMemory(memory) {
         * data values
         */
         function updateScale(data) {
-            var tickScale = d3.scale.pow().range([data.length / 2, 0]).domain([data.length, 0]).exponent(.5)
+            var tickScale = d3.scale.pow().range([data.length, 0]).domain([data.length, 0]).exponent(.5)
             var brushValue = brush.extent()[1] - brush.extent()[0];
             if (brushValue === 0) {
                 brushValue = width;
@@ -1003,7 +1000,7 @@ function changeMemory(memory) {
         /** Build the bars based on  
         * updated data values
         */
-        this.update = function(data) {
+        function update(data) {
             x.domain(data.map(function(d) {
                 return d.location
             }));
