@@ -194,6 +194,10 @@ text {
   flex-direction: column;
 }
 
+#load-alert {
+  color: blueviolet;
+}
+
 #done {
   color: mediumspringgreen;
   font-size: 20px;
@@ -259,18 +263,38 @@ svg {
   height: fit-content;
 }
 
+#narrow-switch {
+  margin-right: 1%;
+}
+
+.selection {
+  display: none;
+  margin: 0px 1% 0px 0px;
+  height: fit-content;
+  font-size: 20px;
+}
+
 #response-messages {
   display: flex;
   flex-direction: row;
 }
 
 #trace-processes {
-  width: 30%;
+  width: 20%;
+}
+
+#trace-info-box {
+  height: 700px;
+  overflow: auto;
 }
 
 #error-box {
   display: none;
-  width: 60%;
+  width: 75%;
+}
+
+#error-messages {
+  height: 700px;
   overflow: auto;
 }
 
@@ -285,11 +309,6 @@ svg {
   font-weight: bold;
 }
 
-#selection-info {
-  display: flex;
-  flex-direction: row;
-}
-
-.selection {
-  margin-right: 5%;
+#complete-alert {
+  color: orange;
 }

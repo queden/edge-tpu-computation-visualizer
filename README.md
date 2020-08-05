@@ -19,16 +19,50 @@ Project components:
       ```
       src/main/java/com/google/sps/exceptions
       ```
-    - Interval tree code used when validating:
-      - Nodes (around line 700 and below)
+
+    - Structures:
+      - Pair object used for grouping layer and tensor (around line 754 and below)
         ```
         src/main/java/com/google/sps/Validation.java
         ```
-      - Tree
-        ```
-        src/main/java/com/google/sps/structures/Interval.java
-        src/main/java/com/google/sps/structures/IntervalTree.java
-        ```
+
+      - Interval tree code used when validating:
+        - Nodes (around line 700 and below)
+          ```
+          src/main/java/com/google/sps/Validation.java
+          ```
+        - Tree
+          ```
+          src/main/java/com/google/sps/structures/Interval.java
+          src/main/java/com/google/sps/structures/IntervalTree.java
+          ```
+
+      - Non-custom:
+        - List:
+          - Tensor allocations across layers, two for narrow and wide
+          - Total collection of instructions
+          - Total collection of traceEvents
+
+        - Hashtable:
+          - Layer to tensor Pair object to TensorAllocation
+        - Map:
+          - Relation of all instruction tags to their instruction
+
+        - 2-dimensional array:
+          - Representation of narrow and wide memory states, one for each
+
+    - Methods:
+      - preProcess
+      - process
+      - getTileUnion
+      - getLayerToInstructionTable
+      - relateInstructionTagtoInstructionTable
+      - validateTraceEvents
+      - getTraceTensor
+      - getTensor
+      - writeValidation
+      - readValidation
+
     - Processing results:
       - Preprocessing information
         ```
@@ -48,11 +82,13 @@ Project components:
       ```
       src/main/java/com/google/sps/structures/Delta.java
       ```
-  - Website:
+
+  - Website code:
     - JSON processing and UI updates
       ```
       src/main/webapp/script.js
       ```
+
     - Server communications:
       - Main page
         ```
@@ -62,6 +98,7 @@ Project components:
         ```
         src/main/java/com/google/sps/servlets/ReportServlet.java
         ```
+
     - UI skeleton:
       - Main page
         ```
@@ -71,6 +108,7 @@ Project components:
         ```
         src/main/webapp/report.html
         ```
+
     - Styling
       ```
       src/main/webapp/style.css

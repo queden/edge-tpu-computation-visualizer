@@ -339,6 +339,9 @@ function openVisualization() {
   } 
 }
 
+// Variable to dictate whether the visualization should finish
+var endVisualization = false;
+
 // Variable to hold how the visualization should continue:
 // -"a" to continue past all errors
 // -"d" to continue as is with prompts after each error
@@ -353,6 +356,8 @@ var curLocation = "";
 async function runVisualization() {
   alert("Visualization begun");
 
+  endVisualization = false;
+
   const done = document.getElementById("done");
   done.style.display = "none";
 
@@ -365,6 +370,13 @@ async function runVisualization() {
   const errorMessages = document.getElementById("error-messages");
   errorMessages.innerHTML = '';
 
+  // Makes the information about what the user is viewing on the visualizer
+  const viewInfoBox = document.getElementsByClassName("selection");
+  
+  for (i = 0; i < viewInfoBox.length; i++) {
+    viewInfoBox[i].style.display = "block";
+  }
+
   const stepSize = parseInt(document.getElementById("step-size").value);
 
   /*
@@ -376,15 +388,11 @@ async function runVisualization() {
   const preprocessResponse = await preprocess.json();
 
   // Process initial json information.
-  // TODO: Substitute
 
   // Add the number of tile options to switch to.
   addTiles(preprocessResponse.numTiles);
 
-  // Update visualizer. <- real data load
-  // extractData(preprocessResponse);
-
-  // Dummy data load
+  // Update visualizer.
   chart(1, "pre", preprocessResponse);
 
   const init = document.createElement("p");
@@ -398,9 +406,9 @@ async function runVisualization() {
   if (!preprocessResponse.isError) {
     
     while (start < numTraces) {
-      var runTracesEnd = await runTraces(start, numTraces, stepSize);
-      console.log(runTracesEnd);
-      if (proceed == "s") {
+      var runTracesEnd = await runTraces(start, stepSize);
+
+      if (proceed == "s" || endVisualization == true) {
         break;
       }
 
@@ -410,6 +418,8 @@ async function runVisualization() {
     alert("Error occurred in preprocessing, visualization aborted.");
   }
   
+  alert("Visualization completed.");
+
   proceed = "";
   done.style.display = "block";
 }
@@ -420,7 +430,7 @@ async function runVisualization() {
   start -> the beginning index of the traces to be processed
   numTraces -> the total number of traces
 */
-async function runTraces(start, numTraces, stepSize) {
+async function runTraces(start, stepSize) {
   // Retrieves box to display error/processing information.
   const traceBox = document.getElementById("trace-info-box");
 
@@ -434,10 +444,9 @@ async function runTraces(start, numTraces, stepSize) {
   var end = traceProcess.validationEnd;
 
   // Process json trace information.
-
-  var responseMessage = document.createElement("p");
-
   if (!traceProcess.isError) {
+    var responseMessage = document.createElement("p");
+
     responseMessage.innerHTML += `Traces ${start}-${end} validated.`;
     traceBox.appendChild(responseMessage);
 
@@ -445,7 +454,6 @@ async function runTraces(start, numTraces, stepSize) {
     chart(1, "post", traceProcess);
 
     // Continues visualization.
-
     return end;
   } else {
     document.getElementById("error-box").style.display = "block";
@@ -465,8 +473,6 @@ async function runTraces(start, numTraces, stepSize) {
     errorMessages.appendChild(p);
 
     // Checks if the user wants to continue or abort the visualization after an error is found.
-    // var proceed = confirm("An error was encountered. Would you like to continue the visualization?");
-
     if (proceed != "a") {
       var promptString = 
           "An error was encountered. Please choose how to continue:" +
@@ -479,6 +485,8 @@ async function runTraces(start, numTraces, stepSize) {
 
       if (!(proceed != "d" || proceed != "a" || proceed != "s")) {
         proceed = "d";
+      } else if (proceed == "a") {
+        alert("Press \"q\" at any time to end the visualization.");
       }
     }
 
@@ -486,7 +494,6 @@ async function runTraces(start, numTraces, stepSize) {
       // Continue visualization.
 
       // Update visualizer
-      // extractData(traceProcess);
       chart(1, "post", traceProcess);
 
       return end;
@@ -494,6 +501,15 @@ async function runTraces(start, numTraces, stepSize) {
       // Abort visualization.
       return end;
     }
+  }
+}
+
+// Listener to terminate the visualization
+window.onkeyup = checkTerminate;
+
+function checkTerminate(key) {
+  if (key.code == "KeyQ") {
+    endVisualization = true;
   }
 }
 
@@ -554,6 +570,10 @@ var layerBox = document.getElementById("layer-name");
 var locationBox = document.getElementById("location");
 var tileBox = document.getElementById("viewing-box");
 var memoryBox = document.getElementById("memory");
+
+function chart(memory) {
+  chart(memory, "post", postResult);
+}
 
 async function chart(val, process, json) {
   var narrow = "Narrow";
@@ -1045,13 +1065,12 @@ async function chart(val, process, json) {
             });
 
       }
-
-      if (val == 2) {
+    }
+    if (val == 2) {
           extractData(data1, narrow)
         } else {
           extractData(data1, wide)
         }
-    }
   }
 }
 

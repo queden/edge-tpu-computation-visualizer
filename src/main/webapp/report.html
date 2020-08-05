@@ -18,6 +18,7 @@
           <li> Please close this window before selecting another file to run </li>
           <li> You must run the visualization before attempting to switch tiles or memory types </li>
           <li> You can run the visualization as many times as you want by clicking the "Run" button </li>
+          <li id="complete-alert"> <b> You will get an alert once the visualization has completed </b> </li>
         </ul>
 
         <p id="file-info"> Viewing file: </p>
@@ -31,8 +32,13 @@
 
         <div id="memory-switch">
           Switch between narrow and wide memory:
-         <button class="memory" type="button" onClick="chart(1)">wide</button>
-         <button class="memory" type="button" onClick="chart(2)">narrow</button>
+          <button class="memory" type="button" onClick="chart(1)"> Wide </button>
+          <button class="memory" id="narrow-switch" type="button" onClick="chart(2)"> Narrow </button>
+
+          <p id="viewing-box" class="selection"></p>
+          <p id="memory" class="selection"> Memory: </p>
+          <p id="layer-name" class="selection"> Layer: </p>
+          <p id="location" class="selection"> Location: </p>
         </div>
 
         <form action="#">
@@ -41,17 +47,12 @@
               <option value="0" selected="selected">Tile 0</option>
           </select>
         </form>
-
-        <p id="viewing-box"><p>
-        <div id="selection-info">
-          <p id="memory" class="selection"> Memory: </p>
-          <p id="layer-name" class="selection"> Layer: </p>
-          <p id="location" class="selection"> Location: </p>
+          
         </div>
-        <!-- <div id="tooltip"></div> -->
+
         <div id="chart"></div>
+
         <p id="error-report"></p>
-        
 
         <div id="response-messages">
           <div id="trace-processes">
@@ -67,7 +68,6 @@
 
         
     </body>
-    <!-- <script type="text/javascript" src="report.js"></script> -->
-     
+  
     <script type="text/javascript" src="script.js"></script>
 </html>

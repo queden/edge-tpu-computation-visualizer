@@ -548,14 +548,13 @@ public class Validation {
       throw new MemoryAccessException(traceAccessType, instruction.getTag());
     }
 
-    System.out.println(tensor);
     // Throws an exception if there is no tensor
     // associated with the correct instruction access type.
     if (tensor == -1) {
       throw new Exception(
-          "Instruction "
+          "Instruction \""
               + instruction.getName()
-              + " (tag: "
+              + "\" (tag: "
               + instruction.getTag()
               + ", layer: "
               + instruction.getLayer()
@@ -582,7 +581,7 @@ public class Validation {
    * @throws Exception if the narrow/wide memory allocation table is empty
    * @return the tensor associated with this traceEvent
    */
-  private static int getTensor (
+  private static int getTensor(
       List<Integer> accessTypeTensorList,
       int traceAddress,
       Hashtable<Pair, TensorAllocation> tensorLabelToTensorAllocationTable,
@@ -611,7 +610,6 @@ public class Validation {
       int end = start + tensorAlloc.getSize();
 
       if (traceAddress >= start && traceAddress < end) {
-        System.out.println("Trace is within interval!");
         tensor = accessTypeTensorList.get(i);
         break;
       }
@@ -695,8 +693,6 @@ public class Validation {
    * @param masks is the mask list of this traceEvent's instruction
    * @param tensor is the tensor this traceEvent is operating on
    * @param traceEvent is the traceEvent currently being validated
-   * @param narrowDeltas is the list of narrow memory locations altered in this chunk of traceEvent processing
-   * @param wideDeltas is the list of wide memory locations altered in this chunk of traceEvent processing
    * @throws Exception if attempting to read from a memory location on a tile that is in this 
    *                   traceEvent but not its corresponding instruction
    * @throws InvalidTensorReadException if a traceEvent is attempting to read from 
