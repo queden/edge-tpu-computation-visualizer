@@ -272,6 +272,7 @@ svg {
   margin: 0px 1% 0px 0px;
   height: fit-content;
   font-size: 20px;
+  font-weight: bold;
 }
 
 #response-messages {
@@ -284,7 +285,7 @@ svg {
 }
 
 #trace-info-box {
-  height: 700px;
+  max-height: 700px;
   overflow: auto;
 }
 
