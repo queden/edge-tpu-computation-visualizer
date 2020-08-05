@@ -23,7 +23,6 @@ public class ProcessResults {
     }
 
     this.validationEnd = validationEnd;
-    
     this.narrowDeltas = narrowDeltas;
     this.wideDeltas = wideDeltas;
   }

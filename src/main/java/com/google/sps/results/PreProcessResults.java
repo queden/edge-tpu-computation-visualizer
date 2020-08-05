@@ -1,4 +1,6 @@
 package com.google.sps.results;
+import java.util.List;
+import com.google.sps.proto.MemaccessCheckerDataProto.*;
 
 import com.google.sps.proto.MemaccessCheckerDataProto.*;
 import java.util.List;

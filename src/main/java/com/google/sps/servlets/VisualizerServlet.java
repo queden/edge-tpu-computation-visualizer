@@ -149,9 +149,9 @@ public class VisualizerServlet extends HttpServlet {
 
         Entity memaccessCheckerUpload = new Entity("File");
         memaccessCheckerUpload.setProperty("date", dateTime.format(formatter));
-        // ^ Purely for sorting purposes only
-        
         memaccessCheckerUpload.setProperty("time", new Date());
+        // ^ Purely for sorting purposes only
+
         memaccessCheckerUpload.setProperty("name", checkerName);
         memaccessCheckerUpload.setProperty("user", user);
         memaccessCheckerUpload.setProperty(
@@ -161,7 +161,7 @@ public class VisualizerServlet extends HttpServlet {
         
         datastore.put(memaccessCheckerUpload);
 
-        // Write file to Cloud Storage using the file's upload time and name as its unique id.
+        // Write file to Cloud Storage using the file's upload time and name as its unique name.
         GcsFileOptions instance = GcsFileOptions.getDefaultInstance();
         GcsService gcsService = GcsServiceFactory.createGcsService();
         GcsFilename gcsFile = 
@@ -261,13 +261,13 @@ public class VisualizerServlet extends HttpServlet {
       throws IOException, InvalidProtocolBufferException, UnsupportedEncodingException {
     // Checks if the file uploaded is a binary file or a text file.
     if (fileName.toLowerCase().endsWith(".bin")) {
-      // If binary file
+      // Parses the file as a binary file.
 
       byte[] byteArray = ByteStreams.toByteArray(fileInputStream);
 
       return MemaccessCheckerData.parseFrom(byteArray);
     } else {
-      // If text file
+      // Parses the file as a text file.
 
       InputStreamReader reader = new InputStreamReader(fileInputStream, "ASCII");
       MemaccessCheckerData.Builder builder = MemaccessCheckerData.newBuilder();
@@ -334,7 +334,7 @@ public class VisualizerServlet extends HttpServlet {
     String dateTimeString = (String) fileEntity.getProperty("date");
 
     if (dateTimeString == null) {
-      // Sends the time zone information only.
+      // Sends the time zone information only. Will be used when there is no last uploaded file.
 
       ZonedDateTime dateTime = ZonedDateTime.now(ZoneId.of(zone));
       DateTimeFormatter formatter = DateTimeFormatter.ofPattern("z");
@@ -376,29 +376,29 @@ public class VisualizerServlet extends HttpServlet {
 
         queryFile = new Query("File").addSort("time", SortDirection.DESCENDING);
         userFilesExist = false;
-        }
-      }        
-
-      PreparedQuery fileResults = datastore.prepare(queryFile);
-
-      ArrayList<LoadFile> files = new ArrayList<>();
-      String dateTimeString;
-
-      // Creates a collection of LoadFile objects with the proper information about their storage.
-      for (Entity fileEntity : fileResults.asIterable()) {
-        dateTimeString = fileEntity.getProperty("date").toString();
-
-        files.add(
-            new LoadFile(
-                fileEntity.getKey().getId(),
-                (String) fileEntity.getProperty("name"),
-                dateTimeString,
-                timeZone,
-                user,
-                userFilesExist));
       }
+    }        
 
-      return files;
+    PreparedQuery fileResults = datastore.prepare(queryFile);
+
+    ArrayList<LoadFile> files = new ArrayList<>();
+    String dateTimeString;
+
+    // Creates a collection of LoadFile objects with the proper information about their storage.
+    for (Entity fileEntity : fileResults.asIterable()) {
+      dateTimeString = fileEntity.getProperty("date").toString();
+
+      files.add(
+          new LoadFile(
+              fileEntity.getKey().getId(),
+              (String) fileEntity.getProperty("name"),
+              dateTimeString,
+              timeZone,
+              user,
+              userFilesExist));
+    }
+
+    return files;
   }
 
   // Assembles a collection of all known users.

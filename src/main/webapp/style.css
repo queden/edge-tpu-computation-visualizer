@@ -68,6 +68,12 @@ p, li {
   color: red;
 }
 
+#error-report {
+  font-weight: bold;
+  text-decoration: underline;
+  color: red;
+}
+
 #upload-box {
     margin-bottom: 30px;
 }
@@ -145,60 +151,6 @@ text {
     font-weight: bold;
 }
 
-/* rect {
-    stroke:#0096c7;;
-    stroke-width: 1px;
-    fill : #023e8a;
-}
-
-rect.parent,
-.grandparent rect {
-    stroke-width: 3px;
-}
-
-.grandparent:hover rect {
-    fill: #023e8a;
-}
-
-.children rect.parent,
-.grandparent rect {
-    cursor: pointer;
-    fill: #023e8a;
-}
-
-.children rect.child {
-    opacity: 0.5;
-    fill : orange;
-}
-.children rect.parent {
-    fill: #023e8a;
-}
-
-.children:hover rect.child {
-    opacity: 1;
-    stroke-width: 1px;
-}
-
-.children:hover rect.parent {
-    opacity: 0;
-}
-
-.legend {
-    margin-bottom:8px !important;
-}
-
-.legend rect {
-    stroke-width: 0px;
-}
-
-.legend text {
-    text-anchor: middle;
-    pointer-events: auto;
-    font-size: 13px;
-    font-family: sans-serif;
-    fill: #023e8a;
-} */
-
 .form-group {
     text-align:left;
 }
@@ -240,6 +192,10 @@ rect.parent,
 #delete-buttons {
   display: flex;
   flex-direction: column;
+}
+
+#load-alert {
+  color: blueviolet;
 }
 
 #done {
@@ -307,18 +263,39 @@ svg {
   height: fit-content;
 }
 
+#narrow-switch {
+  margin-right: 1%;
+}
+
+.selection {
+  display: none;
+  margin: 0px 1% 0px 0px;
+  height: fit-content;
+  font-size: 20px;
+  font-weight: bold;
+}
+
 #response-messages {
   display: flex;
   flex-direction: row;
 }
 
 #trace-processes {
-  width: 30%;
+  width: 20%;
+}
+
+#trace-info-box {
+  max-height: 700px;
+  overflow: auto;
 }
 
 #error-box {
   display: none;
-  width: 60%;
+  width: 75%;
+}
+
+#error-messages {
+  height: 700px;
   overflow: auto;
 }
 
@@ -331,4 +308,8 @@ svg {
 .trace-error-interval {
   font-size: 18px;
   font-weight: bold;
+}
+
+#complete-alert {
+  color: orange;
 }
