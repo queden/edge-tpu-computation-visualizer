@@ -299,7 +299,7 @@ function openVisualization() {
   } else {
     // Creates and opens the pop-up window.
     const visualizerWindow = window.open("report.html", "Visualizer", "_blank", "toolbar=yes,scrollbars=yes,width=2200,height=10000,resizable=yes");
-    // visualizerWindow.focus();
+    visualizerWindow.focus();
 
     // Listener to retrieve information from the main page.
     visualizerWindow.addEventListener("message", function(message) {
@@ -318,6 +318,7 @@ function openVisualization() {
         const tiles = visualizerWindow.document.getElementById("tile-select");
         tiles.innerHTML = '';
 
+        // Adds the first tile 0 option, independent of how many tiles are present in the file,
         const option = document.createElement("option");
         option.value = 0;
         option.text = "Tile 0";
@@ -347,10 +348,6 @@ var endVisualization = false;
 // -"d" to continue as is with prompts after each error
 // -"s" to abort the visualization
 var proceed = "";
-
-var tile = 0;
-var layerName = "";
-var curLocation = "";
 
 // Runs the visualization of the chosen simulation trace.
 async function runVisualization() {
@@ -392,7 +389,7 @@ async function runVisualization() {
   // Add the number of tile options to switch to.
   addTiles(preprocessResponse.numTiles);
 
-  // Update visualizer.
+  // Update visualizer with initial memory allocations.
   chart(1, "pre", preprocessResponse);
 
   const init = document.createElement("p");
@@ -404,10 +401,11 @@ async function runVisualization() {
   var start = 0; 
 
   if (!preprocessResponse.isError) {
-    
     while (start < numTraces) {
       var runTracesEnd = await runTraces(start, stepSize);
 
+      // Checks if the user has chosen to stop the visualization, either by
+      // pressing "s" when prompted or pressing "q" after previously selecting "a" when prompted
       if (proceed == "s" || endVisualization == true) {
         break;
       }
@@ -417,11 +415,11 @@ async function runVisualization() {
   } else {
     alert("Error occurred in preprocessing, visualization aborted.");
   }
-  
-  alert("Visualization completed.");
 
   proceed = "";
   done.style.display = "block";
+
+  alert("Visualization completed.");
 }
 
 /*
@@ -473,6 +471,7 @@ async function runTraces(start, stepSize) {
     errorMessages.appendChild(p);
 
     // Checks if the user wants to continue or abort the visualization after an error is found.
+    // Will not occur if the user previously chose to run through all errors found.
     if (proceed != "a") {
       var promptString = 
           "An error was encountered. Please choose how to continue:" +
@@ -483,6 +482,7 @@ async function runTraces(start, stepSize) {
 
       proceed = prompt(promptString, "d");
 
+      // Sets the option chosen to "d" if the user failed to give a valid input.
       if (!(proceed != "d" || proceed != "a" || proceed != "s")) {
         proceed = "d";
       } else if (proceed == "a") {
@@ -493,7 +493,7 @@ async function runTraces(start, stepSize) {
     if (proceed != "s") {
       // Continue visualization.
 
-      // Update visualizer
+      // Update visualizer with current chunk of memory information.
       chart(1, "post", traceProcess);
 
       return end;
@@ -504,7 +504,7 @@ async function runTraces(start, stepSize) {
   }
 }
 
-// Listener to terminate the visualization
+// Listener to terminate the visualization.
 window.onkeyup = checkTerminate;
 
 function checkTerminate(key) {
