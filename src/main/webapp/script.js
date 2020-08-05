@@ -1074,7 +1074,6 @@ async function chart(val, process, json) {
   }
 }
 
-
 // Cool rectangle easter egg ;D
 var realKonami = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "KeyA", "KeyB"];
 var userKonami = [];
