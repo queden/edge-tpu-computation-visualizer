@@ -1013,7 +1013,7 @@ var postResult;
                     var start = 0;
                     var end = 0;
                     // uncomment the next line for faster rendering
-                    var size = alloc["size_"]/32;
+                    var size = alloc["size_"];
                     //uncomment the next line for slow rendering 
                     //var size = alloc["size_"];
                     start = alloc["baseAddress_"];

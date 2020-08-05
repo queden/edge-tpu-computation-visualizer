@@ -345,10 +345,6 @@ public class Validation {
         maxSize = 0;
       }
 
-      if (!isNarrow) {
-        maxSize /= 32;
-      }
-
       TensorAllocation.Builder unionTensorBuilder = TensorAllocation.newBuilder();
       unionTensorBuilder.mergeFrom(tensor);
       unionTensorBuilder.setSize(maxSize);
