@@ -1,6 +1,4 @@
 package com.google.sps.results;
-import java.util.List;
-import com.google.sps.structures.Delta;
 
 import com.google.sps.structures.Delta;
 import java.util.List;

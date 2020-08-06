@@ -77,8 +77,6 @@ public class ReportServlet extends HttpServlet {
         long start = Long.parseLong(request.getParameter("start"));
         long step = Long.parseLong(request.getParameter("step-size"));
 
-        // System.out.println("Start is " + start);
-
         ProcessResults processResults = validation.process(start, start + step);
         
         json = gson.toJson(processResults);

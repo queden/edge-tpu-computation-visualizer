@@ -1,12 +1,12 @@
-
 <html>
     <head>
         <meta charset="UTF-8">
         <link rel="stylesheet" href="style.css">
         <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
         <script type="text/javascript" src="script.js"></script>
-        <script src="https://d3js.org/d3.v3.min.js"></script>
-        <title> Computation Visualizer </title>
+        <!-- <script src="https://d3js.org/d3.v3.min.js"></script> -->
+        <script src="https://d3js.org/d3.v3.js"></script>
+        <script src = "https://cdnjs.cloudflare.com/ajax/libs/d3-legend/1.13.0/d3-legend.min.js"></script>        <title> Computation Visualizer </title>
     </head>
     <body>
       <div id = "nav-bar"> 
@@ -18,6 +18,7 @@
           <li> Please close this window before selecting another file to run </li>
           <li> You must run the visualization before attempting to switch tiles or memory types </li>
           <li> You can run the visualization as many times as you want by clicking the "Run" button </li>
+          <li id="complete-alert"> <b> You will get an alert once the visualization has completed </b> </li>
         </ul>
 
         <p id="file-info"> Viewing file: </p>
@@ -26,13 +27,16 @@
           <input type="number" name="step-size" id="step-size" value="1000"/>
         </form>
         <button id="run-button" onclick="runVisualization()"> Run! </button>
-        <h3 id="memory-type"></h3>
-         <h4 id="tile"></h4>
 
         <div id="memory-switch">
           Switch between narrow and wide memory:
-         <button class="memory" type="button" onClick="chart(1)">wide</button>
-         <button class="memory" type="button" onClick="chart(2)">narrow</button>
+          <button class="memory" type="button" onClick="chart(1, data1, false)"> Wide </button>
+          <button class="memory" id="narrow-switch" type="button" onClick="chart(2, data2, false)"> Narrow </button>
+
+          <p id="viewing-box" class="selection"> Viewing information for Tile: 0 </p>
+          <p id="memory" class="selection"> Memory: </p>
+          <p id="layer-name" class="selection"> Layer: </p>
+          <p id="location" class="selection"> Location: </p>
         </div>
 
         <form action="#">
@@ -41,12 +45,12 @@
               <option value="0" selected="selected">Tile 0</option>
           </select>
         </form>
-        <div id="tooltip"></div>
+          
+        </div>
+
         <div id="chart"></div>
-        <div id="legend-unallocated"></div>
-        <div id="legend-allocated"></div>
+
         <p id="error-report"></p>
-        
 
         <div id="response-messages">
           <div id="trace-processes">
@@ -62,7 +66,6 @@
 
         
     </body>
-    <!-- <script type="text/javascript" src="report.js"></script> -->
-     
+  
     <script type="text/javascript" src="script.js"></script>
 </html>
