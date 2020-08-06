@@ -4,8 +4,9 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
-// Objects to hold the file information to be displayed in the drop down menu of the
-// all uploaded files
+/** Objects to hold the file information to be displayed in the drop down menu of the
+ * all uploaded files
+ */
 public class LoadFile {
   private long id;
   private String name;
@@ -34,7 +35,7 @@ public class LoadFile {
     this.getTime();
   }
 
-  // Generates the appropriate time information of the file according to the time zone
+  /** Generates the appropriate time information of the file according to the time zone */
   private void getTime() {
     DateTimeFormatter formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME;
     ZonedDateTime dateTime = ZonedDateTime.parse(dateTimeString, formatter);

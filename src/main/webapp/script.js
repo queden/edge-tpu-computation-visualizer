@@ -61,12 +61,18 @@ async function loadMainPage() {
   // Gives feedback to the user if they were attempting to add a duplicate user
   // (in which case the duplicate addition would be prevented).
   if (errorMessage != '') {
-    alert("User already exists");
+    // Checks if the user uploaded a compatible file
+    if (errorMessage != "User already exists.") {
+      alert("Unsupported file content: \n" + errorMessage + "\n\nPlease upload a file that can be parsed into a MemaccessChecker proto message.");
+    } else {
+      alert(errorMessage);
+    }   
   }
 
   const box = document.getElementById("uploaded-file");
   box.innerHTML = '';
 
+  // Checks if a file was uploaded
   if (uploadFile.fileName != "null") {
     // Adds the uploaded file information to be displayed.
     addFileInfo(uploadFile);

@@ -33,7 +33,6 @@
   width: 100vw;
   max-width:100%;
   max-height:100%;
-  margin-bottom: 50px;
 }
 
 #body-text-upload, #body-text-visualizer, #delete-buttons {
@@ -44,7 +43,7 @@
   margin: 0;
   top: 50%;
   -ms-transform: translateY(-50%);
-  margin-right: 12%;
+  margin-right: 10%;
 }
 
 body {
@@ -196,6 +195,7 @@ text {
 
 #load-alert {
   color: blueviolet;
+  font-size: 18px;
 }
 
 #done {

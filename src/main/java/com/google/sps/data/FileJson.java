@@ -4,7 +4,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
-// Object to hold the user feedback information about a file after upload
+/** Object to hold the user feedback information about a file after upload */
 public class FileJson {
   private String fileName;
   private String fileSize;
@@ -17,7 +17,7 @@ public class FileJson {
   private String zone;
   private String uploadUser;
 
-  // Master constructor initializing all variables
+  /** Master constructor initializing all variables */
   public FileJson(
       String fileName, 
       String fileSize, 
@@ -41,7 +41,7 @@ public class FileJson {
     this.uploadUser = uploadUser;
   }
 
-  // Constructor to be used when time information is unknown
+  /** Constructor to be used when time information is unknown */
   public FileJson(
       String fileName, 
       String fileSize, 
@@ -54,7 +54,7 @@ public class FileJson {
   this(fileName, fileSize, fileTrace, fileTiles, narrowBytes, wideBytes, "", "", uploadUser);
   }
 
-  // Final constructor to be used combining file and time information
+  /** Final constructor to be used combining file and time information */
   public FileJson(FileJson fileJson, String dateTimeString, String zone) {
     this(
         fileJson.fileName, 
@@ -70,18 +70,19 @@ public class FileJson {
     this.getTime();
   }
 
-  // Constructor to be used when a file has not been uploaded but the time zone information is 
-  // necessary
+  /** Constructor to be used when a file has not been uploaded but the time zone information is 
+   * necessary
+   */
   public FileJson(String dateTimeString, String zone) {
     this("null", "null", "null", 0 , "null", "null", "", zone, "");
   }
 
-  // Constructor to be used when resetting the file information
+  /** Constructor to be used when resetting the file information */
   public FileJson() {
     this("null", "null", "null", 0 , "null" , "null", "", "", "");
   }
 
-  // Generates the appropriate time information of the file according to the time zone
+  /** Generates the appropriate time information of the file according to the time zone */
   private void getTime() {
     DateTimeFormatter formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME;
     ZonedDateTime dateTime = ZonedDateTime.parse(dateTimeString, formatter);
