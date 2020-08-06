@@ -273,6 +273,7 @@ svg {
   height: fit-content;
   font-size: 20px;
   font-weight: bold;
+  color: blue;
 }
 
 #response-messages {
