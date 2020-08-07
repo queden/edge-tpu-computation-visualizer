@@ -7,4 +7,9 @@
     <!-- prevent unwanted caching when accessing via the web preview server -->
     <include path="/**" expiration="0s" />
   </static-files>
+  <instance-class>B4</instance-class>
+    <basic-scaling>
+        <idle-timeout>60m</idle-timeout>
+        <max-instances>10</max-instances>
+    </basic-scaling>
 </appengine-web-app>
