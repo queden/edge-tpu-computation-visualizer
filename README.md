@@ -2,7 +2,7 @@
 
 ## Summary
 
-The Edge TPU Computation Visualizer is an internal debugging tool designed for the Edge TPU Team to find memory access dependency errors due to bugs in the Edge TPU Compiler. Currently, users can upload a log of a software simulation, and our tool will validate whether or not the compiler executed the simulation correctly. We have a web interface where users can upload the file, and then we simulate the simulation and any errors that occur.
+The Edge TPU Computation Visualizer is an internal debugging tool designed for the Edge TPU Team to find memory access dependency errors due to bugs in the chip's compiler. Currently, users can upload a log of a software simulation, and our tool will validate whether or not the compiler executed the instructions given to it correctly. We have a web interface where users can upload the file, and then we simulate the simulation and any errors that occur.
 
 For a detailed design doc:
 https://docs.google.com/document/d/1XzgKLn5qp4aP58RxTXuekrX1jXuSs58QO2LfIH2tCFs/edit?usp=sharing
