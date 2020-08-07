@@ -429,7 +429,7 @@ public class Validation {
         throw new Exception(
             "Instruction with tag "
                 + traceEvent.getInstructionTag()
-                + " does not exist."); // TODO: May need to write custom exception
+                + " does not exist.");
       }
 
       TraceEvent.AccessType accessType = traceEvent.getAccessType();
