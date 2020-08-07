@@ -93,6 +93,11 @@ p, li {
     font-size: 20px;
 }
 
+#wait {
+    color: blueviolet;
+    font-size: 18px;
+}
+
 #time-zone-display, #user-name {
     font-family: 'Montserrat';
     font-style: normal;
