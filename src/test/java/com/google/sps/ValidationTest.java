@@ -1413,6 +1413,7 @@ public final class ValidationTest extends Suite {
         private int expectedTensor;
         private int recievedTensor;
         private TraceEvent.AccessType traceAccessType;
+        private long cycle;
 
         private Method mGetTraceTensor;
         private Field mLayerTensorLabelToTensorAllocationNarrow;
@@ -1430,7 +1431,7 @@ public final class ValidationTest extends Suite {
 
             Validation validation = new Validation(protoBuilder.build());
 
-            mGetTraceTensor = Validation.class.getDeclaredMethod("getTraceTensor", int.class, TraceEvent.AccessType.class, Instruction.class);
+            mGetTraceTensor = Validation.class.getDeclaredMethod("getTraceTensor", long.class, int.class, TraceEvent.AccessType.class, Instruction.class);
             mGetTraceTensor.setAccessible(true);
 
             mLayerTensorLabelToTensorAllocationNarrow = Validation.class.getDeclaredField("layerTensorLabelToTensorAllocationNarrow");
@@ -1474,6 +1475,8 @@ public final class ValidationTest extends Suite {
 
             mLayerTensorLabelToTensorAllocationNarrow.set(validation, narrowMap);
             mLayerTensorLabelToTensorAllocationWide.set(validation, wideMap);
+
+            cycle = 0;
         }
 
         // Trace is narrow read, instruction has narrow read, confirm returned tensor
@@ -1491,7 +1494,7 @@ public final class ValidationTest extends Suite {
                 .setLayer("input");
 
             expectedTensor = 2;
-            recievedTensor = (int) mGetTraceTensor.invoke(validation, traceAddress, traceAccessType, instructionBuilder.build());
+            recievedTensor = (int) mGetTraceTensor.invoke(validation, cycle, traceAddress, traceAccessType, instructionBuilder.build());
             
             assertEquals(expectedTensor, recievedTensor);
         }
@@ -1512,7 +1515,7 @@ public final class ValidationTest extends Suite {
 
             expectedTensor = 2;
 
-            recievedTensor = (int) mGetTraceTensor.invoke(validation, traceAddress, traceAccessType, instructionBuilder.build());
+            recievedTensor = (int) mGetTraceTensor.invoke(validation, cycle, traceAddress, traceAccessType, instructionBuilder.build());
             
             assertEquals(expectedTensor, recievedTensor);
         }
@@ -1533,7 +1536,7 @@ public final class ValidationTest extends Suite {
 
             expectedTensor = 2;
 
-            recievedTensor = (int) mGetTraceTensor.invoke(validation, traceAddress, traceAccessType, instructionBuilder.build());
+            recievedTensor = (int) mGetTraceTensor.invoke(validation, cycle, traceAddress, traceAccessType, instructionBuilder.build());
             
             assertEquals(expectedTensor, recievedTensor);
         }
@@ -1554,7 +1557,7 @@ public final class ValidationTest extends Suite {
 
             expectedTensor = 2;
 
-            recievedTensor = (int) mGetTraceTensor.invoke(validation, traceAddress, traceAccessType, instructionBuilder.build());
+            recievedTensor = (int) mGetTraceTensor.invoke(validation, cycle, traceAddress, traceAccessType, instructionBuilder.build());
             
             assertEquals(expectedTensor, recievedTensor);
         }
@@ -1576,7 +1579,7 @@ public final class ValidationTest extends Suite {
             expectedTensor = 2;
 
             try {
-                recievedTensor = (int) mGetTraceTensor.invoke(validation, traceAddress, traceAccessType, instructionBuilder.build());
+                recievedTensor = (int) mGetTraceTensor.invoke(validation, cycle, traceAddress, traceAccessType, instructionBuilder.build());
             } catch (InvocationTargetException e) {
                 throw e.getTargetException();
             }
@@ -1601,7 +1604,7 @@ public final class ValidationTest extends Suite {
             expectedTensor = 2;
 
             try {
-                recievedTensor = (int) mGetTraceTensor.invoke(validation, traceAddress, traceAccessType, instructionBuilder.build());
+                recievedTensor = (int) mGetTraceTensor.invoke(validation, cycle, traceAddress, traceAccessType, instructionBuilder.build());
             } catch (InvocationTargetException e) {
                 throw e.getTargetException();
             }
@@ -1626,7 +1629,7 @@ public final class ValidationTest extends Suite {
             expectedTensor = 2;
 
             try {
-                recievedTensor = (int) mGetTraceTensor.invoke(validation, traceAddress, traceAccessType, instructionBuilder.build());
+                recievedTensor = (int) mGetTraceTensor.invoke(validation, cycle, traceAddress, traceAccessType, instructionBuilder.build());
             } catch (InvocationTargetException e) {
                 throw e.getTargetException();
             }
@@ -1651,7 +1654,7 @@ public final class ValidationTest extends Suite {
             expectedTensor = 2;
 
             try {
-                recievedTensor = (int) mGetTraceTensor.invoke(validation, traceAddress, traceAccessType, instructionBuilder.build());
+                recievedTensor = (int) mGetTraceTensor.invoke(validation, cycle, traceAddress, traceAccessType, instructionBuilder.build());
             } catch (InvocationTargetException e) {
                 throw e.getTargetException();
             }
@@ -1676,7 +1679,7 @@ public final class ValidationTest extends Suite {
             expectedTensor = 2;
 
             try {
-                recievedTensor = (int) mGetTraceTensor.invoke(validation, traceAddress, traceAccessType, instructionBuilder.build());
+                recievedTensor = (int) mGetTraceTensor.invoke(validation, cycle, traceAddress, traceAccessType, instructionBuilder.build());
             } catch (InvocationTargetException e) {
                 throw e.getTargetException();
             }
@@ -1700,7 +1703,7 @@ public final class ValidationTest extends Suite {
             expectedTensor = 2;
 
             try {
-                recievedTensor = (int) mGetTraceTensor.invoke(validation, traceAddress, traceAccessType, instructionBuilder.build());
+                recievedTensor = (int) mGetTraceTensor.invoke(validation, cycle, traceAddress, traceAccessType, instructionBuilder.build());
             } catch (InvocationTargetException e) {
                 throw e.getTargetException();
             }
@@ -1725,7 +1728,7 @@ public final class ValidationTest extends Suite {
             expectedTensor = 2;
 
             try {
-                recievedTensor = (int) mGetTraceTensor.invoke(validation, traceAddress, traceAccessType, instructionBuilder.build());
+                recievedTensor = (int) mGetTraceTensor.invoke(validation, cycle, traceAddress, traceAccessType, instructionBuilder.build());
             } catch (InvocationTargetException e) {
                 throw e.getTargetException();
             }

@@ -8,7 +8,7 @@ public class InvalidTensorAddressException extends Exception {
 
   private int baseAddress; // Address operarted on by instruction
   private int instruction; // Tag of instruction performing the operation
-  private String memoryType;
+  private String memoryType; // Narrow or wide memory type
 
   public InvalidTensorAddressException(int baseAddress, int instruction, boolean isNarrow) {
     this.baseAddress = baseAddress;
