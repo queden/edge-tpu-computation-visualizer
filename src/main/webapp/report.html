@@ -1,12 +1,12 @@
-
 <html>
     <head>
         <meta charset="UTF-8">
         <link rel="stylesheet" href="style.css">
         <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
         <script type="text/javascript" src="script.js"></script>
-        <script src="https://d3js.org/d3.v3.min.js"></script>
-        <title> Computation Visualizer </title>
+        <!-- <script src="https://d3js.org/d3.v3.min.js"></script> -->
+        <script src="https://d3js.org/d3.v3.js"></script>
+        <script src = "https://cdnjs.cloudflare.com/ajax/libs/d3-legend/1.13.0/d3-legend.min.js"></script>        <title> Computation Visualizer </title>
     </head>
     <body>
       <div id = "nav-bar"> 
@@ -30,8 +30,8 @@
 
         <div id="memory-switch">
           Switch between narrow and wide memory:
-          <button class="memory" type="button" onClick="chart(1)"> Wide </button>
-          <button class="memory" id="narrow-switch" type="button" onClick="chart(2)"> Narrow </button>
+          <button class="memory" type="button" onClick="chart(1, wideArray, false)"> Wide </button>
+          <button class="memory" id="narrow-switch" type="button" onClick="chart(2, narrowArray, false)"> Narrow </button>
 
           <p id="viewing-box" class="selection"> Viewing information for Tile: 0 </p>
           <p id="memory" class="selection"> Memory: </p>
