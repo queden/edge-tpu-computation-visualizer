@@ -19,6 +19,8 @@ import com.google.appengine.tools.cloudstorage.GcsServiceFactory;
 import com.google.common.io.ByteStreams;
 import com.google.gson.Gson;
 import com.google.protobuf.TextFormat;
+import com.google.protobuf.TextFormat.ParseException;
+import com.google.protobuf.TextFormat.ParseException.*;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.sps.data.*;
 import com.google.sps.proto.MemaccessCheckerDataProto.*;
@@ -138,56 +140,59 @@ public class VisualizerServlet extends HttpServlet {
 
         MemaccessCheckerData memaccessChecker = getMessage(fileInputStream, fileName);
 
-        // Put the file information into datastore.
-        ZonedDateTime dateTime = ZonedDateTime.now(ZoneId.of(ZoneOffset.UTC.getId()));
-        DateTimeFormatter formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME;
+        // Checks if the user uploaded a compatible file that can be parsed
+        if (memaccessChecker != null) {
+          // Put the file information into datastore.
+          ZonedDateTime dateTime = ZonedDateTime.now(ZoneId.of(ZoneOffset.UTC.getId()));
+          DateTimeFormatter formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME;
 
-        String checkerName = 
-            (memaccessChecker.getName().equals("")) 
-                ? filePart.getSubmittedFileName() 
-                : memaccessChecker.getName();
+          String checkerName = 
+              (memaccessChecker.getName().equals("")) 
+                  ? filePart.getSubmittedFileName() 
+                  : memaccessChecker.getName();
 
-        Entity memaccessCheckerUpload = new Entity("File");
-        memaccessCheckerUpload.setProperty("date", dateTime.format(formatter));
-        memaccessCheckerUpload.setProperty("time", new Date());
-        // ^ Purely for sorting purposes only
+          Entity memaccessCheckerUpload = new Entity("File");
+          memaccessCheckerUpload.setProperty("date", dateTime.format(formatter));
+          memaccessCheckerUpload.setProperty("time", new Date());
+          // ^ Purely for sorting purposes only
 
-        memaccessCheckerUpload.setProperty("name", checkerName);
-        memaccessCheckerUpload.setProperty("user", user);
-        memaccessCheckerUpload.setProperty(
-            "memaccess-checker", dateTime.format(formatter) + ":" + checkerName);        
+          memaccessCheckerUpload.setProperty("name", checkerName);
+          memaccessCheckerUpload.setProperty("user", user);
+          memaccessCheckerUpload.setProperty(
+              "memaccess-checker", dateTime.format(formatter) + ":" + checkerName);        
 
-        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-        
-        datastore.put(memaccessCheckerUpload);
+          DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+          
+          datastore.put(memaccessCheckerUpload);
 
-        // Write file to Cloud Storage using the file's upload time and name as its unique name.
-        GcsFileOptions instance = GcsFileOptions.getDefaultInstance();
-        GcsService gcsService = GcsServiceFactory.createGcsService();
-        GcsFilename gcsFile = 
-            new GcsFilename("trace_info_files", dateTime.format(formatter) + ":" + checkerName);
+          // Write file to Cloud Storage using the file's upload time and name as its unique name.
+          GcsFileOptions instance = GcsFileOptions.getDefaultInstance();
+          GcsService gcsService = GcsServiceFactory.createGcsService();
+          GcsFilename gcsFile = 
+              new GcsFilename("trace_info_files", dateTime.format(formatter) + ":" + checkerName);
 
-        // Gets the file in its byte array form.
-        byte[] byteArray = memaccessChecker.toByteArray();
-        ByteBuffer buffer = ByteBuffer.wrap(byteArray, 0, byteArray.length);
+          // Gets the file in its byte array form.
+          byte[] byteArray = memaccessChecker.toByteArray();
+          ByteBuffer buffer = ByteBuffer.wrap(byteArray, 0, byteArray.length);
 
-        // Create and write to the GCS object.
-        gcsService.createOrReplace(gcsFile, instance, buffer);
+          // Create and write to the GCS object.
+          gcsService.createOrReplace(gcsFile, instance, buffer);
 
-        // Updates the last submitted file.
-        fileEntity = memaccessCheckerUpload;
+          // Updates the last submitted file.
+          fileEntity = memaccessCheckerUpload;
 
-        // Holds the last uploaded file information.
-        String fileSize = getBytes(filePart.getSize());
-        String fileTrace = 
-            memaccessChecker.getName().equals("") ? "No name provided" : memaccessChecker.getName();
-            
-        int fileTiles = memaccessChecker.getNumTiles();
-        String narrowBytes = commaFormat(memaccessChecker.getNarrowMemorySizeBytes());
-        String wideBytes = commaFormat(memaccessChecker.getWideMemorySizeBytes());
+          // Holds the last uploaded file information.
+          String fileSize = getBytes(filePart.getSize());
+          String fileTrace = 
+              memaccessChecker.getName().equals("") ? "No name provided" : memaccessChecker.getName();
+              
+          int fileTiles = memaccessChecker.getNumTiles();
+          String narrowBytes = commaFormat(memaccessChecker.getNarrowMemorySizeBytes());
+          String wideBytes = commaFormat(memaccessChecker.getWideMemorySizeBytes());
 
-        fileJson =
-            new FileJson(fileName, fileSize, fileTrace, fileTiles, narrowBytes, wideBytes, user);
+          fileJson =
+              new FileJson(fileName, fileSize, fileTrace, fileTiles, narrowBytes, wideBytes, user);
+        }
       } else {
         // Resets the last uploaded file to "null" to help provide feedback to the user.
 
@@ -256,28 +261,54 @@ public class VisualizerServlet extends HttpServlet {
     response.sendRedirect("/index.html");
   }
 
-  // Creates a proto message out of the uploaded file's input stream.
+  /** Creates a proto message out of the uploaded file's input stream.
+   * 
+   * @param fileInputStream is the input stream of the uploaded file
+   * @param fileName is the name of the uploaded file
+   * @throws IOException
+   * @throws InvalidProtocolBufferException if the byte array of the uploaded binary file cannnot
+   *                                        be parsed into a MemaccessChecker message
+   * @throws UnsupportedEncodingException if the uploaded text file cannot be parsed into a 
+   *                                      MemaccessChecker message
+   */
   private static MemaccessCheckerData getMessage(InputStream fileInputStream, String fileName) 
       throws IOException, InvalidProtocolBufferException, UnsupportedEncodingException {
+    MemaccessCheckerData memaccessChecker = null;
+
     // Checks if the file uploaded is a binary file or a text file.
     if (fileName.toLowerCase().endsWith(".bin")) {
-      // Parses the file as a binary file.
+      // Parses the file as a binary file if it is compatible.
 
       byte[] byteArray = ByteStreams.toByteArray(fileInputStream);
 
-      return MemaccessCheckerData.parseFrom(byteArray);
+      try {
+        memaccessChecker = MemaccessCheckerData.parseFrom(byteArray);
+      } catch (InvalidProtocolBufferException e) {
+        errorMessage = e.getMessage();
+      }
     } else {
-      // Parses the file as a text file.
+      // Parses the file as a text file if it is compatible.
 
       InputStreamReader reader = new InputStreamReader(fileInputStream, "ASCII");
       MemaccessCheckerData.Builder builder = MemaccessCheckerData.newBuilder();
-      TextFormat.merge(reader, builder);
       
-      return builder.build();
+      try {        
+        TextFormat.merge(reader, builder);
+
+        memaccessChecker = builder.build();
+      } catch (ParseException e) {
+        errorMessage = e.getMessage();
+      }
     }
+
+    return memaccessChecker;
   }
 
-  // Function to retrieve the file size information in terms of Bytes/KB/MB/GB.
+  /** Function to retrieve the file size information in terms of Bytes/KB/MB/GB.
+   *
+   * @param size is the size of the uploaded file
+   * @return the String representation of the number of file size
+   */
   private static String getBytes(long size) {
     double bytes = (double) size;
     String result = "";
@@ -298,7 +329,11 @@ public class VisualizerServlet extends HttpServlet {
     return result;
   }
 
-  // Adds a comma for every 3 digits.
+  /** Adds a comma for every 3 digits.
+   * 
+   * @param input is the size of the narrow/wide memory passed in
+   * @return the String representation of the memory size
+   */
   private static String commaFormat(int input) {
     Integer value = new Integer(input);
     String result = value.toString();
@@ -329,7 +364,12 @@ public class VisualizerServlet extends HttpServlet {
     return finalResult;
   }
 
-  // Determines the appropriate file information to be displayed on the page.
+  /** Determines the appropriate file information to be displayed on the page.
+   * 
+   * @param zone is the current selected time zone
+   * @param fileEntity is the last uploaded file by this user in that was put into Datastore
+   * @return the FileJson object containing the most recent uploaded file.
+   */
   private static FileJson getFileJson(String zone, Entity fileEntity) {
     String dateTimeString = (String) fileEntity.getProperty("date");
 
@@ -349,7 +389,10 @@ public class VisualizerServlet extends HttpServlet {
     return fileJson;
   }
 
-  // Retrieves the information of all of the uploaded files.
+  /** Retrieves the information of all of the uploaded files based on the selected filter.
+   * 
+   * @return the list of filtered files
+   */
   private static List<LoadFile> getFiles() {
     boolean userFilesExist = true;
 
@@ -401,7 +444,10 @@ public class VisualizerServlet extends HttpServlet {
     return files;
   }
 
-  // Assembles a collection of all known users.
+  /** Assembles a collection of all known users.
+   * 
+   * @return the total collection of users in Datastore
+   */
   private static List<User> getUsers() {
     Query queryUser = new Query("User").addSort("time", SortDirection.DESCENDING);
 
@@ -417,7 +463,11 @@ public class VisualizerServlet extends HttpServlet {
     return users;
   }
 
-  // Clears datastore and/or Cloud Storage of users and/or files as specified.
+  /** Clears datastore and/or Cloud Storage of users and/or files as specified.
+   *
+   * @param allUsers dictates whether to delete all users or all files
+   * @throws IOException
+   */
   private static void purgeAll(boolean allUsers) throws IOException {
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
@@ -454,7 +504,15 @@ public class VisualizerServlet extends HttpServlet {
     }
   }
 
-  // Deletes a single user or file from datastore and/or Cloud Storage.
+  /** Deletes a single user or file from datastore and/or Cloud Storage.
+   * 
+   * @param isUser dictates whether the entity being deleted is a user or a file
+   * @param id is the id of the entity in Datastore
+   * @param name is the name of the user if it is a user being deleted, null if a file.
+   * @throws IOException
+   * @throws EntityNotFoundException if the passed in id and its corresponding key is not
+   *                                 present in Datastore
+   */
   private static void purgeEntity(boolean isUser, Long id, String name) 
       throws IOException, EntityNotFoundException {
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
