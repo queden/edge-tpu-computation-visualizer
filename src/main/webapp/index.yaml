@@ -1,0 +1,6 @@
+indexes:
+- kind: File
+  properties:
+  - name: user
+  - name: time
+    direction: desc

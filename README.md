@@ -1,4 +1,7 @@
 # Computation Vizualizer for the Edge TPU
+Design doc:
+https://docs.google.com/document/d/1XzgKLn5qp4aP58RxTXuekrX1jXuSs58QO2LfIH2tCFs/edit?usp=sharing
+
 To generate the protobuf, cd into the root of the repository and run:
 ```
 protoc --java_out=src/main/java src/main/java/com/google/sps/proto/memaccess_checker_data.proto
@@ -21,13 +24,13 @@ Project components:
       ```
 
     - Structures:
-      - Pair object used for grouping layer and tensor (around line 754 and below)
+      - Pair object used for grouping layer and tensor (around line 760 and below)
         ```
         src/main/java/com/google/sps/Validation.java
         ```
 
       - Interval tree code used when validating:
-        - Nodes (around line 700 and below)
+        - Nodes (around line 815 and below)
           ```
           src/main/java/com/google/sps/Validation.java
           ```
@@ -74,7 +77,7 @@ Project components:
         ```
 
   - Visualizer:
-    - Code (around line 500 and below)
+    - Code (around line 550 and below)
       ```
       src/main/webapp/script.js
       ```

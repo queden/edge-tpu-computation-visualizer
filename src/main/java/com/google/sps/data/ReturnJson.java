@@ -2,8 +2,9 @@ package com.google.sps.data;
 
 import java.util.List;
 
-// Object to send a JSON string of the uploaded files, all uploaded files,
-// the current user, and the current time zone
+/** Object to send a JSON string of the uploaded files, all uploaded files,
+ * the current user, and the current time zone
+ */
 public class ReturnJson {
   private FileJson uploadFile;
   private List<LoadFile> files;
@@ -31,7 +32,7 @@ public class ReturnJson {
     this.getZone(dateTimeString);
   }
 
-  // Gets the time zone information only
+  /** Gets the time zone information only */
   private void getZone(String dateTimeString) {
     if (zone.equals("-04:00")) {
       zone = "Eastern Daylight Time (EDT)";
