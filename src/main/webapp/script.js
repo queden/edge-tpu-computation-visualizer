@@ -438,7 +438,6 @@ async function runVisualization() {
 	// Update visualizer with initial memory allocations.
 	// chart(1, "pre", preprocessResponse);
 	await fill(preprocessResponse);
-	console.log(data1);
 
 	const init = document.createElement("p");
 	init.innerHTML = preprocessResponse.message;
@@ -593,29 +592,25 @@ var memoryBox = document.getElementById("memory");
 var preResult;
 var postResult;
 
-var data1 = new Array();
-var data2 = new Array();
+var wideArray = new Array();
+var narrowArray = new Array();
 var layersWide = new Set();
 var layersNarrow = new Set();
 var longestLayerName = 0;
-var deltaProccessed = false;
 
-async function chart(val, data1, hasFilled) {
+async function chart(val, memoryArray, hasFilled) {
 	var narrow = "Narrow Memory";
 	var wide = "Wide Memory";
-	var layers
+	var layers;
 
-	// Proccess the narrow memory deltas
+	/** Retrieve the layers in order of apperance 
+	 */
 	if (val === 1) {
 		var layersArray = [...layersWide];
-		layers = layersWide
+		layers = layersWide;
 	} else {
 		var layersArray = [...layersNarrow];
-		layers = layersWide
-		if (!deltaProccessed) {
-			deltaProccess()
-			deltaProccessed = true
-		}
+		layers = layersNarrow;
 	}
 
 	/**filter the data based on the tile selected 
@@ -649,31 +644,33 @@ async function chart(val, data1, hasFilled) {
 		displayChart(sortedData, memoryType, '0');
 	}
 
-	//Set up the chart
+	/** Set up the chart
+	 */
 	var obj = document.getElementById('chart');
 	var divWidth = obj.offsetWidth;
-	// var divWidth = 2000;
 	var margin = {
 			top: 10,
 			right: 10,
 			bottom: 100,
-			left: 10 + 2 * longestLayerName
+			left: 10 + 8 * longestLayerName
 		},
 		margin2 = {
 			top: 430,
 			right: 10,
 			bottom: 20,
-			left: 10 + 2 * longestLayerName
+			left: 10 + 8 * longestLayerName
 		},
 		width = divWidth - 25,
 		height = 500 - margin.top - margin.bottom,
 		height2 = 500 - margin2.top - margin2.bottom;
 
+	// Define the scales
 	var x = d3.scale.ordinal().rangeBands([0, width], 0),
 		x2 = d3.scale.ordinal().rangeBands([0, width], 0),
 		y = d3.scale.ordinal().rangeRoundBands([0, height], 0),
 		y1 = d3.scale.ordinal().rangeRoundBands([0, height], 0);
 
+	// Remove the previous svg chart
 	d3.select("svg").remove();
 
 	var svg = d3.select("#chart").append("svg")
@@ -695,10 +692,8 @@ async function chart(val, data1, hasFilled) {
 	//Draw the chart
 	function displayChart(data, memoryType, section) {
 
-		// Display memory type
+		// Display memory type and tile
 		memoryBox.innerHTML = "Memory: " + memoryType;
-
-		//Display tile 
 		tileBox.innerHTML = "Viewing information for Tile: " + section;
 
 		//Define color scales
@@ -707,30 +702,10 @@ async function chart(val, data1, hasFilled) {
 		})]).range(['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', '#008080',
 			'#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075'
 		]);
-		// grayColorScale = d3.scale.ordinal().domain([0, d3.max(data, function(d) {
-		//     return d.label;
-		// })]).range(['#DCDCDC', '#D3D3D3', '#C0C0C0', '#BEBEBE', '#989898', '#808080', '#696969', '#555555', '#E5E4E2',
-		//     '#727472', '#928E85', '#708090', '#A9A9A9', '#acacac'
-		// ]);
-
 		var grayColorScale = d3.scale.linear()
 			.domain([0, d3.max(data, function (d) {
 				return d.label;
 			})]).range(['#DCDCDC', '#343434']);
-
-		// svg.append("g")
-		// .attr("class", "legendLinear")
-		// .attr("transform", "translate(0,0)")
-
-		// var legendLinear = d3.legend.color()
-		// .shapeWidth(30)
-		// .cells(34)
-		// .orient('horizontal')
-		// .scale(grayColorScale);
-
-		// svg.select(".legendLinear")
-		// .call(legendLinear);
-
 
 		// remove predrawn structures
 		var bars = focus.selectAll('.bar').remove();
@@ -741,14 +716,11 @@ async function chart(val, data1, hasFilled) {
 		x.domain(data.map(function (d) {
 			return d.location
 		}));
-
 		y.domain(layersArray.map(function (d) {
-			console.log(d)
-			return d
+			return d;
 		}));
-
 		x2.domain(data.map(function (d) {
-			return d.location
+			return d.location;
 		}));
 
 		//draw axis
@@ -756,24 +728,24 @@ async function chart(val, data1, hasFilled) {
 			.attr("class", "x axis")
 			.attr("transform", "translate(0," + height + ")")
 			.call(xAxis);
-
 		focus.append("g")
 			.attr("class", "y axis")
 			.call(yAxis);
 
-		var maxw = 0;
+		// centralize the chart
+		var maxwidth = 0;
 		focus.selectAll("text").each(function () {
-			if (this.getBBox().width > maxw) maxw = this.getBBox().width;
+			if (this.getBBox().width > maxwidth) maxwidth = this.getBBox().width;
 		});
-		svg.attr("transform", "translate(" + maxw + ",0)");
+		svg.attr("transform", "translate(" + maxwidth + ",0)");
 
-		//add brush
+		//add a zoom brush
 		var brush = d3.svg.brush()
 			.x(x2)
 			.on("brush", brushed);
 
-		enter(data, focus)
-		updateScale(data)
+		enter(data, focus);
+		updateScale(data);
 
 		// draw the subbars
 		var subBars = context.selectAll('.subBar')
@@ -791,7 +763,7 @@ async function chart(val, data1, hasFilled) {
 					return x2(d.location);
 				},
 				y: function (d) {
-					return 10
+					return 10;
 				}
 			})
 		context.append("g")
@@ -811,6 +783,7 @@ async function chart(val, data1, hasFilled) {
 		 */
 		function brushed() {
 			var selected = null;
+			// Identify selected region
 			selected = x2.domain()
 				.filter(function (d) {
 					return (brush.extent()[0] <= x2(d)) && (x2(d) <= brush.extent()[1]);
@@ -827,20 +800,23 @@ async function chart(val, data1, hasFilled) {
 				end = data.length;
 			}
 
+			// Identify which datasets is to be zoomed into
 			var updatedData = new Array();
 			for (var i = 0; i < data.length; i++) {
 				if (data[i].location <= end && data[i].location >= start) {
 					updatedData.push(data[i]);
 				}
 			}
+
+			// Update the chart based on datasets to be visualized
 			update(updatedData);
 			enter(updatedData, focus);
 			exit(updatedData);
-			updateScale(updatedData)
+			updateScale(updatedData);
 		}
 
 		/** Update scale based on number of 
-		 * data values
+		 * data values on the chart
 		 */
 		function updateScale(data) {
 			var tickScale = d3.scale.pow().range([data.length / 2, 0]).domain([data.length, 0]).exponent(.5)
@@ -854,7 +830,7 @@ async function chart(val, data1, hasFilled) {
 			var filteredTickValues = data.filter(function (d, i) {
 				return i % tickValueMultiplier === 0
 			}).map(function (d) {
-				return d.location
+				return d.location;
 			})
 			focus.select(".x.axis").call(xAxis.tickValues(filteredTickValues));
 		}
@@ -886,16 +862,13 @@ async function chart(val, data1, hasFilled) {
 						return newHeight;
 					},
 					width: function (d) {
-						return x.rangeBand()
+						return x.rangeBand();
 					},
 					x: function (d) {
 						return x(d.location);
 					},
 					y: function (d) {
-						if (d.layer === "input") {
-							console.log(9 + y(d.layer))
-						}
-						return 9 + y(d.layer)
+					    return 9 + y(d.layer);
 					},
 					fill: function (d) {
 						if (d.filled) {
@@ -921,11 +894,11 @@ async function chart(val, data1, hasFilled) {
 				});
 		}
 
-		/** remove data values  
+		/** remove data values to redraw 
 		 */
 		function exit(data) {
-			var bars = focus.selectAll('.bar').data(data)
-			bars.exit().remove()
+			var bars = focus.selectAll('.bar').data(data);
+			bars.exit().remove();
 		}
 
 
@@ -935,15 +908,16 @@ async function chart(val, data1, hasFilled) {
 		function enter(data, focus) {
 
 			x.domain(data.map(function (d) {
-				return d.location
+				return d.location;
 			}));
 
 			y.domain(layersArray.map(function (d) {
-				return d
+				return d;
 			}));
-
+			/** calculate the hieght of the bars based on the height of the chart 
+			 in the window. Allows for dynamic resizing according to window size.*/
 			var focusHeight = focus.node().getBoundingClientRect().height;
-			var size = layers.size
+			var size = layers.size;
 			if (size === 0) {
 				size = 1;
 			}
@@ -959,16 +933,13 @@ async function chart(val, data1, hasFilled) {
 						return newHeight;
 					},
 					width: function (d) {
-						return x.rangeBand()
+						return x.rangeBand();
 					},
 					x: function (d) {
 						return x(d.location);
 					},
 					y: function (d) {
-						if (d.layer === "input") {
-							console.log(9 + y(d.layer))
-						}
-						return 9 + y(d.layer)
+						return 9 + y(d.layer);
 					},
 					fill: function (d) {
 						if (d.filled) {
@@ -998,33 +969,41 @@ async function chart(val, data1, hasFilled) {
 	}
 
 	if (val == 2) {
-		extractData(data1, narrow)
+		extractData(narrowArray, narrow)
 	} else {
-		extractData(data1, wide)
+		extractData(wideArray, wide)
 	}
 }
 
-/**Fill the array depending on which of the memory type is selected
+/**Fill the arrays depending after fetching data from the validation algorithm
  */
+var narrowMap = new Map();
+var wideMap = new Map();
 async function fill(preResult) {
 	var narrowSize = preResult["narrowSize"];
 	var wideSize = preResult["wideSize"];
 	var narrowAlloc = preResult['tensorAllocationNarrow'];
 	var wideAlloc = preResult['tensorAllocationWide'];
-	populateData(wideAlloc, wideSize, data1, layersWide, true)
-	populateData(narrowAlloc, narrowSize, data2, layersNarrow, false)
-	chart(1, data1, false)
+	populateData(wideAlloc, wideSize, wideArray, layersWide, true);
+	populateData(narrowAlloc, narrowSize, narrowArray, layersNarrow, false);
+	chart(2, narrowArray, false);
 }
 
+/** Function to place all of the allocations in an array 
+and build a map to keep track of their position with in
+the array. The map works well for the most part, however we have 
+encounterd enteries with the same key which we did not have enought time
+in our internship to further investigate. 
+ */
 function populateData(memoryAlloc, memorySize, data, layerSet, wide) {
 	for (var i = 0; i < memoryAlloc.length; i++) {
 		var allocs = memoryAlloc[i]["tensorTileAllocation_"][0]["tensorAllocation_"];
 		var tileAllocs = memoryAlloc[i]["tensorTileAllocation_"];
 		var memoryType;
 		if (wide) {
-			memoryType = "wide memory"
+			memoryType = "wide memory";
 		} else {
-			memoryType = "narrow memory"
+			memoryType = "narrow memory";
 		}
 		for (var tile = 0; tile < tileAllocs.length; tile++) {
 			allocs = tileAllocs[tile]["tensorAllocation_"]
@@ -1037,67 +1016,70 @@ function populateData(memoryAlloc, memorySize, data, layerSet, wide) {
 				end = start + size;
 				for (var k = start; k < end; k++) {
 					if (end > memorySize) {
-						//Display the Error message
+						//Display the Error message if an entry is out of bounds
 						const errorMessage = document.getElementById("error-report");
 						errorMessage.innerHTML = "Allocation with label " + alloc["tensorLabel_"] + " has invalid memory address of " + end + " in " + memoryType + ".";
 						break;
 					}
-					var datum = {}
+					var datum = {};
 					datum.location = k;
 					datum.layer = memoryAlloc[i]["layer_"];
 					datum.tile = tile;
 					datum.filled = false;
-					datum.label = alloc["tensorLabel_"]
-					data.push(datum)
+					datum.label = alloc["tensorLabel_"];
+					data.push(datum);
 
+                    // keep track of the layer in order apperance to be displayed on chart
 					layerSet.add(memoryAlloc[i]["layer_"])
+                    // keep track of the longest layer to set left margin of chart
 					if (longestLayerName < memoryAlloc[i]["layer_"].length) {
-						longestLayerName = memoryAlloc[i]["layer_"].length
+						longestLayerName = memoryAlloc[i]["layer_"].length;
 					}
-
+					if (!wide) {
+						if (!narrowMap.has(k + memoryAlloc[i]["layer_"] + tile)) {
+							narrowMap.set(k + memoryAlloc[i]["layer_"] + tile, data.length - 1);
+						}
+					} else {
+                        if (!wideMap.has(k + memoryAlloc[i]["layer_"] + tile)) {
+							wideMap.set(k + memoryAlloc[i]["layer_"] + tile, data.length - 1);
+						}
+					}
 				}
 			}
 		}
 	}
 }
-var deltaCount = 0;
-var narrowDeltas = new Array();
+
+
+/** Function to update the data based on the memory 
+being allocated. As the narrow memory is the default view, 
+the function updates the chart for every 20,000 deltas it encounters 
+to avoid constant graph redrawing that would slow down the validation. 
+ */
+var narrowDeltaCount = 0;
 async function addDelta(postResult) {
 	var narrowDelta = postResult["narrowDeltas"];
-	var deltas = postResult["wideDeltas"];
-	for (var i = 0; i < deltas.length; i++) {
-		var delta = deltas[i];
-		for (var j = 0; j < data1.length; j++) {
-			var entry = data1[j];
-			if (entry.layer === delta.layer && entry.tile === delta.tile && entry.location === delta.memoryAddressChanged && entry.label === delta.tensor) {
-				entry.filled = true;
-			}
-		}
-	}
-	if (narrowDelta.length != 0) {
-		for (var i = 0; i < narrowDelta.length; i++) {
-			narrowDeltas.push(narrowDelta[i])
-		}
+	var wideDelta = postResult["wideDeltas"];
+	deltaProccess(narrowDelta, narrowArray, narrowMap);
+	deltaProccess(wideDelta, wideArray, wideMap);
 
-	}
-	deltaCount = deltaCount + deltas.length
-
-	if (deltaCount >= 1000) {
-		chart(1, data1, true)
-		deltaCount = 0;
+	narrowDeltaCount = narrowDelta.length + narrowDeltaCount
+	if (narrowDeltaCount >= 20000) {
+		chart(2, narrowArray, true);
+		narrowDeltaCount = 0;
 	}
 }
 
-// 
-function deltaProccess() {
-	for (var i = 0; i < narrowDeltas.length; i++) {
-		var delta = narrowDeltas[i]
-		for (var k = 0; k < data2.length; k++) {
-			var entry = data2[k];
-			if (entry.layer === delta.layer && entry.tile === delta.tile && entry.location === delta.memoryAddressChanged && entry.label === delta.tensor) {
-				entry.filled = true;
-			}
-		}
+/** Function to update the array entry based of delta enteries.
+The hashmap here serves to locate exactly where this entry is with
+in the array.
+ */
+function deltaProccess(deltas, data, memoryMap) {
+	for (var i = 0; i < deltas.length; i++) {
+		var delta = deltas[i];
+		var key = delta.memoryAddressChanged + delta.layer + delta.tile;
+		var entryLocation = memoryMap.get(key);
+		data[entryLocation].filled = true;
 	}
 }
 
