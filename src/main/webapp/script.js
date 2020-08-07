@@ -1,387 +1,379 @@
 // Updates the time zone to be used throughout the website.
 async function submitTimeZone() {
-	// Retrieves the selected time zone.
-	const select = document.getElementById("time-zone");
-	const zone = select.options[select.selectedIndex].value;
+  // Retrieves the selected time zone.
+  const select = document.getElementById("time-zone");
+  const zone = select.options[select.selectedIndex].value;
 
-	/*
-	  /visualizer -> sends information to the report servlet
-	  time=true -> DOES update the time zone
-	  zone=zone -> sends the selected time zone information
-	*/
-	await fetch('/visualizer?time=true&zone=' + zone, {
-		method: 'GET'
-	});
+  /*
+    /visualizer -> sends information to the report servlet
+    time=true -> DOES update the time zone
+    zone=zone -> sends the selected time zone information
+  */
+  await fetch('/visualizer?time=true&zone=' + zone, {method: 'GET'});
 }
 
 async function selectUser() {
-	const newUser = document.getElementById("new-user");
+  const newUser = document.getElementById("new-user");
 
-	if (newUser.value != "") {
-		/*
-		  /visualizer -> sends information to the visualizer servlet
-		  time=false -> does NOT update the time zone
-		  process=loadfiles -> populates the drop down menu of the appropriate files
-		  user=true -> DOES update the current user
-		  new=true -> DOES create a new user
-		  user-name=newUser.value-> sends the name of the selected user
-		*/
-		await fetch('/visualizer?time=false&user=true&new=true&user-name=' + newUser.value, {
-			method: 'GET'
-		});
-	} else {
-		const select = document.getElementById("users");
-		const user = select.options[select.selectedIndex].text;
+  if (newUser.value != "") {
+    /*
+      /visualizer -> sends information to the visualizer servlet
+      time=false -> does NOT update the time zone
+      process=loadfiles -> populates the drop down menu of the appropriate files
+      user=true -> DOES update the current user
+      new=true -> DOES create a new user
+      user-name=newUser.value-> sends the name of the selected user
+    */
+    await fetch('/visualizer?time=false&user=true&new=true&user-name=' + newUser.value, {method: 'GET'});
+  } else {
+    const select = document.getElementById("users");
+    const user = select.options[select.selectedIndex].text;
 
-		/*
-		  /visualizer -> sends information to the visualizer servlet
-		  time=false -> does NOT update the time zone
-		  process=loadfiles -> populates the drop down menu of the appropriate files
-		  user=true -> DOES update the current user
-		  new=false -> does NOT create a new user
-		  user-name=user -> sends the name of the selected user
-		*/
-		await fetch('/visualizer?time=false&user=true&new=false&user-name=' + user, {
-			method: 'GET'
-		});
-	}
+    /*
+      /visualizer -> sends information to the visualizer servlet
+      time=false -> does NOT update the time zone
+      process=loadfiles -> populates the drop down menu of the appropriate files
+      user=true -> DOES update the current user
+      new=false -> does NOT create a new user
+      user-name=user -> sends the name of the selected user
+    */
+    await fetch('/visualizer?time=false&user=true&new=false&user-name=' + user, {method: 'GET'});
+  }
 }
 
 // Handles the upload of the selected file as well as the loading of the page.
 async function loadMainPage() {
-	/*
-	  /visualizer -> sends information to the visualizer servlet
-	  time=false -> does NOT update the time zone
-	  user=false -> does NOT update the current user
-	*/
-	const call = await fetch('/visualizer?time=false&user=false', {
-		method: 'GET'
-	});
-	const response = await call.json();
+  /*
+    /visualizer -> sends information to the visualizer servlet
+    time=false -> does NOT update the time zone
+    user=false -> does NOT update the current user
+  */
+  const call = await fetch('/visualizer?time=false&user=false', {method: 'GET'});
+  const response = await call.json();
 
-	const uploadFile = response.uploadFile;
-	const files = response.files;
-	const users = response.users;
-	const currentUser = response.currentUser;
-	const zone = response.zone;
-	const errorMessage = response.errorMessage;
+  const uploadFile = response.uploadFile;
+  const files = response.files;
+  const users = response.users;
+  const currentUser = response.currentUser;
+  const zone = response.zone;
+  const errorMessage = response.errorMessage;
 
-	// Gives feedback to the user if they were attempting to add a duplicate user
-	// (in which case the duplicate addition would be prevented).
-	if (errorMessage != '') {
-		alert("User already exists");
-	}
+  // Gives feedback to the user if they were attempting to add a duplicate user
+  // (in which case the duplicate addition would be prevented).
+  if (errorMessage != '') {
+    // Checks if the user uploaded a compatible file
+    if (errorMessage != "User already exists.") {
+      alert("Unsupported file content: \n" + errorMessage + "\n\nPlease upload a file that can be parsed into a MemaccessChecker proto message.");
+    } else {
+      alert(errorMessage);
+    }   
+  }
 
-	const box = document.getElementById("uploaded-file");
-	box.innerHTML = '';
+  const box = document.getElementById("uploaded-file");
+  box.innerHTML = '';
 
-	if (uploadFile.fileName != "null") {
-		// Adds the uploaded file information to be displayed.
-		addFileInfo(uploadFile);
-	} else {
-		// Alerts the user if they failed to select a file after clicking "upload".
-		const p = document.createElement("p");
+  // Checks if a file was uploaded
+  if (uploadFile.fileName != "null") {
+    // Adds the uploaded file information to be displayed.
+    addFileInfo(uploadFile);
+  } else {
+    // Alerts the user if they failed to select a file after clicking "upload".
+    const p = document.createElement("p");
 
-		p.innerHTML = "Please select a file.";
-		p.style.color = "red";
+    p.innerHTML = "Please select a file.";
+    p.style.color = "red";
 
-		box.appendChild(p);
-	}
+    box.appendChild(p);
+  }
 
-	// Adds the correct time zone information to the page.
-	const timeZoneBox = document.getElementById("time-zone-display");
-	timeZoneBox.innerHTML = "Time Zone: " + zone;
+  // Adds the correct time zone information to the page.
+  const timeZoneBox = document.getElementById("time-zone-display");
+  timeZoneBox.innerHTML = "Time Zone: " + zone;
 
-	// Adds the current user information to the page.
-	const userNameBox = document.getElementById("user-name");
-	userNameBox.innerHTML = "User: " + currentUser;
-	userNameBox.title = currentUser;
+  // Adds the current user information to the page.
+  const userNameBox = document.getElementById("user-name");
+  userNameBox.innerHTML = "User: " + currentUser;
+  userNameBox.title = currentUser;
 
-	// Shows the user who's files they are currently viewing.
-	const displayUserFilesBox = document.getElementById("display-user-files");
-	displayUserFilesBox.innerHTML = '';
-	displayUserFilesBox.innerHTML = "Displaying files for: " + currentUser;
+  // Shows the user who's files they are currently viewing.
+  const displayUserFilesBox = document.getElementById("display-user-files");
+  displayUserFilesBox.innerHTML = '';
+  displayUserFilesBox.innerHTML = "Displaying files for: " + currentUser;
 
-	if (files.length > 0) {
-		// Checks if the current user has uploaded files under their name.
-		const userFiles = files[0].userFilesExist;
-		const userContainer = document.getElementById("user-files");
+  if (files.length > 0) {
+    // Checks if the current user has uploaded files under their name.
+    const userFiles = files[0].userFilesExist;
+    const userContainer = document.getElementById("user-files");
 
-		if (userFiles == false) {
-			// Displays "error" message if the user has not uploaded files under their name.
-			userContainer.style.display = "block";
-		} else {
-			// Hides "error" message.
-			userContainer.style.display = "none";
-		}
-	}
+    if (userFiles == false) {
+      // Displays "error" message if the user has not uploaded files under their name.
+      userContainer.style.display = "block";
+    } else {
+      // Hides "error" message.
+      userContainer.style.display = "none";
+    }
+  }
 
-	// Populates the drop down menu of all known users.
-	addUsers(users);
+  // Populates the drop down menu of all known users.
+  addUsers(users);
 
-	const select = document.getElementById("uploaded-files");
-	select.innerHTML = '';
+  const select = document.getElementById("uploaded-files");
+  select.innerHTML = ''; 
 
-	const option = document.createElement("option");
-	option.text = "No file chosen";
-	select.appendChild(option);
+  const option = document.createElement("option");
+  option.text = "No file chosen";
+  select.appendChild(option);
 
-	// Appends each file into the file drop down menu.
-	files.forEach((file) => {
-		select.appendChild(createFile(file));
-	});
+  // Appends each file into the file drop down menu.
+  files.forEach((file) => {
+    select.appendChild(createFile(file));
+  });
 }
 
 // Adds the uploaded file information to be displayed.
 function addFileInfo(response) {
-	const box = document.getElementById("uploaded-file");
+  const box = document.getElementById("uploaded-file");
 
-	// File name and time.
-	var p = document.createElement("p");
-	p.innerHTML = response.fileName + " at " + response.time;
-	p.style.fontWeight = "bold";
+  // File name and time.
+  var p = document.createElement("p");
+  p.innerHTML = response.fileName + " at " + response.time;
+  p.style.fontWeight = "bold";
 
-	box.appendChild(p);
+  box.appendChild(p);
 
-	// User who uploaded the file.
-	var p = document.createElement("p");
-	p.innerHTML = "Uploaded by: " + response.uploadUser;
-	p.style.fontWeight = "bold";
+  // User who uploaded the file.
+  var p = document.createElement("p");
+  p.innerHTML = "Uploaded by: " + response.uploadUser;
+  p.style.fontWeight = "bold";
 
-	box.appendChild(p);
+  box.appendChild(p);
 
-	// Appropriate size of the file
-	p = document.createElement("p");
-	p.innerHTML = "File size: " + response.fileSize;
+  // Appropriate size of the file
+  p = document.createElement("p");
+  p.innerHTML = "File size: " + response.fileSize;
 
-	box.appendChild(p);
+  box.appendChild(p);
 
-	// Name of the simulation trace in the uploaded file.
-	p = document.createElement("p");
-	p.innerHTML = "Simulation trace name: " + response.fileTrace;
+  // Name of the MemaccessChecker proto message in the uploaded file.
+  p = document.createElement("p");
+  p.innerHTML = "MemaccessChecker name: " + response.fileProto;
 
-	box.appendChild(p);
+  box.appendChild(p);
 
-	// Number of tiles in the memaccess checker.
-	p = document.createElement("p");
-	p.innerHTML = "Number of tiles: " + response.fileTiles;
+  // Number of tiles in the memaccess checker.
+  p = document.createElement("p");
+  p.innerHTML = "Number of tiles: " + response.fileTiles;
 
-	box.appendChild(p);
+  box.appendChild(p);
 
-	// Size of the narrow memory.
-	p = document.createElement("p");
-	p.innerHTML = "Narrow memory size: " + response.narrowBytes + " Bytes";
+  // Size of the narrow memory.
+  p = document.createElement("p");
+  p.innerHTML = "Narrow memory size: " + response.narrowBytes + " Bytes";
 
-	box.appendChild(p);
+  box.appendChild(p);
 
-	// Size of the wide memory.
-	p = document.createElement("p");
-	p.innerHTML = "Wide memory size: " + response.wideBytes + " Bytes";
+  // Size of the wide memory.
+  p = document.createElement("p");
+  p.innerHTML = "Wide memory size: " + response.wideBytes + " Bytes";
 
-	box.appendChild(p);
+  box.appendChild(p);
 }
 
 // Populates the drop down menu of all known users.
 function addUsers(users) {
-	const select = document.getElementById("users");
-	select.innerHTML = '';
+  const select = document.getElementById("users");
+  select.innerHTML = '';
 
-	// Creates the default "All" users option.
-	const selectOption = document.createElement("option");
-	selectOption.text = "All";
-	select.appendChild(selectOption);
+  // Creates the default "All" users option.
+  const selectOption = document.createElement("option");
+  selectOption.text = "All";
+  select.appendChild(selectOption);
 
-	// Appends each user into the user drop down menu.
-	users.forEach((user) => {
-		select.appendChild(createUser(user));
-	});
+  // Appends each user into the user drop down menu.
+  users.forEach((user) => {
+    select.appendChild(createUser(user));
+  });
 }
 
 // Creates file options out of previously uploaded files to append to the select list.
 function createFile(file) {
-	const selectOption = document.createElement("option");
-	selectOption.value = file.id;
-	selectOption.text = file.name + " at " + file.time;
-	return selectOption;
+  const selectOption = document.createElement("option");
+  selectOption.value = file.id;
+  selectOption.text = file.name + " at " + file.time;
+  return selectOption;
 }
 
 // Creates user options out of all known users.
 function createUser(user) {
-	const selectOption = document.createElement("option");
-	selectOption.value = user.id;
-	selectOption.text = user.userName;
-	return selectOption;
+  const selectOption = document.createElement("option");
+  selectOption.value = user.id;
+  selectOption.text = user.userName;
+  return selectOption;
 }
 
 // Shows the user which file they have currently selected.
 function displayFile() {
-	// Retrieves the selected file.
-	const select = document.getElementById("uploaded-files");
-	const file = select.options[select.selectedIndex].text;
+  // Retrieves the selected file.
+  const select = document.getElementById("uploaded-files");
+  const file = select.options[select.selectedIndex].text;
 
-	const selectedFileBox = document.getElementById("selected-file");
-	selectedFileBox.innerHTML = '';
-	selectedFileBox.innerHTML = "Selected file: " + file;
+  const selectedFileBox = document.getElementById("selected-file");
+  selectedFileBox.innerHTML = '';
+  selectedFileBox.innerHTML = "Selected file: " + file;
 
-	// Checks if the user has selected a file and changes feedback message accordingly.
-	if (file == "No file chosen") {
-		selectedFileBox.style.color = "red";
-	} else {
-		selectedFileBox.innerHTML = "Selected file: " + file;
-		selectedFileBox.style.color = "limegreen";
-	}
+  // Checks if the user has selected a file and changes feedback message accordingly.
+  if (file == "No file chosen") {
+    selectedFileBox.style.color = "red";
+  } else {
+    selectedFileBox.innerHTML = "Selected file: " + file;
+    selectedFileBox.style.color = "limegreen";
+  } 
 }
 
 // Deletes a single file.
 async function deleteFile() {
-	// Retrieves the selected file.
-	const select = document.getElementById("uploaded-files");
-	const file = select.options[select.selectedIndex];
+  // Retrieves the selected file.
+  const select = document.getElementById("uploaded-files");
+  const file = select.options[select.selectedIndex];
 
-	// Prevents the user from attempting to delete a non-selected file.
-	if (file.text == "No file chosen") {
-		alert("You must choose a file to delete.");
-	} else {
-		// Confirms if the user wants to delete the selected file.
-		var purge = confirm("You are about to delete file: " + file.text + ". Do you wish to continue?");
+  // Prevents the user from attempting to delete a non-selected file.
+  if (file.text == "No file chosen") {
+    alert("You must choose a file to delete.");
+  } else {
+    // Confirms if the user wants to delete the selected file.
+    var purge = confirm("You are about to delete file: " + file.text + ". Do you wish to continue?");
 
-		if (purge == true) {
-			/*
-			  /visualizer -> sends the information to the visualizer servlet
-			  upload=false -> user is NOT uploading a file
-			  purge=false -> user is NOT doing a blanket delete operation
-			  user=false -> user is NOT deleting a user
-			  file-id=file.value -> the id of the file's entity in datastore
-			*/
-			await fetch('/visualizer?upload=false&purge=false&user=false&file-id=' + file.value, {
-				method: 'POST'
-			});
-			await loadMainPage();
+    if (purge == true) {
+      /*
+        /visualizer -> sends the information to the visualizer servlet
+        upload=false -> user is NOT uploading a file
+        purge=false -> user is NOT doing a blanket delete operation
+        user=false -> user is NOT deleting a user
+        file-id=file.value -> the id of the file's entity in datastore
+      */
+      await fetch('/visualizer?upload=false&purge=false&user=false&file-id=' + file.value, {method: 'POST'});
+      await loadMainPage();
 
-			alert("File deleted");
-		} else {
-			alert("Delete aborted");
-		}
-	}
+      alert("File deleted");
+    } else {
+      alert("Delete aborted");
+    }
+  }
 }
 
 // Deletes a single user.
 async function deleteUser() {
-	// Retrieves the selected user.
-	const select = document.getElementById("users");
-	const user = select.options[select.selectedIndex];
+  // Retrieves the selected user.
+  const select = document.getElementById("users");
+  const user = select.options[select.selectedIndex];
 
-	// Prevents the user from attempting to delete the default option.
-	if (user.text == "All") {
-		alert("Cannot delete user \"All\"");
-	} else {
-		// Confirms if the user wants to delete the selected user.
-		var purge = confirm("You are about to delete user \"" + user.text + "\". Do you wish to continue?");
+  // Prevents the user from attempting to delete the default option.
+  if (user.text == "All") {
+    alert("Cannot delete user \"All\"");
+  } else {
+    // Confirms if the user wants to delete the selected user.
+    var purge = confirm("You are about to delete user \"" + user.text + "\". Do you wish to continue?");
 
-		if (purge == true) {
-			/*
-			  /visualizer -> sends the information to the visualizer servlet
-			  upload=false -> user is NOT uploading a file
-			  purge=user -> user is NOT doing a blanket delete operation
-			  user=true -> user IS deleting a user
-			  user-id=user.value -> the selected user's key id in datastore
-			  user-name=user.text -> the name of the selected user
-			*/
-			await fetch('/visualizer?upload=false&purge=false&user=true&user-id=' + user.value + "&user-name=" + user.text, {
-				method: 'POST'
-			});
-			await loadMainPage();
+    if (purge == true) {
+      /*
+        /visualizer -> sends the information to the visualizer servlet
+        upload=false -> user is NOT uploading a file
+        purge=user -> user is NOT doing a blanket delete operation
+        user=true -> user IS deleting a user
+        user-id=user.value -> the selected user's key id in datastore
+        user-name=user.text -> the name of the selected user
+      */
+      await fetch('/visualizer?upload=false&purge=false&user=true&user-id=' + user.value + "&user-name=" + user.text, {method: 'POST'});
+      await loadMainPage();
 
-			alert("User deleted");
-		} else {
-			alert("Delete aborted");
-		}
-	}
+      alert("User deleted");
+    } else {
+      alert("Delete aborted");
+    }
+  }
 }
 
 // Deletes the specified elements from datastore.
 async function purgeAll(users, files) {
-	var message = "";
+  var message = "";
 
-	if (users == true && files == false) {
-		message = "all users";
-	} else if (users == false && files == true) {
-		message = "all files";
-	} else {
-		message = "all users and files";
-	}
+  if (users == true && files == false) {
+    message = "all users";
+  } else if (users == false && files == true) {
+    message = "all files";
+  } else {
+    message = "all users and files";
+  }
 
-	// Double checks if the user actually wants to delete elements from datastore.
-	var purge = confirm("You are about to delete " + message + ". Do you wish to continue?");
+  // Double checks if the user actually wants to delete elements from datastore.
+  var purge = confirm("You are about to delete " + message + ". Do you wish to continue?");
 
-	if (purge == true) {
-		/*
-		  /visualizer -> sends information to visualizer servlet
-		  upload=false -> does NOT change the last uploaded file information
-		  purge=true -> DOES delete the specified type of elements from datastore
-		  users=users -> does/does not delete all users
-		  files=files -> does/does not delete all files
-		*/
-		await fetch('/visualizer?upload=false&purge=true&users=' + users + '&files=' + files, {
-			method: 'POST'
-		});
-		await loadMainPage();
-	} else {
-		alert("Purge aborted");
-	}
+  if (purge == true) {
+    /*
+      /visualizer -> sends information to visualizer servlet
+      upload=false -> does NOT change the last uploaded file information
+      purge=true -> DOES delete the specified type of elements from datastore
+      users=users -> does/does not delete all users
+      files=files -> does/does not delete all files
+    */
+    await fetch('/visualizer?upload=false&purge=true&users=' + users + '&files=' + files, {method: 'POST'});
+    await loadMainPage();
+  } else {
+    alert("Purge aborted");
+  }
 }
 
 // Opens a pop-up window containing the visualization page.
 function openVisualization() {
-	// Retrieves the selected file.
-	const select = document.getElementById("uploaded-files");
-	const file = select.options[select.selectedIndex];
+  // Retrieves the selected file.
+  const select = document.getElementById("uploaded-files");
+  const file = select.options[select.selectedIndex];
 
-	if (file.text == "No file chosen") {
-		// Prevents the user from trying to access the visualizer without selecting a file.
-		alert("You must choose a file");
-	} else {
-		// Creates and opens the pop-up window.
-		const visualizerWindow = window.open("report.html", "Visualizer", "_blank", "toolbar=yes,scrollbars=yes,width=2200,height=10000,resizable=yes");
-		visualizerWindow.focus();
+  if (file.text == "No file chosen") {
+    // Prevents the user from trying to access the visualizer without selecting a file.
+    alert("You must choose a file");
+  } else {
+    // Creates and opens the pop-up window.
+    const visualizerWindow = window.open("report.html", "Visualizer", "_blank", "toolbar=yes,scrollbars=yes,width=2200,height=10000,resizable=yes");
+    visualizerWindow.focus();
 
-		// Listener to retrieve information from the main page.
-		visualizerWindow.addEventListener("message", function (message) {
-			// Determines if the sent data is the file's id or information.
-			if (!(isNaN(parseInt(message.data)))) {
-				// Stores the selected file's id.
+    // Listener to retrieve information from the main page.
+    visualizerWindow.addEventListener("message", function(message) {
+      // Determines if the sent data is the file's id or information.
+      if (!(isNaN(parseInt(message.data)))) {
+        // Stores the selected file's id.
 
-				const fileIdBox = visualizerWindow.document.getElementById("trace-info-box");
-				fileIdBox.title = message.data;
-			} else {
-				// Displays the selected file's information.
+        const fileIdBox = visualizerWindow.document.getElementById("trace-info-box");
+        fileIdBox.title = message.data;
+      } else {
+        // Displays the selected file's information.
 
-				const fileInfoBox = visualizerWindow.document.getElementById("file-info");
-				fileInfoBox.innerHTML += message.data;
+        const fileInfoBox = visualizerWindow.document.getElementById("file-info");
+        fileInfoBox.innerHTML += message.data;
 
-				const tiles = visualizerWindow.document.getElementById("tile-select");
-				tiles.innerHTML = '';
+        const tiles = visualizerWindow.document.getElementById("tile-select");
+        tiles.innerHTML = '';
 
-				// Adds the first tile 0 option, independent of how many tiles are present in the file,
-				const option = document.createElement("option");
-				option.value = 0;
-				option.text = "Tile 0";
+        // Adds the first tile 0 option, independent of how many tiles are present in the file,
+        const option = document.createElement("option");
+        option.value = 0;
+        option.text = "Tile 0";
 
-				tiles.appendChild(option);
-			}
-		});
+        tiles.appendChild(option);
+      }
+    });
 
-		// Checks and executes the specified functions after the pop-up has finished loading.
-		visualizerWindow.onload = function () {
-			// Lets the user know the window has completed its loading.
-			visualizerWindow.alert("Visualizer loaded.");
+    // Checks and executes the specified functions after the pop-up has finished loading.
+    visualizerWindow.onload = function() {
+      // Lets the user know the window has completed its loading.
+      visualizerWindow.alert("Visualizer loaded.");
 
-			// Passes the file id and the file information to the pop-up window.
+      // Passes the file id and the file information to the pop-up window.
 
-			visualizerWindow.postMessage(file.value, "*");
-			visualizerWindow.postMessage(file.text, "*");
-		};
-	}
+      visualizerWindow.postMessage(file.value, "*"); 
+      visualizerWindow.postMessage(file.text, "*");
+    };
+  } 
 }
 
 // Variable to dictate whether the visualization should finish
@@ -395,78 +387,77 @@ var proceed = "";
 
 // Runs the visualization of the chosen simulation trace.
 async function runVisualization() {
-	alert("Visualization begun");
+  alert("Visualization begun");
 
-	endVisualization = false;
+  endVisualization = false;
 
-	const done = document.getElementById("done");
-	done.style.display = "none";
+  const done = document.getElementById("done");
+  done.style.display = "none";
 
-	const traceBox = document.getElementById("trace-info-box");
-	traceBox.innerHTML = '';
+  const traceBox = document.getElementById("trace-info-box");
+  traceBox.innerHTML = '';
 
-	const errorBox = document.getElementById("error-box");
-	errorBox.style.display = "none";
+  const errorBox = document.getElementById("error-box");
+  errorBox.style.display = "none";
 
-	const errorMessages = document.getElementById("error-messages");
-	errorMessages.innerHTML = '';
+  const errorMessages = document.getElementById("error-messages");
+  errorMessages.innerHTML = '';
 
-	// Makes the information about what the user is viewing on the visualizer
-	const viewInfoBox = document.getElementsByClassName("selection");
+  // Makes the information about what the user is viewing on the visualizer
+  const viewInfoBox = document.getElementsByClassName("selection");
+  
+  for (i = 0; i < viewInfoBox.length; i++) {
+    viewInfoBox[i].style.display = "block";
+  }
 
-	for (i = 0; i < viewInfoBox.length; i++) {
-		viewInfoBox[i].style.display = "block";
-	}
+  const stepSize = parseInt(document.getElementById("step-size").value);
 
-	const stepSize = parseInt(document.getElementById("step-size").value);
+  /*
+    /report -> sends to report servlet
+    process=pre -> performs preprocessing of the proto information
+    fileId=traceBox.title -> the id of the file to retrieve from datastore
+  */
+  const preprocess = await fetch('/report?process=pre&fileId=' + traceBox.title, {method: 'GET'});
+  const preprocessResponse = await preprocess.json();
 
-	/*
-	  /report -> sends to report servlet
-	  process=pre -> performs preprocessing of the proto information
-	  fileId=traceBox.title -> the id of the file to retrieve from datastore
-	*/
-	const preprocess = await fetch('/report?process=pre&fileId=' + traceBox.title, {
-		method: 'GET'
-	});
-	const preprocessResponse = await preprocess.json();
+  // Process initial json information.
 
-	// Process initial json information.
+  // Add the number of tile options to switch to.
+  addTiles(preprocessResponse.numTiles);
 
-	// Add the number of tile options to switch to.
-	addTiles(preprocessResponse.numTiles);
+  // Update visualizer with initial memory allocations.
+  // chart(1, "pre", preprocessResponse);
+  await fill(preprocessResponse);
+  
 
-	// Update visualizer with initial memory allocations.
-	// chart(1, "pre", preprocessResponse);
-	await fill(preprocessResponse);
+  const init = document.createElement("p");
+  init.innerHTML = preprocessResponse.message;
+  traceBox.appendChild(init);
 
-	const init = document.createElement("p");
-	init.innerHTML = preprocessResponse.message;
-	traceBox.appendChild(init);
+  var numTraces = preprocessResponse.numTraces;
 
-	var numTraces = preprocessResponse.numTraces;
+  var start = 0; 
 
-	var start = 0;
+  if (!preprocessResponse.isError) {
+    while (start < numTraces) {
+      var runTracesEnd = await runTraces(start, stepSize);
 
-	if (!preprocessResponse.isError) {
-		while (start < numTraces) {
-			var runTracesEnd = await runTraces(start, stepSize);
+      // Checks if the user has chosen to stop the visualization, either by
+      // pressing "s" when prompted or pressing "q" after previously selecting "a" when prompted
+      if (proceed == "s" || endVisualization == true) {
+        break;
+      }
 
-			// Checks if the user has chosen to stop the visualization, either by
-			// pressing "s" when prompted or pressing "q" after previously selecting "a" when prompted
-			if (proceed == "s" || endVisualization == true) {
-				break;
-			}
+      start = runTracesEnd + 1;
+    }
+  } else {
+    alert("Error occurred in preprocessing, visualization aborted.");
+  }
 
-			start = runTracesEnd + 1;
-		}
-	} else {
-		alert("Error occurred in preprocessing, visualization aborted.");
-	}
+  proceed = "";
+  done.style.display = "block";
 
-	proceed = "";
-	done.style.display = "block";
-
-	alert("Visualization completed.");
+  alert("Visualization completed.");
 }
 
 /*
@@ -476,118 +467,116 @@ async function runVisualization() {
   numTraces -> the total number of traces
 */
 async function runTraces(start, stepSize) {
-	// Retrieves box to display error/processing information.
-	const traceBox = document.getElementById("trace-info-box");
+  // Retrieves box to display error/processing information.
+  const traceBox = document.getElementById("trace-info-box");
 
-	/*
-	  /report -> sends information to report servlet
-	  process=post -> runs trace validation algorithm on selected proto
-	  start=start -> the index of the traces to start processing
-	*/
-	const traceResponse = await fetch('/report?process=post&start=' + start + "&step-size=" + stepSize, {
-		method: 'GET'
-	});
-	const traceProcess = await traceResponse.json();
-	var end = traceProcess.validationEnd;
+  /*
+    /report -> sends information to report servlet
+    process=post -> runs trace validation algorithm on selected proto
+    start=start -> the index of the traces to start processing
+  */
+  const traceResponse = await fetch('/report?process=post&start=' + start + "&step-size=" + stepSize, {method: 'GET'});
+  const traceProcess = await traceResponse.json();
+  var end = traceProcess.validationEnd;
 
-	// Process json trace information.
-	if (!traceProcess.isError) {
-		var responseMessage = document.createElement("p");
+  // Process json trace information.
+  if (!traceProcess.isError) {
+    var responseMessage = document.createElement("p");
 
-		responseMessage.innerHTML += `Traces ${start}-${end} validated.`;
-		traceBox.appendChild(responseMessage);
+    responseMessage.innerHTML += `Traces ${start}-${end} validated.`;
+    traceBox.appendChild(responseMessage);
 
-		// Update visualizer
-		// chart(1, "post", traceProcess);
+    // Update visualizer
+    // chart(1, "post", traceProcess);
 
-		addDelta(traceProcess);
+    addDelta(traceProcess);
 
-		// Continues visualization.
-		return end;
-	} else {
-		document.getElementById("error-box").style.display = "block";
+    // Continues visualization.
+    return end;
+  } else {
+    document.getElementById("error-box").style.display = "block";
 
-		// Appends error information.
+    // Appends error information.
 
-		const errorMessages = document.getElementById("error-messages");
-		errorMessages.style.display = "block";
+    const errorMessages = document.getElementById("error-messages");
+    errorMessages.style.display = "block";
 
-		const tracesError = document.createElement("p");
-		tracesError.className = "trace-error-interval";
-		tracesError.innerHTML = "Traces " + start + "-" + end;
-		errorMessages.appendChild(tracesError);
+    const tracesError = document.createElement("p");
+    tracesError.className = "trace-error-interval";
+    tracesError.innerHTML = "Traces " + start + "-" + end;
+    errorMessages.appendChild(tracesError);
 
-		const p = document.createElement("p");
-		p.innerHTML = traceProcess.message;
-		errorMessages.appendChild(p);
+    const p = document.createElement("p");
+    p.innerHTML = traceProcess.message;
+    errorMessages.appendChild(p);
 
-		// Checks if the user wants to continue or abort the visualization after an error is found.
-		// Will not occur if the user previously chose to run through all errors found.
-		if (proceed != "a") {
-			var promptString =
-				"An error was encountered. Please choose how to continue:" +
-				"\n\"a\": continue through all errors with no prompts" +
-				"\n\"s\": abort visualization" +
-				"\n\"d\": continue with prompts" +
-				"\n\n*Default is \"d\" if invalid/no selection made";
+    // Checks if the user wants to continue or abort the visualization after an error is found.
+    // Will not occur if the user previously chose to run through all errors found.
+    if (proceed != "a") {
+      var promptString = 
+          "An error was encountered. Please choose how to continue:" +
+          "\n\"a\": continue through all errors with no prompts" +
+          "\n\"s\": abort visualization" +
+          "\n\"d\": continue with prompts" +
+          "\n\n*Default is \"d\" if invalid/no selection made";
 
-			proceed = prompt(promptString, "d");
+      proceed = prompt(promptString, "d");
 
-			// Sets the option chosen to "d" if the user failed to give a valid input.
-			if (!(proceed != "d" || proceed != "a" || proceed != "s")) {
-				proceed = "d";
-			} else if (proceed == "a") {
-				alert("Press \"q\" at any time to end the visualization.");
-			}
-		}
+      // Sets the option chosen to "d" if the user failed to give a valid input.
+      if (!(proceed != "d" || proceed != "a" || proceed != "s")) {
+        proceed = "d";
+      } else if (proceed == "a") {
+        alert("Press \"q\" at any time to end the visualization.");
+      }
+    }
 
-		if (proceed != "s") {
-			// Continue visualization.
+    if (proceed != "s") {
+      // Continue visualization.
 
-			// Update visualizer with current chunk of memory information.
-			// chart(1, "post", traceProcess);
-			addDelta(traceProcess);
+      // Update visualizer with current chunk of memory information.
+      // chart(1, "post", traceProcess);
+      addDelta(traceProcess);
 
-			return end;
-		} else {
-			// Abort visualization.
-			return end;
-		}
-	}
+      return end;
+    } else {
+      // Abort visualization.
+      return end;
+    }
+  }
 }
 
 // Listener to terminate the visualization.
 window.onkeyup = checkTerminate;
 
 function checkTerminate(key) {
-	if (key.code == "KeyQ") {
-		endVisualization = true;
-	}
+  if (key.code == "KeyQ") {
+    endVisualization = true;
+  }
 }
+
 
 // Adds the number of tiles in the selected file to the tile dropdown menu
 function addTiles(numTiles) {
-	for (var i = 1; i <= numTiles; i += 1) {
-		createTile(i);
-	}
+  for (var i = 1; i <= numTiles; i += 1) {
+    createTile(i);
+  }
 }
 
 // Creates a tile option and its specified number
 function createTile(numTile) {
-	const tiles = document.getElementById("tile-select");
-	const option = document.createElement("option");
+  const tiles = document.getElementById("tile-select");
+  const option = document.createElement("option");
 
-	option.value = numTile;
-	option.text = "Tile " + numTile;
+  option.value = numTile;
+  option.text = "Tile " + numTile;
 
-	tiles.appendChild(option);
+  tiles.appendChild(option);
 }
 
 var layerBox = document.getElementById("layer-name");
 var locationBox = document.getElementById("location");
 var tileBox = document.getElementById("viewing-box");
 var memoryBox = document.getElementById("memory");
-
 
 var preResult;
 var postResult;
@@ -1090,23 +1079,23 @@ var userKonami = [];
 window.onkeydown = checkKonami;
 
 function checkKonami(e) {
-	userKonami.push(e.code);
+  userKonami.push(e.code);
 
-	if (userKonami.length > 10) {
-		userKonami.shift();
-	}
+  if (userKonami.length > 10) {
+    userKonami.shift();
+  }
 
-	let match = true;
+  let match = true;
 
-	for (i = 0; i < 10; i += 1) {
-		if (userKonami[i] != realKonami[i]) {
-			match = false;
-			break;
-		}
-	}
+  for (i = 0; i < 10; i += 1) {
+    if (userKonami[i] != realKonami[i]) {
+      match = false;
+      break;
+    }
+  }
 
-	if (match) {
-		location.replace("/rec.html");
-		alert("ENTER CURIOUS TRAVELER");
-	}
+  if (match) {
+    location.replace("/rec.html");
+    alert("ENTER CURIOUS TRAVELER");
+  }
 }
