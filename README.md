@@ -1,4 +1,7 @@
 # Computation Vizualizer for the Edge TPU
+Design doc:
+https://docs.google.com/document/d/1XzgKLn5qp4aP58RxTXuekrX1jXuSs58QO2LfIH2tCFs/edit?usp=sharing
+
 To generate the protobuf, cd into the root of the repository and run:
 ```
 protoc --java_out=src/main/java src/main/java/com/google/sps/proto/memaccess_checker_data.proto

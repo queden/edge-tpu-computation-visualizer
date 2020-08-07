@@ -154,9 +154,9 @@ function addFileInfo(response) {
 
   box.appendChild(p);
 
-  // Name of the simulation trace in the uploaded file.
+  // Name of the MemaccessChecker proto message in the uploaded file.
   p = document.createElement("p");
-  p.innerHTML = "Simulation trace name: " + response.fileTrace;
+  p.innerHTML = "MemaccessChecker name: " + response.fileProto;
 
   box.appendChild(p);
 

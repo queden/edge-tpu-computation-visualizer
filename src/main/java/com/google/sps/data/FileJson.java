@@ -8,7 +8,7 @@ import java.time.format.DateTimeFormatter;
 public class FileJson {
   private String fileName;
   private String fileSize;
-  private String fileTrace;
+  private String fileProto;
   private int fileTiles;
   private String narrowBytes;
   private String wideBytes;
@@ -21,7 +21,7 @@ public class FileJson {
   public FileJson(
       String fileName, 
       String fileSize, 
-      String fileTrace, 
+      String fileProto, 
       int fileTiles, 
       String narrowBytes, 
       String wideBytes, 
@@ -31,7 +31,7 @@ public class FileJson {
 
     this.fileName = fileName;
     this.fileSize = fileSize;
-    this.fileTrace = fileTrace;
+    this.fileProto = fileProto;
     this.fileTiles = fileTiles;
     this.narrowBytes = narrowBytes;
     this.wideBytes = wideBytes;
@@ -45,13 +45,13 @@ public class FileJson {
   public FileJson(
       String fileName, 
       String fileSize, 
-      String fileTrace, 
+      String fileProto, 
       int fileTiles, 
       String narrowBytes, 
       String wideBytes,
       String uploadUser) {
 
-  this(fileName, fileSize, fileTrace, fileTiles, narrowBytes, wideBytes, "", "", uploadUser);
+  this(fileName, fileSize, fileProto, fileTiles, narrowBytes, wideBytes, "", "", uploadUser);
   }
 
   /** Final constructor to be used combining file and time information */
@@ -59,7 +59,7 @@ public class FileJson {
     this(
         fileJson.fileName, 
         fileJson.fileSize, 
-        fileJson.fileTrace, 
+        fileJson.fileProto, 
         fileJson.fileTiles, 
         fileJson.narrowBytes, 
         fileJson.wideBytes, 
