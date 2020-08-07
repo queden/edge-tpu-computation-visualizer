@@ -2,9 +2,10 @@ package com.google.sps.exceptions;
 
 import com.google.sps.proto.MemaccessCheckerDataProto.*;
 
+/** Exception thrown if instruction does not have a mask associated with it */
 public class InvalidMaskException extends Exception {
-    private int instructionTag;
-    private String accessType;
+    private int instructionTag; // Instruction without mask
+    private String accessType; // Trace related to instruction
 
 
     public InvalidMaskException(int instructionTag, TraceEvent.AccessType accessType) {

@@ -1,10 +1,11 @@
 package com.google.sps.structures;
 
+/** Changes to memory locations passed to front end to visualize trace operations */
 public class Delta {
-  public String layer;
-  public int tile;
-  public int memoryAddressChanged;
-  public int tensor;
+  public String layer; // Layer of memory location change 
+  public int tile; // Tile of memory location change
+  public int memoryAddressChanged; // Memory address changed
+  public int tensor; // Label of tensor written
 
   public Delta(String layer, int tile, int memoryAddressChanged, int tensor) {
     this.layer = layer;
@@ -15,7 +16,6 @@ public class Delta {
 
   @Override
   public boolean equals(Object other) {
-    // No need for null check. The instanceof operator returns false if (other == null).
     if (!(other instanceof Delta)) {
       return false;
     }

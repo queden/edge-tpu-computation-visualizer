@@ -434,8 +434,9 @@ public class Validation {
 
       TraceEvent.AccessType accessType = traceEvent.getAccessType();
       int address = traceEvent.getAddress() * traceEvent.getBytes();
+      long cycle = traceEvent.getCycle();
 
-      int traceTensor = getTraceTensor(address, accessType, instruction);
+      int traceTensor = getTraceTensor(cycle, address, accessType, instruction);
 
       List<Boolean> masks = instruction.getMaskList();
       if (masks.isEmpty()) {
@@ -470,7 +471,7 @@ public class Validation {
    * @return the tensor operated on by this traceEvent
    */
   private static int getTraceTensor(
-      int traceAddress, TraceEvent.AccessType traceAccessType, Instruction instruction)
+      long cycle, int traceAddress, TraceEvent.AccessType traceAccessType, Instruction instruction)
       throws Exception, MemoryAccessException {
     List<Integer> accessTypeTensorList;
     int tensor = -1;
@@ -569,6 +570,8 @@ public class Validation {
               + traceAddress
               + " trace access type: "
               + traceAccessType
+              + " cycle: "
+              + cycle
               + ")"); // notifying incorrect address error
     }
     return tensor;
@@ -644,6 +647,7 @@ public class Validation {
     int address = traceEvent.getAddress() * traceEvent.getBytes();
     int tile = traceEvent.getTile();
     int instruction = traceEvent.getInstructionTag();
+    long cycle = traceEvent.getCycle();
 
     if (traceEvent.getAccessType() == TraceEvent.AccessType.NARROW_WRITE) {
       // Iterate through the tiles.
@@ -656,7 +660,9 @@ public class Validation {
         }
       } else {
         throw new Exception(
-          "Trace event writing to address "
+          "Trace event at cycle "
+          + cycle 
+          + " writing to address "
           + address
           + " operates on tile "
           + tile 
@@ -677,7 +683,9 @@ public class Validation {
         }
       } else {
         throw new Exception(
-          "Trace event writing to address "
+          "Trace event at cycle "
+          + cycle 
+          + " writing to address "
           + address
           + " operates on tile "
           + tile 
@@ -706,6 +714,7 @@ public class Validation {
     int address = traceEvent.getAddress() * traceEvent.getBytes();
     int tile = traceEvent.getTile();
     int instruction = traceEvent.getInstructionTag();
+    long cycle = traceEvent.getCycle();
 
     if (traceEvent.getAccessType() == TraceEvent.AccessType.NARROW_READ) {
       if (masks.get(tile)) {
@@ -713,7 +722,7 @@ public class Validation {
         for (int currentByte = address; currentByte < endAddress; currentByte++) {
           if (narrow[tile][currentByte] != tensor) {
             throw new InvalidTensorReadException(
-              tensor, layer, instruction, tile, address, narrow[tile][currentByte], "narrow");
+              tensor, layer, instruction, tile, address, narrow[tile][currentByte], "narrow", cycle);
           }
         }
       } else {
@@ -733,7 +742,7 @@ public class Validation {
         for (int currentByte = address; currentByte < endAddress; currentByte++) {
           if (wide[tile][currentByte] != tensor) {
             throw new InvalidTensorReadException(
-              tensor, layer, instruction, tile, address, wide[tile][currentByte], "wide");
+              tensor, layer, instruction, tile, address, wide[tile][currentByte], "wide", cycle);
           }
         }
       } else {

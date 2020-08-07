@@ -1,6 +1,13 @@
 # Computation Vizualizer for the Edge TPU
-Design doc:
+
+## Summary
+
+The Edge TPU Computation Visualizer is an internal debugging tool designed for the Edge TPU Team to find memory access dependency errors due to bugs in the chip's compiler. Currently, users can upload a log of a software simulation, and our tool will validate whether or not the compiler executed the instructions given to it correctly. We have a web interface where users can upload the file, and then we simulate the simulation and any errors that occur.
+
+For a detailed design doc:
 https://docs.google.com/document/d/1XzgKLn5qp4aP58RxTXuekrX1jXuSs58QO2LfIH2tCFs/edit?usp=sharing
+
+## Working with the Project
 
 To generate the protobuf, cd into the root of the repository and run:
 ```
@@ -8,7 +15,17 @@ protoc --java_out=src/main/java src/main/java/com/google/sps/proto/memaccess_che
 protoc --java_out=src/test/java src/main/java/com/google/sps/proto/memaccess_checker_data.proto
 ```
 
-Project components:
+Then, to run on a local server, run: 
+```
+mvn package appengine:run
+```
+and to deploy (to a valid Google Cloud Appengine project), run:
+```
+mvn package appengine:deploy
+```
+
+## Project Components
+
   - Algorithm:
     - Validation algorithm code
       ```
@@ -116,17 +133,3 @@ Project components:
       ```
       src/main/webapp/style.css
       ```
-
-Possible errors caught by the algorithm:
-  - Lack of mask(s) assigned to a given instruction and trace event
-  - Lack of tensor assigned to a base address in narrow/wide memory
-  - Attempting to read from a memory location that has not yet been allocated
-  - Attempting to perform a memory access operation from an instruction that does not contain its trace event
-  - A layer does not have the same number of tiles as expected by the proto
-  - A complete lack of provided trace events
-  - A non-existent instruction corresponding to an existing trace event
-  - A present trace event with an access type that is not narrow/wide read/write
-  - A lack of a tensor associated to an instruction
-  - An empty narrow/wide memory allocation table
-  - Attempting to read/write from/to a memory location on a tile that is 
-    in the operating trace event but not its corresponding instruction

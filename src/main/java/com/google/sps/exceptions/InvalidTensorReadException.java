@@ -1,15 +1,17 @@
 package com.google.sps.exceptions;
 
+/** Exception for when a trace entry performs an invalid read */
 public class InvalidTensorReadException extends Exception {
-    private int tensor;
-    private String layer;
-    private int instructionTag;
-    private int tile;
-    private int address;
-    private int invalidTensor;
-    private String memory;
+    private int tensor; // Expected tensor
+    private String layer; // Layer of trace event
+    private int instructionTag; // Trace event's instruction tag
+    private int tile; // Tile that it was operating on
+    private int address; // Address that trace should operate on
+    private int invalidTensor; // Tensor that was found instead
+    private String memory; // Wide or narrow memory type
+    private long cycle; // Trace event's cycle
 
-    public InvalidTensorReadException(int tensor, String layer, int instructionTag, int tile, int address, int invalidTensor, String memory) {
+    public InvalidTensorReadException(int tensor, String layer, int instructionTag, int tile, int address, int invalidTensor, String memory, long cycle) {
         super();
         this.tensor = tensor;
         this.layer = layer;
@@ -18,12 +20,15 @@ public class InvalidTensorReadException extends Exception {
         this.address = address;
         this.invalidTensor = invalidTensor;
         this.memory = memory;
+        this.cycle = cycle;
     }
 
     @Override
     public String getMessage() {
         if (tensor <= 0) {
-            return "Trace event corresponding to instruction "
+            return "Trace event at cycle "
+                + cycle
+                + " corresponding to instruction "
                 + instructionTag
                 + " tried to read tensor " +
                 tensor +
@@ -38,7 +43,9 @@ public class InvalidTensorReadException extends Exception {
                 ") but memory location was not allocated";
         }
         
-        return "Trace event corresponding to instruction "
+        return "Trace event at cycle "
+            + cycle
+            + " corresponding to instruction "
             + instructionTag
             + " tried to read tensor " +
             tensor +
